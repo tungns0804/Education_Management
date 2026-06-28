@@ -7,6 +7,7 @@ import { API_ENDPOINTS } from '../constants/api.constants';
 export const requestLogin          = (data) => request.post(API_ENDPOINTS.LOGIN,           data).then((r) => r.data);
 export const requestRefreshToken   = ()     => request.get(API_ENDPOINTS.REFRESH_TOKEN)        .then((r) => r.data);
 export const requestForgotPassword = (data) => request.post(API_ENDPOINTS.FORGOT_PASSWORD, data).then((r) => r.data);
+export const requestVerifyOtp      = (data) => request.post(API_ENDPOINTS.VERIFY_OTP,      data).then((r) => r.data);
 export const requestResetPassword  = (data) => request.post(API_ENDPOINTS.RESET_PASSWORD,  data).then((r) => r.data);
 
 // ── Authenticated calls ──────────────────────────────────────────────────────

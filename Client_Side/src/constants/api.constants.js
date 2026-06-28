@@ -16,6 +16,7 @@ export const API_ENDPOINTS = {
   AUTH:            `${USERS_BASE}/auth`,
   REFRESH_TOKEN:   `${USERS_BASE}/refresh-token`,
   FORGOT_PASSWORD: `${USERS_BASE}/forgot-password`,
+  VERIFY_OTP:      `${USERS_BASE}/verify-otp`,
   RESET_PASSWORD:  `${USERS_BASE}/reset-password`,
   CHANGE_PASSWORD: `${USERS_BASE}/change-password`,
 

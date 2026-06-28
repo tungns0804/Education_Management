@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { I } from '../../materials/icons';
 import { useApp, useToast } from '../../materials/ui';
 import { useAuth } from '../../context/AuthContext';
-import { requestLogin, requestForgotPassword, requestResetPassword } from '../../config/userRequest';
+import { requestLogin, requestForgotPassword, requestVerifyOtp, requestResetPassword } from '../../config/userRequest';
 import {
   DEMO_USERS,
   DEMO_PASSWORDS,
@@ -121,6 +121,8 @@ export default function LoginUser({ renderApp }) {
   const [loading, setLoading]   = useState(false);
   const [apiError, setApiError] = useState('');
   const otpRefs = useRef([]);
+
+  const navigate = (v) => { setApiError(''); setView(v); };
 
   // Must be declared before any early returns (Rules of Hooks)
   useEffect(() => {
@@ -242,7 +244,7 @@ export default function LoginUser({ renderApp }) {
                 <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13.5, color: 'var(--text-2)', cursor: 'pointer', userSelect: 'none' }}>
                   <input type="checkbox" defaultChecked style={{ width: 16, height: 16, accentColor: 'var(--accent)' }} />{t('rememberMe')}
                 </label>
-                <button type="button" className="link-btn" onClick={() => setView('forgot')} style={{ fontSize: 13.5, color: 'var(--accent)', fontWeight: 600 }}>{t('forgotPw')}</button>
+                <button type="button" className="link-btn" onClick={() => navigate('forgot')} style={{ fontSize: 13.5, color: 'var(--accent)', fontWeight: 600 }}>{t('forgotPw')}</button>
               </div>
               <button className="btn btn-primary" style={{ height: 46, fontSize: 15 }} type="submit" disabled={loading}>
                 {loading ? (lang === 'vi' ? 'Đang đăng nhập...' : 'Signing in...') : t('loginBtn')}
@@ -287,7 +289,7 @@ export default function LoginUser({ renderApp }) {
           {/* ---- Forgot password ---- */}
           {view === 'forgot' && (
             <div style={{ margin: 'auto 0', display: 'flex', flexDirection: 'column', gap: 18 }}>
-              <button className="link-btn" onClick={() => setView('login')} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13.5, color: 'var(--muted)', fontWeight: 600, alignSelf: 'flex-start' }}><I.chevL size={15} />{t('backToLogin')}</button>
+              <button className="link-btn" onClick={() => navigate('login')} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13.5, color: 'var(--muted)', fontWeight: 600, alignSelf: 'flex-start' }}><I.chevL size={15} />{t('backToLogin')}</button>
               <div>
                 <h2 style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: '-0.02em' }}>{t('forgotTitle')}</h2>
                 <p style={{ margin: '7px 0 0', fontSize: 14, color: 'var(--muted)', lineHeight: 1.5 }}>
@@ -335,20 +337,26 @@ export default function LoginUser({ renderApp }) {
           {/* ---- OTP entry ---- */}
           {view === 'otp' && (
             <div style={{ margin: 'auto 0', display: 'flex', flexDirection: 'column', gap: 18 }}>
-              <button className="link-btn" onClick={() => setView('forgot')} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13.5, color: 'var(--muted)', fontWeight: 600, alignSelf: 'flex-start' }}><I.chevL size={15} />{t('backToLogin')}</button>
+              <button className="link-btn" onClick={() => navigate('forgot')} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13.5, color: 'var(--muted)', fontWeight: 600, alignSelf: 'flex-start' }}><I.chevL size={15} />{t('back')}</button>
               <div>
                 <h2 style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: '-0.02em' }}>{t('otpTitle')}</h2>
                 <p style={{ margin: '7px 0 0', fontSize: 14, color: 'var(--muted)', lineHeight: 1.5 }}>
-                  {lang === 'vi' ? 'Nhập mã OTP đã gửi tới email cá nhân của bạn. Hết hạn sau ' : 'Enter the OTP sent to your personal email. Expires in '}
-                  <b style={{ color: 'var(--text-2)' }}>{mm}:{ss}</b>
+                  {secs > 0
+                    ? <>{lang === 'vi' ? 'Nhập mã OTP đã gửi tới email cá nhân của bạn. Hết hạn sau ' : 'Enter the OTP sent to your personal email. Expires in '}<b style={{ color: secs <= 60 ? 'var(--danger)' : 'var(--text-2)' }}>{mm}:{ss}</b></>
+                    : <b style={{ color: 'var(--danger)' }}>{lang === 'vi' ? 'Mã OTP đã hết hạn.' : 'OTP has expired.'}</b>}
                 </p>
               </div>
+              {secs === 0 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 14px', borderRadius: 10, background: 'var(--danger-soft, rgba(220,38,38,.08))', color: 'var(--danger)', fontSize: 13.5 }}>
+                  <I.alert size={15} />{lang === 'vi' ? 'Mã OTP đã hết hạn. Vui lòng nhấn "Gửi lại mã" để nhận mã mới.' : 'OTP has expired. Please click "Resend code" to get a new one.'}
+                </div>
+              )}
               <div style={{ display: 'flex', gap: 9, justifyContent: 'space-between' }}>
                 {otp.map((d, i) => (
                   <input key={i} ref={(el) => (otpRefs.current[i] = el)} value={d} inputMode="numeric" maxLength={1}
                     onChange={(e) => setOtpAt(i, e.target.value)}
                     onKeyDown={(e) => { if (e.key === 'Backspace' && !otp[i] && i > 0) otpRefs.current[i - 1]?.focus(); }}
-                    style={{ width: 50, height: 58, textAlign: 'center', fontSize: 24, fontWeight: 700, borderRadius: 12, background: 'var(--surface)', color: 'var(--text)', outline: 'none', boxShadow: d ? 'inset 0 0 0 1.5px var(--accent)' : 'inset 0 0 0 1px var(--border-strong)' }} />
+                    style={{ width: 50, height: 58, textAlign: 'center', fontSize: 24, fontWeight: 700, borderRadius: 12, border: 'none', background: 'var(--surface)', color: 'var(--text)', outline: 'none', opacity: secs === 0 ? 0.5 : 1, boxShadow: d ? 'inset 0 0 0 1.5px var(--accent)' : 'inset 0 0 0 1px var(--border-strong)' }} />
                 ))}
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13.5 }}>
@@ -356,6 +364,7 @@ export default function LoginUser({ renderApp }) {
                 <button className="link-btn" disabled={loading} style={{ color: 'var(--accent)', fontWeight: 600 }}
                   onClick={async () => {
                     setLoading(true);
+                    setApiError('');
                     try {
                       await requestForgotPassword({ email: email.trim() });
                       setSecs(OTP_EXPIRY_SECONDS);
@@ -370,13 +379,36 @@ export default function LoginUser({ renderApp }) {
                   {t('resend')}
                 </button>
               </div>
-              <button className="btn btn-primary" style={{ height: 46 }} disabled={!otpFull} onClick={() => setView('reset')}>{t('verify')}</button>
+              {apiError && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 14px', borderRadius: 10, background: 'var(--danger-soft, rgba(220,38,38,.08))', color: 'var(--danger)', fontSize: 13.5 }}>
+                  <I.alert size={15} />{apiError}
+                </div>
+              )}
+              <button className="btn btn-primary" style={{ height: 46 }} disabled={!otpFull || loading || secs === 0}
+                onClick={async () => {
+                  setLoading(true);
+                  setApiError('');
+                  try {
+                    await requestVerifyOtp({ email: email.trim(), otp: otp.join('') });
+                    setNpw('');
+                    setCpw('');
+                    setView('reset');
+                  } catch (err) {
+                    const msg = err?.response?.data?.message || (lang === 'vi' ? 'OTP không hợp lệ hoặc đã hết hạn' : 'Invalid or expired OTP');
+                    setApiError(msg);
+                  } finally {
+                    setLoading(false);
+                  }
+                }}>
+                {loading ? (lang === 'vi' ? 'Đang xác thực...' : 'Verifying...') : t('verify')}
+              </button>
             </div>
           )}
 
           {/* ---- Reset password ---- */}
           {view === 'reset' && (
             <div style={{ margin: 'auto 0', display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <button className="link-btn" onClick={() => navigate('otp')} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13.5, color: 'var(--muted)', fontWeight: 600, alignSelf: 'flex-start' }}><I.chevL size={15} />{t('back')}</button>
               <div>
                 <h2 style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: '-0.02em' }}>{t('setNewPw')}</h2>
                 <p style={{ margin: '7px 0 0', fontSize: 14, color: 'var(--muted)' }}>{t('pwPolicy')}</p>
@@ -396,8 +428,8 @@ export default function LoginUser({ renderApp }) {
                   setApiError('');
                   try {
                     await requestResetPassword({ email: email.trim(), otp: otp.join(''), newPassword: npw });
-                    toast(lang === 'vi' ? 'Đặt lại mật khẩu thành công' : 'Password reset successfully', 'success');
-                    setView('login');
+                    toast(lang === 'vi' ? 'Đặt lại mật khẩu thành công! Vui lòng đăng nhập lại.' : 'Password reset! Please sign in again.', 'success');
+                    navigate('login');
                     setPw('');
                     setNpw('');
                     setCpw('');

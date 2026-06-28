@@ -135,6 +135,17 @@ export class AuthService {
     return bcrypt.hash(plain, BCRYPT_SALT_ROUNDS);
   }
 
+  private validatePasswordStrength(password: string): void {
+    if (!password || password.length < 8)
+      throw new BadRequestException('Mật khẩu phải có ít nhất 8 ký tự');
+    if (!/[A-Z]/.test(password))
+      throw new BadRequestException('Mật khẩu phải có ít nhất 1 chữ hoa (A-Z)');
+    if (!/[0-9]/.test(password))
+      throw new BadRequestException('Mật khẩu phải có ít nhất 1 chữ số (0-9)');
+    if (!/[^A-Za-z0-9]/.test(password))
+      throw new BadRequestException('Mật khẩu phải có ít nhất 1 ký tự đặc biệt (!@#$%...)');
+  }
+
   async forgotPassword(email: string) {
     if (!email) throw new BadRequestException('Vui lòng nhập email');
     const user = await this.prisma.user.findUnique({ where: { email } });
@@ -166,9 +177,29 @@ export class AuthService {
     return true;
   }
 
+  async verifyOtp(email: string, otp: string) {
+    if (!email || !otp) throw new BadRequestException('Thiếu thông tin xác thực');
+
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    if (!user) throw new BadRequestException('Email không tồn tại');
+
+    const record = await this.prisma.otp.findFirst({
+      where: { userId: user.id, expireAt: { gt: new Date() } },
+      orderBy: { createdAt: 'desc' },
+    });
+    if (!record) throw new BadRequestException('OTP đã hết hạn. Vui lòng gửi lại mã mới.');
+
+    const valid = await bcrypt.compare(otp, record.otp);
+    if (!valid) throw new BadRequestException('OTP không chính xác');
+
+    return true;
+  }
+
   async resetPassword(email: string, otp: string, newPassword: string) {
     if (!email || !otp || !newPassword)
       throw new BadRequestException('Thiếu thông tin đặt lại mật khẩu');
+
+    this.validatePasswordStrength(newPassword);
 
     const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) throw new BadRequestException('Email không tồn tại');
@@ -194,6 +225,8 @@ export class AuthService {
     if (!currentPassword || !newPassword)
       throw new BadRequestException('Vui lòng nhập đầy đủ thông tin');
 
+    this.validatePasswordStrength(newPassword);
+
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new UnauthorizedException('Người dùng không tồn tại');
 
@@ -202,6 +235,8 @@ export class AuthService {
 
     const hashed = await this.hashPassword(newPassword);
     await this.prisma.user.update({ where: { id: userId }, data: { password: hashed } });
+    // Vô hiệu hóa toàn bộ token để bắt buộc đăng nhập lại trên mọi thiết bị
+    await this.prisma.apiKey.deleteMany({ where: { userId } });
     return true;
   }
 }

@@ -102,6 +102,13 @@ export class AuthController {
     return { success: true, message: 'OTP đã được gửi tới email của bạn' };
   }
 
+  @Post('verify-otp')
+  @HttpCode(HttpStatus.OK)
+  async verifyOtp(@Body() body: { email: string; otp: string }) {
+    await this.authService.verifyOtp(body.email, body.otp);
+    return { success: true, message: 'OTP hợp lệ' };
+  }
+
   @Post('reset-password')
   @HttpCode(HttpStatus.OK)
   async resetPassword(
