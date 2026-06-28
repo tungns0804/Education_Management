@@ -12,7 +12,7 @@ export const DEFAULT_THEME = 'light';
 export const DEFAULT_LANG  = 'vi';
 
 // ---- Cookie names (set by the server on login) -----------------
-// Must match Server_Side/src/constants/auth.constants.ts
+// Must match server_side/src/constants/auth.constants.ts
 export const COOKIE_LOGGED       = 'logged'; // JS-readable, value '1' when logged in
 export const COOKIE_LOGGED_VALUE = '1';
 

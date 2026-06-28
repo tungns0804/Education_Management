@@ -1,4 +1,4 @@
-# Hướng Dẫn Server Side — Hệ Thống Quản Lý Giáo Dục
+﻿# Hướng Dẫn Server Side — Hệ Thống Quản Lý Giáo Dục
 
 ## Công Nghệ Sử Dụng
 
@@ -16,7 +16,7 @@
 ## Cấu Trúc Thư Mục
 
 ```
-Server_Side/
+server_side/
 ├── prisma/
 │   ├── schema.prisma              # Lược đồ cơ sở dữ liệu (13 model)
 │   └── seed.ts                    # Dữ liệu mẫu ban đầu

@@ -30,7 +30,7 @@ export const OTP_EXPIRY_SECONDS   = 300;  // 5 minutes countdown shown in UI
 export const OTP_TIMER_INTERVAL_MS = 1000; // how often the countdown ticks (1 s)
 
 // ---- Demo / quick-login credentials (development only) ----------
-// Must match the passwords set in Server_Side/src/constants/seed.constants.ts
+// Must match the passwords set in server_side/src/constants/seed.constants.ts
 export const DEMO_USERS = {
   [ROLE_ADMIN]: {
     email:         'admin@school.edu.vn',

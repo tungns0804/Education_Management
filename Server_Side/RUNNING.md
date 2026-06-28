@@ -1,4 +1,4 @@
-# Hướng dẫn chạy Server_Side
+# Hướng dẫn chạy server_side
 
 ## Yêu cầu hệ thống
 
@@ -13,7 +13,7 @@
 ## 1. Cài đặt dependencies
 
 ```bash
-cd Server_Side
+cd server_side
 npm install
 ```
 
@@ -21,7 +21,7 @@ npm install
 
 ## 2. Cấu hình biến môi trường
 
-Tạo file `.env` tại thư mục `Server_Side/` (hoặc chỉnh sửa file có sẵn):
+Tạo file `.env` tại thư mục `server_side/` (hoặc chỉnh sửa file có sẵn):
 
 ```env
 # PostgreSQL Connection

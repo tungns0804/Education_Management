@@ -1,4 +1,4 @@
-# Hướng dẫn chạy Client_Side
+# Hướng dẫn chạy client_side
 
 ## Yêu cầu hệ thống
 
@@ -12,7 +12,7 @@
 ## 1. Cài đặt dependencies
 
 ```bash
-cd Client_Side
+cd client_side
 npm install
 ```
 
@@ -23,7 +23,7 @@ npm install
 Mặc định client kết nối tới server tại `http://localhost:3000`.  
 Nếu cần thay đổi, chỉnh URL trong file cấu hình axios của dự án.
 
-Server_Side phải được cấu hình CORS với:
+server_side phải được cấu hình CORS với:
 
 ```env
 URL_CLIENT="http://localhost:5173"
@@ -68,8 +68,8 @@ npm run preview
 Để ứng dụng hoạt động đầy đủ, khởi động theo thứ tự sau:
 
 1. **PostgreSQL** — đảm bảo database đang chạy
-2. **Server_Side** — chạy `npm run start:dev` trong thư mục `Server_Side/`
-3. **Client_Side** — chạy `npm run dev` trong thư mục `Client_Side/`
+2. **server_side** — chạy `npm run start:dev` trong thư mục `server_side/`
+3. **client_side** — chạy `npm run dev` trong thư mục `client_side/`
 
 ---
 

@@ -2,6 +2,7 @@ import {
   Injectable,
   UnauthorizedException,
   BadRequestException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
@@ -150,12 +151,18 @@ export class AuthService {
     await this.prisma.otp.deleteMany({ where: { userId: user.id } });
     await this.prisma.otp.create({ data: { userId: user.id, otp: hashedOtp, expireAt } });
 
-    await this.emailService.sendOtp({
-      personalEmail: user.personalEmail,
-      schoolEmail:   email,
-      otp:           plainOtp,
-      fullName:      user.fullName,
-    });
+    try {
+      await this.emailService.sendOtp({
+        personalEmail: user.personalEmail,
+        schoolEmail:   email,
+        otp:           plainOtp,
+        fullName:      user.fullName,
+      });
+    } catch {
+      throw new InternalServerErrorException(
+        'Không thể gửi email OTP. Vui lòng thử lại sau hoặc liên hệ quản trị viên.',
+      );
+    }
     return true;
   }
 

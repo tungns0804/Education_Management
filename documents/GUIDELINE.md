@@ -1,6 +1,6 @@
-# Education Management System — Guideline
+﻿# Education Management System — Guideline
 
-Hệ thống quản lý giáo dục gồm hai phần độc lập: **Client_Side** (React + Vite) và **Server_Side** (NestJS + Prisma + PostgreSQL).
+Hệ thống quản lý giáo dục gồm hai phần độc lập: **client_side** (React + Vite) và **server_side** (NestJS + Prisma + PostgreSQL).
 
 ---
 
@@ -9,10 +9,11 @@ Hệ thống quản lý giáo dục gồm hai phần độc lập: **Client_Side
 - [Yêu cầu hệ thống](#yêu-cầu-hệ-thống)
 - [Cấu trúc thư mục](#cấu-trúc-thư-mục)
 - [Cài đặt & Khởi chạy](#cài-đặt--khởi-chạy)
-  - [Server\_Side](#1-server_side-nestjs)
-  - [Client\_Side](#2-client_side-react--vite)
+  - [server_side](#1-server_side-nestjs)
+  - [client_side](#2-client_side-react--vite)
 - [Biến môi trường](#biến-môi-trường)
 - [Database](#database)
+- [Master Data — Khởi tạo dữ liệu nền](#master-data--khởi-tạo-dữ-liệu-nền)
 - [Kiến trúc hệ thống](#kiến-trúc-hệ-thống)
 - [Phân quyền & Vai trò](#phân-quyền--vai-trò)
 - [Tính năng chính](#tính-năng-chính)
@@ -35,7 +36,7 @@ Hệ thống quản lý giáo dục gồm hai phần độc lập: **Client_Side
 
 ```
 Education_Management/
-├── Client_Side/                  # Frontend — React + Vite
+├── client_side/                  # Frontend — React + Vite
 │   ├── src/
 │   │   ├── assets/               # Hình ảnh, static files
 │   │   ├── components/           # Shared UI components
@@ -78,7 +79,7 @@ Education_Management/
 │   ├── vite.config.js
 │   └── package.json
 │
-├── Server_Side/                  # Backend — NestJS + Prisma
+├── server_side/                  # Backend — NestJS + Prisma
 │   ├── src/
 │   │   ├── auth/                 # Module xác thực
 │   │   │   ├── auth.controller.ts
@@ -101,19 +102,24 @@ Education_Management/
 │   ├── .env
 │   └── package.json
 │
-└── GUIDELINE.md
+├── scripts/                      # SQL & helper scripts khởi tạo dữ liệu
+│   ├── init_master_data.sql      # SQL thuần: import master data (idempotent)
+│   └── run_seed.ps1              # PowerShell helper: tự tìm psql và chạy SQL
+│
+└── documents/
+    └── GUIDELINE.md
 ```
 
 ---
 
 ## Cài đặt & Khởi chạy
 
-> Cần chạy **Server_Side trước**, sau đó mới chạy **Client_Side**.
+> Cần chạy **server_side trước**, sau đó mới chạy **client_side**.
 
-### 1. Server_Side (NestJS)
+### 1. server_side (NestJS)
 
 ```powershell
-cd Server_Side
+cd server_side
 ```
 
 **Bước 1 — Cài dependencies:**
@@ -136,9 +142,18 @@ npx prisma migrate dev --name init
 npx prisma generate
 ```
 
-**Bước 5 — Seed dữ liệu mẫu (tuỳ chọn):**
+**Bước 5 — Khởi tạo master data:**
+
+> Chọn một trong hai cách bên dưới — cả hai đều idempotent (an toàn khi chạy nhiều lần).
+
 ```powershell
+# Cách 1 — Prisma seed (TypeScript, khuyến nghị khi dev)
 npm run seed
+
+# Cách 2 — SQL script (nhanh hơn, dùng khi setup môi trường mới)
+..\scripts\run_seed.ps1
+# hoặc psql trực tiếp:
+# psql -U postgres -d education_management_database -f ..\scripts\init_master_data.sql
 ```
 
 **Bước 6 — Chạy server:**
@@ -155,12 +170,12 @@ Server khởi chạy tại: `http://localhost:3000`
 
 ---
 
-### 2. Client_Side (React + Vite)
+### 2. client_side (React + Vite)
 
 Mở terminal mới:
 
 ```powershell
-cd Client_Side
+cd client_side
 ```
 
 **Bước 1 — Cài dependencies:**
@@ -190,7 +205,7 @@ npm run preview   # preview bản build
 
 ## Biến môi trường
 
-### Server_Side — `.env`
+### server_side — `.env`
 
 ```env
 # PostgreSQL
@@ -210,7 +225,7 @@ JWT_REFRESH_EXPIRES_IN=7d
 URL_CLIENT="http://localhost:5173"
 ```
 
-### Client_Side — `.env`
+### client_side — `.env`
 
 ```env
 VITE_API_URL=http://localhost:3000
@@ -265,6 +280,74 @@ npx prisma migrate reset
 # Sync schema không tạo migration (chỉ dùng development)
 npx prisma db push
 ```
+
+---
+
+## Master Data — Khởi tạo dữ liệu nền
+
+Thư mục `scripts/` chứa các file dùng để import dữ liệu mẫu mỗi khi set up source code mới.
+
+### Nội dung dữ liệu master
+
+| Bảng | Số lượng | Chi tiết |
+|---|---|---|
+| `departments` | 4 | CNTT, KTKT, KTXD, NN |
+| `branches` | 8 | 2 ngành / khoa |
+| `users` | 11 | 1 Admin + 4 Giảng viên + 6 Sinh viên |
+| `classes` | 4 | KTPM2021A, HTTT2021A, KT2021A, TA2021A |
+| `subjects` | 10 | Trải đều 4 khoa |
+| `subject_classes` | 7 | HK1 & HK2 2024–2025 + HK1 2023–2024 |
+| `enrollments` | 15 | Sinh viên đăng ký học phần |
+
+### Các file trong `scripts/`
+
+| File | Mô tả |
+|---|---|
+| `init_master_data.sql` | Script SQL thuần, chạy được với bất kỳ PostgreSQL client nào |
+| `run_seed.ps1` | PowerShell helper: tự tìm `psql.exe`, chạy file SQL, in kết quả |
+
+### Cách chạy
+
+**Cách 1 — PowerShell helper (khuyến nghị trên Windows):**
+```powershell
+.\scripts\run_seed.ps1
+
+# Tuỳ chỉnh tham số nếu cấu hình DB khác mặc định:
+.\scripts\run_seed.ps1 -DbUser postgres -DbPass mypassword -DbName my_db
+```
+
+**Cách 2 — psql trực tiếp:**
+```powershell
+psql -U postgres -d education_management_database -f scripts/init_master_data.sql
+```
+
+**Cách 3 — Prisma seed (TypeScript):**
+```powershell
+cd server_side
+npm run seed
+```
+
+### Quy trình setup hoàn chỉnh từ đầu
+
+```powershell
+# 1. Tạo database (nếu chưa có)
+psql -U postgres -c "CREATE DATABASE education_management_database;"
+
+# 2. Chạy migration — tạo toàn bộ bảng
+cd server_side
+npx prisma migrate deploy
+
+# 3. Import master data
+cd ..
+.\scripts\run_seed.ps1
+```
+
+### Đặc điểm kỹ thuật
+
+- **Idempotent**: `ON CONFLICT DO UPDATE` — chạy nhiều lần không bị lỗi hoặc tạo bản sao
+- **Password hash thực tế**: bcrypt (cost 10), lấy trực tiếp từ DB — không cần re-hash khi chạy lại
+- **Foreign key bằng subquery**: ví dụ `(SELECT id FROM departments WHERE code = 'CNTT')` — đúng ngay cả khi UUID thay đổi sau `migrate reset`
+- **Bảo toàn điểm số**: bảng `enrollments` dùng `ON CONFLICT DO NOTHING` — không ghi đè điểm nếu đã nhập
 
 ---
 
@@ -351,33 +434,43 @@ Mỗi vai trò sử dụng **Layout riêng** (`AdminLayout`, `TeacherLayout`, `S
 
 ## Tài khoản demo
 
-> Dữ liệu demo được seed qua `npm run seed` trong `Server_Side`.
+> Dữ liệu được khởi tạo qua `npm run seed` hoặc `.\scripts\run_seed.ps1`.
 
 | Vai trò | Email | Mật khẩu |
 |---|---|---|
-| Admin | `admin@school.edu.vn` | _(xem file seed.ts)_ |
-| Teacher | `gv1001@school.edu.vn` | _(xem file seed.ts)_ |
-| Student | `20216001@student.school.edu.vn` | _(xem file seed.ts)_ |
+| Admin | `admin@school.edu.vn` | `Admin@123` |
+| Teacher | `gv1001@school.edu.vn` | `Teacher@123` |
+| Teacher | `gv1002@school.edu.vn` | `Teacher@123` |
+| Teacher | `gv1003@school.edu.vn` | `Teacher@123` |
+| Teacher | `gv1004@school.edu.vn` | `Teacher@123` |
+| Student | `20216001@student.school.edu.vn` | `Student@123` |
+| Student | `20216002@student.school.edu.vn` | `Student@123` |
+| Student | `20216003@student.school.edu.vn` | `Student@123` |
+| Student | `20216004@student.school.edu.vn` | `Student@123` |
+| Student | `20216005@student.school.edu.vn` | `Student@123` |
+| Student | `20216006@student.school.edu.vn` | `Student@123` |
 
 ---
 
 ## Scripts tham khảo
 
-### Server_Side
+### server_side
 
 | Lệnh | Mô tả |
 |---|---|
 | `npm run start:dev` | Chạy development với hot reload |
 | `npm run start:prod` | Chạy production |
 | `npm run build` | Build TypeScript sang JavaScript |
-| `npm run seed` | Seed dữ liệu mẫu vào database |
+| `npm run seed` | Seed master data qua Prisma (TypeScript) |
 | `npm run lint` | Kiểm tra lỗi ESLint |
 | `npm run test` | Chạy unit tests |
 | `npm run test:e2e` | Chạy end-to-end tests |
 | `npx prisma studio` | Mở Prisma Studio (GUI database) |
 | `npx prisma migrate dev` | Tạo và apply migration mới |
+| `npx prisma migrate deploy` | Apply migration trên môi trường production |
+| `npx prisma migrate reset` | Reset database và chạy lại toàn bộ migration |
 
-### Client_Side
+### client_side
 
 | Lệnh | Mô tả |
 |---|---|
@@ -385,11 +478,19 @@ Mỗi vai trò sử dụng **Layout riêng** (`AdminLayout`, `TeacherLayout`, `S
 | `npm run build` | Build production |
 | `npm run preview` | Preview bản build production |
 
+### scripts/
+
+| Lệnh | Mô tả |
+|---|---|
+| `.\scripts\run_seed.ps1` | Chạy PowerShell helper — tự tìm psql và import master data |
+| `.\scripts\run_seed.ps1 -DbPass <pass>` | Chạy với password tùy chỉnh |
+| `psql ... -f scripts/init_master_data.sql` | Chạy SQL trực tiếp qua psql / DBeaver / pgAdmin |
+
 ---
 
 ## Lưu ý
 
-- Luôn khởi động **Server_Side trước** khi chạy Client_Side.
+- Luôn khởi động **server_side trước** khi chạy client_side.
 - Đảm bảo **PostgreSQL đang chạy** và `DATABASE_URL` trong `.env` đúng.
 - Sau khi thay đổi `schema.prisma`, phải chạy `npx prisma migrate dev` và `npx prisma generate`.
-- CORS được cấu hình để chấp nhận request từ `URL_CLIENT` trong `.env` của Server_Side. Nếu đổi port Client, cần cập nhật biến này.
+- CORS được cấu hình để chấp nhận request từ `URL_CLIENT` trong `.env` của server_side. Nếu đổi port Client, cần cập nhật biến này.

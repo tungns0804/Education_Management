@@ -167,7 +167,7 @@ export class EmailService {
       this.logger.log(`Đã gửi OTP tới ${personalEmail}`);
     } catch (err) {
       this.logger.error(`Không thể gửi OTP tới ${personalEmail}: ${err}`);
-      this.logger.warn(`[FALLBACK OTP] ${schoolEmail} → ${otp}`);
+      throw err;
     }
   }
 }

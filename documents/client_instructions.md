@@ -1,4 +1,4 @@
-# Hướng Dẫn Client Side — Hệ Thống Quản Lý Giáo Dục
+﻿# Hướng Dẫn Client Side — Hệ Thống Quản Lý Giáo Dục
 
 ## Công Nghệ Sử Dụng
 
@@ -15,7 +15,7 @@
 ## Cấu Trúc Thư Mục
 
 ```
-Client_Side/src/
+client_side/src/
 ├── App.jsx                        # Gốc: điều hướng theo vai trò người dùng
 ├── main.jsx                       # Điểm khởi động ứng dụng
 ├── config/
