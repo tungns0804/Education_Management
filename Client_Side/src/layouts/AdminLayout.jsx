@@ -35,7 +35,7 @@ export default function AdminLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const user = JSON.parse(localStorage.getItem('user') || '{"name":"Admin","email":"admin@school.edu","hue":210}');
+  const user = JSON.parse(localStorage.getItem('user') || '{"name":"Admin","email":"admin@school.edu.vn","hue":210}');
   const routeKey = NAV.find(item => item.route && location.pathname.endsWith(item.route.replace('a-', '/')))?.route ?? 'a-dash';
   const [titleKey, subtitleKey] = TITLE_MAP[routeKey] ?? ['dashboard', 'management'];
 

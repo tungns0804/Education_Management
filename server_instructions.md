@@ -25,7 +25,7 @@ Server_Side/
     ├── app.module.ts              # Module gốc
     ├── constants/
     │   ├── auth.constants.ts      # Cấu hình JWT, tên cookie, vòng bcrypt
-    │   └── seed.constants.ts      # Thông tin đăng nhập người dùng demo
+    │   └── seed.constants.ts      # Thông tin đăng nhập người dùng demo (hardcoded)
     ├── prisma/
     │   ├── prisma.module.ts       # Module toàn cục — PrismaService khả dụng mọi nơi
     │   └── prisma.service.ts      # Kế thừa PrismaClient
@@ -55,14 +55,14 @@ Server_Side/
 
 | Enum | Giá trị |
 |---|---|
-| `Role` | `student` (sinh viên), `teacher` (giảng viên), `admin` (quản trị) |
-| `Gender` | `male` (nam), `female` (nữ), `other` (khác) |
-| `UserStatus` | `studying` (đang học), `reserved` (bảo lưu), `graduate` (tốt nghiệp), `teaching` (đang dạy), `retired` (đã nghỉ), `resigned` (từ chức), `active` (hoạt động), `inactive` (khóa) |
+| `Role` | `student`, `teacher`, `admin` |
+| `Gender` | `male`, `female`, `other` |
+| `UserStatus` | `studying`, `reserved`, `graduate`, `teaching`, `retired`, `resigned`, `active`, `inactive` |
 | `TypeLogin` | `email`, `google` |
-| `SubjectClassStatus` | `active` (đang mở), `completed` (đã kết thúc), `canceled` (đã hủy) |
-| `EnrollmentStatus` | `registered` (đã đăng ký), `dropped` (đã hủy), `completed` (đã hoàn thành) |
-| `AttendanceStatus` | `present` (có mặt), `absent` (vắng), `late` (muộn), `excused` (có phép) |
-| `NotificationType` | `info`, `success`, `warning`, `error`, `grade` (điểm), `enrollment` (đăng ký) |
+| `SubjectClassStatus` | `active`, `completed`, `canceled` |
+| `EnrollmentStatus` | `registered`, `dropped`, `completed` |
+| `AttendanceStatus` | `present`, `absent`, `late`, `excused` |
+| `NotificationType` | `info`, `success`, `warning`, `error`, `grade`, `enrollment` |
 | `LetterGrade` | `A`, `B`, `C`, `D`, `F` |
 | `ActivityAction` | `CREATE`, `UPDATE`, `DELETE`, `LOGIN`, `LOGOUT` |
 | `ActivityEntityType` | `user`, `class`, `subject`, `subject_class`, `enrollment`, `grade`, `attendance`, `department`, `branch`, `notification` |
@@ -71,139 +71,145 @@ Server_Side/
 
 #### `Department` → bảng `departments` (Khoa)
 ```
-id            String  @id uuid
-code          String  @unique             -- Mã khoa
-nameDepartment String                     -- Tên khoa
-branches      Branch[]                   -- Các ngành thuộc khoa
-classes       Class[]                    -- Các lớp thuộc khoa
-subjects      Subject[]                  -- Các môn học thuộc khoa
+id             String  @id uuid
+code           String  @unique
+nameDepartment String
+branches       Branch[]
+classes        Class[]
+subjects       Subject[]
 ```
 
 #### `Branch` → bảng `branches` (Ngành)
 ```
-id            String  @id uuid
-code          String  @unique             -- Mã ngành
-nameBranch    String                     -- Tên ngành
-departmentId  String  → Department       -- Khoa chủ quản
+id           String  @id uuid
+code         String  @unique
+nameBranch   String
+departmentId String  → Department
 ```
 
 #### `User` → bảng `users` (Người dùng)
 ```
-id            String  @id uuid
-fullName      String                     -- Họ và tên
-email         String  @unique            -- Email trường (dùng đăng nhập)
-password      String                     -- Mật khẩu đã mã hóa bcrypt
-role          Role                       -- Vai trò: student | teacher | admin
-typeLogin     TypeLogin                  -- Loại đăng nhập: email | google
-avatar        String?                    -- URL ảnh đại diện
-idStudent     String?                    -- Mã số sinh viên
-class         String?                    -- Lớp của sinh viên
-idTeacher     String?                    -- Mã giảng viên
-degree        String?                    -- Học vị giảng viên
-phone         String?                    -- Số điện thoại
-department    String?                    -- Khoa công tác
-address       String?                    -- Địa chỉ
-gender        Gender?                    -- Giới tính
-birthDay      DateTime?                  -- Ngày sinh
-status        UserStatus                 -- Trạng thái tài khoản
-isAdmin       Boolean                    -- Cờ quản trị viên
+id        String    @id uuid
+fullName  String
+email     String    @unique
+password  String                  -- bcrypt hashed
+role      Role
+typeLogin TypeLogin @default(email)
+avatar    String?
+idStudent String?                 -- Mã sinh viên
+class     String?                 -- Lớp (chuỗi, không phải FK)
+idTeacher String?                 -- Mã giảng viên
+degree    String?
+phone     String?
+department String?                -- Khoa (chuỗi, không phải FK)
+address   String?   @default("")
+gender    Gender?
+birthDay  DateTime?
+status    UserStatus @default(active)
+isAdmin   Boolean    @default(false)
 ```
 
-#### `Class` → bảng `classes` (Lớp học)
+> **Lưu ý**: `class` và `department` trên User là trường **chuỗi tự do**, không phải foreign key tới model `Class`/`Department`.
+
+#### `Class` → bảng `classes` (Lớp học - cohort)
 ```
-id            String  @id uuid
-code          String  @unique             -- Mã lớp
-nameClass     String                     -- Tên lớp
-teacherId     String  → User             -- Giảng viên chủ nhiệm
-departmentId  String  → Department       -- Khoa quản lý
+id           String  @id uuid
+code         String  @unique
+nameClass    String
+teacherId    String  → User (TeacherClasses)
+departmentId String  → Department
 ```
+
+> Model `Class` **không có** quan hệ array tới sinh viên — không dùng được `_count` trên model này.
 
 #### `Subject` → bảng `subjects` (Môn học)
 ```
-id            String  @id uuid
-code          String  @unique             -- Mã môn
-name          String                     -- Tên môn học
-credits       Int                        -- Số tín chỉ
-departmentId  String  → Department       -- Khoa phụ trách môn
+id           String  @id uuid
+code         String  @unique
+name         String
+credits      Int     @default(0)
+departmentId String  → Department
 ```
 
 #### `SubjectClass` → bảng `subject_classes` (Lớp học phần)
 ```
-id            String  @id uuid
-code          String  @unique             -- Mã lớp học phần
-semester      String                     -- Học kỳ (vd: HK1 2024-2025)
-maxStudents   Int     mặc định 50        -- Sĩ số tối đa
-status        SubjectClassStatus         -- Trạng thái lớp học phần
-subjectId     String  → Subject          -- Môn học
-teacherId     String  → User             -- Giảng viên phụ trách
+id          String             @id uuid
+code        String             @unique
+semester    String
+maxStudents Int                @default(50)
+status      SubjectClassStatus @default(active)
+subjectId   String  → Subject
+teacherId   String  → User (TeacherSubjectClasses)
+enrollments Enrollment[]
+attendances Attendance[]
 ```
 
-#### `Enrollment` → bảng `enrollments` (Đăng ký học phần + Điểm)
+#### `Enrollment` → bảng `enrollments` (Đăng ký + Điểm)
 ```
-id              String  @id uuid
-status          EnrollmentStatus         -- Trạng thái đăng ký
-registeredAt    DateTime                 -- Thời điểm đăng ký
-attendanceScore Float?                   -- Điểm chuyên cần (hệ số 10%)
-midtermScore    Float?                   -- Điểm giữa kỳ (hệ số 30%)
-finalScore      Float?                   -- Điểm cuối kỳ (hệ số 60%)
-totalScore      Float?                   -- Điểm tổng kết
-letterGrade     LetterGrade?             -- Điểm chữ (A/B/C/D/F)
-gradeLocked     Boolean                  -- Khóa điểm (không cho sửa)
-studentId       String  → User           -- Sinh viên
-subjectClassId  String  → SubjectClass   -- Lớp học phần
-@@unique([studentId, subjectClassId])   -- Mỗi sinh viên chỉ đăng ký 1 lần/lớp HP
+id              String           @id uuid
+status          EnrollmentStatus @default(registered)
+registeredAt    DateTime         @default(now())
+attendanceScore Float?           -- hệ số 10%
+midtermScore    Float?           -- hệ số 30%
+finalScore      Float?           -- hệ số 60%
+totalScore      Float?           -- tự tính khi nhập điểm
+letterGrade     LetterGrade?
+gradeLocked     Boolean          @default(false)
+studentId       String  → User
+subjectClassId  String  → SubjectClass
+@@unique([studentId, subjectClassId])
 ```
 
 #### `Attendance` → bảng `attendances` (Điểm danh)
 ```
-id              String  @id uuid
-date            DateTime                 -- Ngày điểm danh
-status          AttendanceStatus         -- Trạng thái: có mặt / vắng / muộn / có phép
-note            String?                  -- Ghi chú
-studentId       String  → User           -- Sinh viên
-subjectClassId  String  → SubjectClass   -- Lớp học phần
-markedById      String? → User           -- Giảng viên điểm danh
-@@unique([subjectClassId, studentId, date])  -- Mỗi buổi chỉ điểm danh 1 lần
+id             String           @id uuid
+date           DateTime
+status         AttendanceStatus @default(present)
+note           String?          @default("")
+studentId      String  → User (StudentAttendances)
+subjectClassId String  → SubjectClass
+markedById     String? → User (MarkedByTeacher)
+@@unique([subjectClassId, studentId, date])
 ```
 
-#### `Notification` → bảng `notifications` (Thông báo)
+#### `Notification` → bảng `notifications`
 ```
-id        String  @id uuid
-title     String                         -- Tiêu đề thông báo
-message   String                         -- Nội dung
-type      NotificationType               -- Loại thông báo
-isRead    Boolean                        -- Đã đọc chưa
-link      String?                        -- Đường dẫn liên kết
-userId    String  → User                 -- Người nhận
-```
-
-#### `ActivityLog` → bảng `activity_logs` (Nhật ký hoạt động)
-```
-id          String  @id uuid
-action      ActivityAction               -- Hành động: CREATE/UPDATE/DELETE/LOGIN/LOGOUT
-entityType  ActivityEntityType           -- Loại đối tượng bị tác động
-entityId    String?                      -- ID đối tượng bị tác động
-description String                       -- Mô tả hoạt động
-metadata    Json                         -- Dữ liệu bổ sung dạng JSON
-ipAddress   String?                      -- Địa chỉ IP thực hiện
-userId      String  → User               -- Người thực hiện
+id      String           @id uuid
+title   String
+message String
+type    NotificationType @default(info)
+isRead  Boolean          @default(false)
+link    String?
+userId  String  → User
 ```
 
 #### `ApiKey` → bảng `api_keys` (Cặp khóa RSA cho JWT)
 ```
-id          String  @id uuid
-publicKey   String                       -- Khóa công khai RSA (PEM)
-privateKey  String                       -- Khóa bí mật RSA (PEM)
-expireAt    DateTime                     -- Thời hạn hết hiệu lực
-userId      String  @unique → User       -- Xóa cùng khi xóa user
+id         String   @id uuid
+publicKey  String   @db.Text
+privateKey String   @db.Text
+expireAt   DateTime
+userId     String   @unique → User (onDelete: Cascade)
 ```
 
-#### `Otp` → bảng `otps` (Mã OTP quên mật khẩu)
+#### `Otp` → bảng `otps`
 ```
-id        String  @id uuid
-otp       String                         -- Mã OTP đã mã hóa bcrypt
-expireAt  DateTime                       -- Thời hạn (5 phút)
-userId    String  → User                 -- Xóa cùng khi xóa user
+id       String   @id uuid
+otp      String                 -- bcrypt hashed
+expireAt DateTime               -- hết hạn sau 5 phút
+userId   String  → User (onDelete: Cascade)
+```
+
+#### `ActivityLog` → bảng `activity_logs`
+```
+id         String             @id uuid
+action     ActivityAction
+entityType ActivityEntityType
+entityId   String?
+description String
+metadata   Json?   @default("{}")
+ipAddress  String?
+userId     String  → User
 ```
 
 ---
@@ -211,41 +217,82 @@ userId    String  → User                 -- Xóa cùng khi xóa user
 ## Hằng Số Xác Thực (`constants/auth.constants.ts`)
 
 ```ts
-RSA_MODULUS_LENGTH     = 2048             // Độ dài modulus RSA (bit)
-JWT_ALGORITHM          = 'RS256'          // Thuật toán ký JWT
-ACCESS_TOKEN_EXPIRES_IN  = '15m'          // Thời hạn access token
-REFRESH_TOKEN_EXPIRES_IN = '7d'           // Thời hạn refresh token
-ACCESS_TOKEN_MAX_AGE_MS  = 900_000        // 15 phút tính bằng ms
-REFRESH_TOKEN_MAX_AGE_MS = 604_800_000    // 7 ngày tính bằng ms
-API_KEY_TTL_MS           = 604_800_000    // Thời hạn lưu cặp khóa
+RSA_MODULUS_LENGTH     = 2048
+JWT_ALGORITHM          = 'RS256'
+ACCESS_TOKEN_EXPIRES_IN  = '15m'
+REFRESH_TOKEN_EXPIRES_IN = '7d'
+ACCESS_TOKEN_MAX_AGE_MS  = 900_000       // 15 phút (ms) — dùng cho cookie maxAge
+REFRESH_TOKEN_MAX_AGE_MS = 604_800_000   // 7 ngày (ms)
+API_KEY_TTL_MS           = 604_800_000   // bằng refresh token TTL
 
-COOKIE_TOKEN         = 'token'            // Tên cookie access token
-COOKIE_REFRESH_TOKEN = 'refreshToken'     // Tên cookie refresh token
-COOKIE_LOGGED        = 'logged'           // Cờ JavaScript-readable
-COOKIE_LOGGED_VALUE  = '1'               // Giá trị khi đã đăng nhập
-LOGIN_TYPE_GOOGLE    = 'google'           // Giá trị TypeLogin cho Google
-BCRYPT_SALT_ROUNDS   = 10                 // Số vòng mã hóa bcrypt
+COOKIE_TOKEN         = 'token'           // httpOnly
+COOKIE_REFRESH_TOKEN = 'refreshToken'    // httpOnly
+COOKIE_LOGGED        = 'logged'          // NON-httpOnly — JS client đọc được để kiểm tra trạng thái đăng nhập
+COOKIE_LOGGED_VALUE  = '1'
+LOGIN_TYPE_GOOGLE    = 'google'
+BCRYPT_SALT_ROUNDS   = 10
 ```
+
+---
+
+## Dữ Liệu Demo (`constants/seed.constants.ts`)
+
+Mật khẩu **hardcoded** trong code (không dùng biến môi trường):
+
+| Vai trò | Email | Mật khẩu |
+|---|---|---|
+| Admin | `admin@school.edu.vn` | `Admin@123` |
+| Giảng viên | `gv1001@school.edu.vn` | `Teacher@123` |
+| Sinh viên | `20216001@student.school.edu.vn` | `Student@123` |
 
 ---
 
 ## Kiến Trúc Module
 
 ### PrismaModule (`src/prisma/`)
-Được đánh dấu `@Global()` — `PrismaService` tự động khả dụng trong mọi module mà không cần import lại.
+`@Global()` — `PrismaService` tự động khả dụng mọi nơi, không cần import lại.
 
 ### AuthModule (`src/auth/`)
-Export `AuthService` và `JwtAuthGuard` để các module khác sử dụng.
+Export `AuthService` và `JwtAuthGuard` để các module khác dùng.
 
 ### Common (`src/common/`)
 
-**`RolesGuard`** — dùng sau `JwtAuthGuard`:
+**`JwtAuthGuard`** — đọc cookie `token`, giải mã `userId`, lấy `ApiKey` của user, xác minh bằng public key, gắn `{ id, role }` vào `req.user`.
+
+**`RolesGuard`** — dùng sau `JwtAuthGuard`, kiểm tra `req.user.role`:
 ```ts
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('admin')
 ```
 
-**`@Roles(...roles)`** — đặt metadata cho `RolesGuard`.
+---
+
+## Cookie Sau Đăng Nhập
+
+| Cookie | httpOnly | Mục đích |
+|---|---|---|
+| `token` | ✅ | Access token JWT (15 phút) |
+| `refreshToken` | ✅ | Refresh token JWT (7 ngày) |
+| `logged` | ❌ | JS client đọc để biết user đã đăng nhập, giá trị = `"1"` |
+
+Môi trường `development`: `secure=false`, `sameSite=lax`.
+Môi trường `production`: `secure=true`, `sameSite=strict`.
+
+---
+
+## Luồng JWT / Phiên Đăng Nhập
+
+1. Đăng nhập: xóa `ApiKey` cũ → tạo cặp RSA mới → ký cả access & refresh token bằng private key → set 3 cookies.
+2. Mỗi request: `JwtAuthGuard` đọc cookie `token` → decode `userId` → lấy `ApiKey` → verify bằng public key → gắn `req.user`.
+3. Đăng xuất: xóa `ApiKey` → xóa 3 cookies → toàn bộ token của user lập tức vô hiệu.
+4. Đổi/reset mật khẩu: cũng xóa `ApiKey` → toàn bộ session bị kick.
+
+---
+
+## Luồng OTP (Quên Mật Khẩu)
+
+1. `POST /api/users/forgot-password { email }` — tạo OTP 6 chữ số, bcrypt hash, lưu `otps` (5 phút), **hiện tại in ra console** (SMTP chưa tích hợp).
+2. `POST /api/users/reset-password { email, otp, newPassword }` — xác thực OTP, đổi mật khẩu, xóa OTP, xóa `ApiKey` (kick toàn bộ session).
 
 ---
 
@@ -253,151 +300,176 @@ Export `AuthService` và `JwtAuthGuard` để các module khác sử dụng.
 
 ### Xác Thực: `POST/GET /api/users/...`
 
-| Phương thức | Đường dẫn | Bảo vệ | Dữ liệu đầu vào | Mô tả |
+| Method | Đường dẫn | Guard | Body / Query | Mô tả |
 |---|---|---|---|---|
-| POST | `/api/users/login` | — | `{ email, password }` | Đăng nhập, đặt cookie |
-| GET | `/api/users/auth` | JWT | — | Trả về thông tin người dùng hiện tại |
-| POST | `/api/users/logout` | JWT | — | Xóa cookie, hủy cặp khóa API |
-| GET | `/api/users/refresh-token` | — | cookie: refreshToken | Cấp access token mới |
-| POST | `/api/users/forgot-password` | — | `{ email }` | Gửi mã OTP 6 chữ số tới email |
-| POST | `/api/users/reset-password` | — | `{ email, otp, newPassword }` | Xác thực OTP và đặt lại mật khẩu |
+| POST | `/api/users/login` | — | `{ email, password }` | Đăng nhập, set 3 cookies |
+| GET | `/api/users/auth` | JWT | — | Thông tin user hiện tại (không trả password) |
+| POST | `/api/users/logout` | JWT | — | Xóa ApiKey, clear cookies |
+| GET | `/api/users/refresh-token` | — | cookie `refreshToken` | Cấp access token mới, set lại cookie `token` |
+| POST | `/api/users/forgot-password` | — | `{ email }` | Tạo OTP 6 số (in console), lưu hash 5 phút |
+| POST | `/api/users/reset-password` | — | `{ email, otp, newPassword }` | Xác thực OTP, đặt lại mật khẩu, kick session |
 | PUT | `/api/users/change-password` | JWT | `{ currentPassword, newPassword }` | Đổi mật khẩu khi đã đăng nhập |
 
 ---
 
 ### Dashboard: `GET /api/dashboard`
 
-| Phương thức | Đường dẫn | Bảo vệ | Mô tả |
+| Method | Đường dẫn | Guard | Mô tả |
 |---|---|---|---|
-| GET | `/api/dashboard` | JWT, admin | Thống kê tổng hợp: số sinh viên/giảng viên/lớp HP/môn học, phân bố giới tính, phân bố điểm chữ |
+| GET | `/api/dashboard` | JWT, admin | Thống kê tổng hợp |
+
+**Response metadata:**
+```json
+{
+  "students": 0,
+  "teachers": 0,
+  "sections": 0,
+  "subjects": 0,
+  "departments": 0,
+  "activeSections": 0,
+  "recentEnrollments": 0,
+  "gender": { "male": 0, "female": 0, "other": 0 },
+  "gradeDist": { "A": 0, "B": 0, "C": 0, "D": 0, "F": 0 }
+}
+```
 
 ---
 
 ### Người Dùng: `/api/users`
 
-| Phương thức | Đường dẫn | Bảo vệ | Mô tả |
+| Method | Đường dẫn | Guard | Mô tả |
 |---|---|---|---|
-| GET | `/api/users/students` | JWT, admin | Danh sách sinh viên (hỗ trợ `?q`, `?class`, `?status`) |
-| GET | `/api/users/teachers` | JWT, admin | Danh sách giảng viên (hỗ trợ `?q`, `?departmentId`) |
-| GET | `/api/users/:id` | JWT | Lấy thông tin người dùng theo ID |
-| POST | `/api/users/students` | JWT, admin | Tạo sinh viên (tự tạo email trường + mật khẩu tạm) |
-| POST | `/api/users/teachers` | JWT, admin | Tạo giảng viên |
-| POST | `/api/users/bulk-import` | JWT, admin | Nhập hàng loạt sinh viên từ dữ liệu CSV |
-| PUT | `/api/users/:id` | JWT | Cập nhật hồ sơ người dùng |
-| PATCH | `/api/users/:id/status` | JWT, admin | Khóa/mở khóa tài khoản (`{ status: 'active' \| 'inactive' }`) |
-| DELETE | `/api/users/:id` | JWT, admin | Xóa người dùng |
+| GET | `/api/users/students` | JWT, admin | Danh sách sinh viên (`?q`, `?class`, `?status=active\|inactive`) |
+| GET | `/api/users/teachers` | JWT, admin | Danh sách giảng viên (`?q`, `?departmentId`) |
+| GET | `/api/users/:id` | JWT | Thông tin user theo ID |
+| POST | `/api/users/students` | JWT, admin | Tạo sinh viên (email trường tự tạo, mật khẩu tạm in console) |
+| POST | `/api/users/teachers` | JWT, admin | Tạo giảng viên (mật khẩu tạm in console) |
+| POST | `/api/users/bulk-import` | JWT, admin | Nhập hàng loạt: `{ rows: [...] }` |
+| PUT | `/api/users/:id` | JWT | Admin: cập nhật bất kỳ; user thường: chỉ cập nhật chính mình. **Không thể thay password/email/role qua endpoint này.** |
+| PATCH | `/api/users/:id/status` | JWT, admin | `{ status: 'active' \| 'inactive' }` |
+| DELETE | `/api/users/:id` | JWT, admin | Xóa user |
+
+**Sinh viên tạo mới:**
+- Email trường: `{idStudent}@student.school.edu.vn`
+- Mật khẩu tạm: 10 ký tự ngẫu nhiên, in ra console
+- Status mặc định: `studying`
+
+**Giảng viên tạo mới:**
+- Status mặc định: `teaching`
 
 ---
 
 ### Khoa: `/api/departments`
 
-| Phương thức | Đường dẫn | Bảo vệ | Mô tả |
+| Method | Đường dẫn | Guard | Mô tả |
 |---|---|---|---|
-| GET | `/api/departments` | JWT | Danh sách tất cả khoa |
-| GET | `/api/departments/:id` | JWT | Chi tiết khoa (kèm số lượng ngành) |
-| POST | `/api/departments` | JWT, admin | Tạo khoa mới |
-| PUT | `/api/departments/:id` | JWT, admin | Cập nhật thông tin khoa |
+| GET | `/api/departments` | JWT | Tất cả khoa (kèm `_count: { branches, classes, subjects }`) |
+| GET | `/api/departments/:id` | JWT | Chi tiết khoa (kèm `branches[]`, `_count: { classes, subjects }`) |
+| POST | `/api/departments` | JWT, admin | `{ code, nameDepartment }` |
+| PUT | `/api/departments/:id` | JWT, admin | `{ code?, nameDepartment? }` |
 | DELETE | `/api/departments/:id` | JWT, admin | Xóa khoa |
 
 ---
 
 ### Ngành: `/api/branches`
 
-| Phương thức | Đường dẫn | Bảo vệ | Mô tả |
+| Method | Đường dẫn | Guard | Mô tả |
 |---|---|---|---|
-| GET | `/api/branches` | JWT | Danh sách ngành (tùy chọn `?departmentId`) |
+| GET | `/api/branches` | JWT | `?departmentId` tùy chọn |
 | GET | `/api/branches/:id` | JWT | Chi tiết ngành |
-| POST | `/api/branches` | JWT, admin | Tạo ngành mới |
-| PUT | `/api/branches/:id` | JWT, admin | Cập nhật thông tin ngành |
-| DELETE | `/api/branches/:id` | JWT, admin | Xóa ngành |
+| POST | `/api/branches` | JWT, admin | `{ code, nameBranch, departmentId }` |
+| PUT | `/api/branches/:id` | JWT, admin | Cập nhật |
+| DELETE | `/api/branches/:id` | JWT, admin | Xóa |
 
 ---
 
 ### Lớp Học: `/api/classes`
 
-| Phương thức | Đường dẫn | Bảo vệ | Mô tả |
+| Method | Đường dẫn | Guard | Mô tả |
 |---|---|---|---|
-| GET | `/api/classes` | JWT | Danh sách lớp (tùy chọn `?departmentId`) |
-| GET | `/api/classes/:id` | JWT | Chi tiết lớp (kèm số sinh viên) |
-| POST | `/api/classes` | JWT, admin | Tạo lớp mới |
-| PUT | `/api/classes/:id` | JWT, admin | Cập nhật thông tin lớp |
-| DELETE | `/api/classes/:id` | JWT, admin | Xóa lớp |
+| GET | `/api/classes` | JWT | `?departmentId` tùy chọn. Trả về `teacher` + `department` |
+| GET | `/api/classes/:id` | JWT | Chi tiết lớp (kèm `teacher`, `department`) |
+| POST | `/api/classes` | JWT, admin | `{ code, nameClass, teacherId, departmentId }` |
+| PUT | `/api/classes/:id` | JWT, admin | Cập nhật |
+| DELETE | `/api/classes/:id` | JWT, admin | Xóa |
 
 ---
 
 ### Môn Học: `/api/subjects`
 
-| Phương thức | Đường dẫn | Bảo vệ | Mô tả |
+| Method | Đường dẫn | Guard | Mô tả |
 |---|---|---|---|
-| GET | `/api/subjects` | JWT | Danh sách môn học (tùy chọn `?departmentId`) |
+| GET | `/api/subjects` | JWT | `?departmentId` tùy chọn |
 | GET | `/api/subjects/:id` | JWT | Chi tiết môn học |
-| POST | `/api/subjects` | JWT, admin | Tạo môn học mới |
-| PUT | `/api/subjects/:id` | JWT, admin | Cập nhật thông tin môn học |
-| DELETE | `/api/subjects/:id` | JWT, admin | Xóa môn học |
+| POST | `/api/subjects` | JWT, admin | `{ code, name, credits, departmentId }` |
+| PUT | `/api/subjects/:id` | JWT, admin | Cập nhật |
+| DELETE | `/api/subjects/:id` | JWT, admin | Xóa |
 
 ---
 
 ### Lớp Học Phần: `/api/subject-classes`
 
-| Phương thức | Đường dẫn | Bảo vệ | Mô tả |
+| Method | Đường dẫn | Guard | Mô tả |
 |---|---|---|---|
-| GET | `/api/subject-classes` | JWT | Danh sách (admin: tất cả; giảng viên: của mình; sinh viên: đang mở) |
-| GET | `/api/subject-classes/my-sections` | JWT, giảng viên | Lớp học phần được phân công cho giảng viên đăng nhập |
-| GET | `/api/subject-classes/:id` | JWT | Chi tiết lớp học phần kèm số sinh viên đăng ký |
-| GET | `/api/subject-classes/:id/roster` | JWT, giảng viên/admin | Danh sách sinh viên đăng ký |
-| POST | `/api/subject-classes` | JWT, admin | Tạo lớp học phần mới |
-| PUT | `/api/subject-classes/:id` | JWT, admin | Cập nhật lớp học phần |
-| DELETE | `/api/subject-classes/:id` | JWT, admin | Xóa lớp học phần |
+| GET | `/api/subject-classes` | JWT | admin: tất cả; teacher: của mình; student: chỉ `active` |
+| GET | `/api/subject-classes/my-sections` | JWT, teacher | Lớp HP của giảng viên đang đăng nhập |
+| GET | `/api/subject-classes/:id` | JWT | Chi tiết + `_count.enrollments` |
+| GET | `/api/subject-classes/:id/roster` | JWT, teacher/admin | Danh sách sinh viên đăng ký |
+| POST | `/api/subject-classes` | JWT, admin | `{ code, semester, maxStudents?, subjectId, teacherId }` |
+| PUT | `/api/subject-classes/:id` | JWT, admin | Cập nhật (có thể đổi `status`) |
+| DELETE | `/api/subject-classes/:id` | JWT, admin | Xóa |
+
+**Include mặc định (mọi endpoint):** `subject { id, code, name, credits }`, `teacher { id, fullName, idTeacher, degree }`, `_count { enrollments }`.
 
 ---
 
 ### Đăng Ký Học Phần: `/api/enrollments`
 
-| Phương thức | Đường dẫn | Bảo vệ | Mô tả |
+| Method | Đường dẫn | Guard | Mô tả |
 |---|---|---|---|
-| GET | `/api/enrollments/my` | JWT, sinh viên | Danh sách đăng ký hiện tại của sinh viên |
-| GET | `/api/enrollments/transcript` | JWT, sinh viên | Bảng điểm tích lũy toàn khóa |
-| GET | `/api/enrollments/gpa-trend` | JWT, sinh viên | GPA theo từng học kỳ |
-| GET | `/api/enrollments/:subjectClassId/grades` | JWT, giảng viên/admin | Bảng điểm của lớp học phần |
-| POST | `/api/enrollments` | JWT, sinh viên | Đăng ký vào lớp học phần `{ subjectClassId }` |
-| DELETE | `/api/enrollments/:id` | JWT, sinh viên | Hủy đăng ký học phần |
-| PUT | `/api/enrollments/:id/grade` | JWT, giảng viên | Nhập/cập nhật điểm `{ attendanceScore, midtermScore, finalScore }` |
-| PATCH | `/api/enrollments/:id/lock` | JWT, giảng viên/admin | Khóa/mở khóa điểm `{ locked: boolean }` |
+| GET | `/api/enrollments/my` | JWT, student | Danh sách đăng ký đang `registered` |
+| GET | `/api/enrollments/transcript` | JWT, student | Bảng điểm tích lũy (chỉ `completed`) + GPA + totalCredits |
+| GET | `/api/enrollments/gpa-trend` | JWT, student | `[{ term, gpa }]` theo từng học kỳ |
+| GET | `/api/enrollments/:subjectClassId/grades` | JWT, teacher/admin | Bảng điểm lớp học phần |
+| POST | `/api/enrollments` | JWT, student | `{ subjectClassId }` — kiểm tra lớp còn mở, chưa đầy, chưa đăng ký |
+| DELETE | `/api/enrollments/:id` | JWT, student | Hủy đăng ký (không hủy được nếu `gradeLocked`) |
+| PUT | `/api/enrollments/:id/grade` | JWT, teacher | `{ attendanceScore?, midtermScore?, finalScore? }` — chỉ teacher phụ trách được nhập |
+| PATCH | `/api/enrollments/:id/lock` | JWT, teacher/admin | `{ locked: boolean }` |
 
-**Công thức tính điểm:**
+**Công thức điểm:**
 ```
-điểmTổng = điểmChuyênCần × 0.10 + điểmGiữaKỳ × 0.30 + điểmCuốiKỳ × 0.60
-Điểm chữ: A (≥8.5) | B (≥7.0) | C (≥5.5) | D (≥4.0) | F (<4.0)
+totalScore = attendanceScore×0.10 + midtermScore×0.30 + finalScore×0.60   (làm tròn 1 chữ số thập phân)
+letterGrade: A(≥8.5) | B(≥7.0) | C(≥5.5) | D(≥4.0) | F(<4.0)
 ```
+
+**Bảo vệ điểm:** `gradeLocked=true` → không thể cập nhật điểm, không thể hủy đăng ký.
 
 ---
 
 ### Điểm Danh: `/api/attendance`
 
-| Phương thức | Đường dẫn | Bảo vệ | Mô tả |
+| Method | Đường dẫn | Guard | Mô tả |
 |---|---|---|---|
-| GET | `/api/attendance/:subjectClassId` | JWT, giảng viên/admin | Toàn bộ bản ghi điểm danh của lớp học phần |
-| GET | `/api/attendance/my/:subjectClassId` | JWT, sinh viên | Điểm danh cá nhân trong lớp học phần |
-| POST | `/api/attendance/bulk` | JWT, giảng viên | Điểm danh hàng loạt một buổi học `{ subjectClassId, date, records: [{studentId, status, note?}] }` |
-| PUT | `/api/attendance/:id` | JWT, giảng viên | Cập nhật một bản ghi điểm danh `{ status, note? }` |
+| GET | `/api/attendance/:subjectClassId` | JWT, teacher/admin | Toàn bộ điểm danh của lớp HP |
+| GET | `/api/attendance/my/:subjectClassId` | JWT, student | Điểm danh cá nhân trong lớp HP |
+| POST | `/api/attendance/bulk` | JWT, teacher | `{ subjectClassId, date, records: [{studentId, status, note?}] }` — dùng upsert (tạo hoặc cập nhật) |
+| PUT | `/api/attendance/:id` | JWT, teacher | `{ status, note? }` — chỉ teacher phụ trách được sửa |
 
 ---
 
 ### Thông Báo: `/api/notifications`
 
-| Phương thức | Đường dẫn | Bảo vệ | Mô tả |
+| Method | Đường dẫn | Guard | Mô tả |
 |---|---|---|---|
-| GET | `/api/notifications/my` | JWT | Thông báo của người dùng hiện tại |
-| PATCH | `/api/notifications/:id/read` | JWT | Đánh dấu một thông báo đã đọc |
-| PATCH | `/api/notifications/read-all` | JWT | Đánh dấu tất cả thông báo đã đọc |
-| POST | `/api/notifications` | JWT, admin | Tạo thông báo cho người dùng |
+| GET | `/api/notifications/my` | JWT | Thông báo của user hiện tại (mới nhất trước) |
+| PATCH | `/api/notifications/:id/read` | JWT | Đánh dấu đã đọc (chỉ chủ sở hữu) |
+| PATCH | `/api/notifications/read-all` | JWT | Đánh dấu tất cả đã đọc |
+| POST | `/api/notifications` | JWT, admin | `{ userId, title, message, type?, link? }` |
 | DELETE | `/api/notifications/:id` | JWT, admin | Xóa thông báo |
 
 ---
 
 ## Định Dạng Response Chuẩn
-
-Tất cả endpoint trả về:
 
 ```json
 {
@@ -407,77 +479,33 @@ Tất cả endpoint trả về:
 }
 ```
 
-Lỗi được ném qua NestJS HTTP exceptions (`BadRequestException`, `NotFoundException`, `UnauthorizedException`, `ForbiddenException`) — NestJS tự động serialize.
+Lỗi được ném qua NestJS HTTP exceptions (`BadRequestException`, `NotFoundException`, `UnauthorizedException`, `ForbiddenException`, `ConflictException`) — NestJS tự serialize thành JSON.
 
 ---
 
-## Luồng JWT / Phiên Đăng Nhập
-
-1. Khi đăng nhập, xóa cặp khóa API cũ của người dùng và tạo cặp khóa RSA mới.
-2. Cả access token và refresh token đều được ký bằng **khóa bí mật**.
-3. Mỗi request đã xác thực, `JwtAuthGuard`:
-   - Đọc cookie `token`
-   - Giải mã JWT để lấy `userId`
-   - Lấy bản ghi `ApiKey` của người dùng đó
-   - Xác minh chữ ký token bằng **khóa công khai** đã lưu
-   - Gắn `{ id, role }` vào `req.user`
-4. Đăng xuất xóa bản ghi `ApiKey` → tất cả token đang tồn tại của người dùng đó lập tức vô hiệu.
-
----
-
-## Luồng OTP (Quên / Đặt Lại Mật Khẩu)
-
-1. `POST /api/users/forgot-password { email }` — tìm người dùng, tạo mã 6 chữ số, mã hóa bcrypt, lưu vào bảng `otps` với thời hạn 5 phút, gửi mã plaintext tới email của người dùng.
-2. `POST /api/users/reset-password { email, otp, newPassword }` — tìm OTP chưa hết hạn của người dùng, xác thực bằng bcrypt, mã hóa mật khẩu mới, cập nhật `User.password`, xóa toàn bộ OTP của người dùng đó.
-
----
-
-## Cách Dùng Role Guard
-
-```ts
-import { UseGuards } from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { RolesGuard }   from '../common/guards/roles.guard';
-import { Roles }        from '../common/decorators/roles.decorator';
-
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('admin')
-@Get()
-findAll() { ... }
-```
-
-`req.user` sau khi qua `JwtAuthGuard`: `{ id: string, role: 'admin' | 'teacher' | 'student' }`
-
----
-
-## Dữ Liệu Mẫu (`prisma/seed.ts`)
-
-Người dùng demo được định nghĩa trong `constants/seed.constants.ts`:
-
-| Vai trò | Email | Mật khẩu |
-|---|---|---|
-| Quản trị | admin@school.edu.vn | (biến môi trường `SEED_ADMIN_PASSWORD`) |
-| Giảng viên | gv1001@school.edu.vn | (biến môi trường `SEED_TEACHER_PASSWORD`) |
-| Sinh viên | 20216001@student.school.edu.vn | (biến môi trường `SEED_STUDENT_PASSWORD`) |
-
----
-
-## Biến Môi Trường
+## Biến Môi Trường (`.env`)
 
 ```env
-DATABASE_URL=postgresql://user:pass@localhost:5432/edu_management
+DATABASE_URL="postgresql://postgres:password@localhost:5432/education_management?schema=public"
+PORT=3000
 NODE_ENV=development
+URL_CLIENT="http://localhost:5173"
 
-SEED_ADMIN_PASSWORD=...
-SEED_TEACHER_PASSWORD=...
-SEED_STUDENT_PASSWORD=...
-
-SMTP_HOST=...
-SMTP_PORT=587
-SMTP_USER=...
-SMTP_PASS=...
-SMTP_FROM=no-reply@school.edu.vn
+# JWT_SECRET không dùng — xác thực bằng RSA key pair per-user lưu trong bảng api_keys
 ```
+
+---
+
+## Scripts (`package.json`)
+
+| Script | Lệnh |
+|---|---|
+| `npm run build` | Compile TypeScript |
+| `npm run start` | Chạy từ source (không watch) |
+| `npm run start:dev` | Chạy với hot-reload |
+| `npm run start:fresh` | Kill port 3000 rồi chạy `start:dev` (tránh EADDRINUSE) |
+| `npm run start:prod` | Chạy từ `dist/` đã build |
+| `npm run seed` | Seed dữ liệu demo vào DB |
 
 ---
 
@@ -485,8 +513,17 @@ SMTP_FROM=no-reply@school.edu.vn
 
 ```ts
 app.enableCors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
-  credentials: true,
+  origin: process.env.URL_CLIENT || 'http://localhost:5173',
+  credentials: true,   // bắt buộc để gửi/nhận cookie cross-origin
 });
 app.use(cookieParser());
 ```
+
+---
+
+## Lưu Ý Triển Khai
+
+- **SMTP chưa tích hợp**: `forgotPassword` và tạo user mới đều `console.log` mật khẩu/OTP thay vì gửi email.
+- **Model `Class` không có sinh viên trực tiếp**: sinh viên thuộc lớp qua trường chuỗi `User.class`, không phải FK.
+- **`User.department`** là chuỗi tự do, không liên kết model `Department`.
+- **`findTeachers(?departmentId)`**: filter theo `User.department` (chuỗi) chứ không phải `Department.id`.

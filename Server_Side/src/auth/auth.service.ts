@@ -4,6 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { EmailService } from '../email/email.service';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import * as jwt from 'jsonwebtoken';
@@ -20,7 +21,10 @@ import {
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly emailService: EmailService,
+  ) {}
 
   // ----------------------------------------------------------------
   // Hàm tiện ích cặp khóa RSA
@@ -134,6 +138,10 @@ export class AuthService {
     if (!email) throw new BadRequestException('Vui lòng nhập email');
     const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) throw new BadRequestException('Email không tồn tại trong hệ thống');
+    if (!user.personalEmail)
+      throw new BadRequestException(
+        'Tài khoản chưa có email cá nhân để nhận OTP. Vui lòng liên hệ quản trị viên.',
+      );
 
     const plainOtp = Math.floor(100000 + Math.random() * 900000).toString();
     const hashedOtp = await bcrypt.hash(plainOtp, BCRYPT_SALT_ROUNDS);
@@ -142,8 +150,12 @@ export class AuthService {
     await this.prisma.otp.deleteMany({ where: { userId: user.id } });
     await this.prisma.otp.create({ data: { userId: user.id, otp: hashedOtp, expireAt } });
 
-    // TODO: Gửi plainOtp tới email người dùng qua SMTP
-    console.log(`[OTP] ${email} → ${plainOtp}`);
+    await this.emailService.sendOtp({
+      personalEmail: user.personalEmail,
+      schoolEmail:   email,
+      otp:           plainOtp,
+      fullName:      user.fullName,
+    });
     return true;
   }
 

@@ -1,0 +1,952 @@
+{
+  "info": {
+    "_postman_id": "education-management-api",
+    "name": "Education Management API",
+    "description": "API collection for Education Management System (NestJS). Base URL: http://localhost:3000. Auth uses JWT stored in cookies (token + refresh_token).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/users/login", "host": ["{{baseUrl}}"], "path": ["api", "users", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"password123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Login with email & password. Returns JWT in 'token' cookie and refresh token in 'refresh_token' cookie."
+          }
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/users/auth", "host": ["{{baseUrl}}"], "path": ["api", "users", "auth"] },
+            "description": "Get the currently authenticated user. Requires JWT cookie."
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/users/logout", "host": ["{{baseUrl}}"], "path": ["api", "users", "logout"] },
+            "description": "Clears auth cookies."
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/users/refresh-token", "host": ["{{baseUrl}}"], "path": ["api", "users", "refresh-token"] },
+            "description": "Get a new access token using the refresh_token cookie. Public endpoint."
+          }
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/users/forgot-password", "host": ["{{baseUrl}}"], "path": ["api", "users", "forgot-password"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Send OTP to the given email for password reset."
+          }
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/users/reset-password", "host": ["{{baseUrl}}"], "path": ["api", "users", "reset-password"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"otp\": \"123456\",\n  \"newPassword\": \"newPassword123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Reset password using OTP received via email."
+          }
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/users/change-password", "host": ["{{baseUrl}}"], "path": ["api", "users", "change-password"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"oldPassword123\",\n  \"newPassword\": \"newPassword456\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Change password for the currently logged-in user. Requires JWT cookie."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get All Students",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/students?q=&class=&status=",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "students"],
+              "query": [
+                { "key": "q", "value": "", "description": "Search query (name, email, ...)" },
+                { "key": "class", "value": "", "description": "Filter by class ID" },
+                { "key": "status", "value": "", "description": "Filter by status (active | inactive)" }
+              ]
+            },
+            "description": "[Admin only] Get all students with optional filters."
+          }
+        },
+        {
+          "name": "Get All Teachers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/teachers?q=&departmentId=",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "teachers"],
+              "query": [
+                { "key": "q", "value": "", "description": "Search query" },
+                { "key": "departmentId", "value": "", "description": "Filter by department ID" }
+              ]
+            },
+            "description": "[Admin only] Get all teachers with optional filters."
+          }
+        },
+        {
+          "name": "Get User By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", ":id"],
+              "variable": [{ "key": "id", "value": "USER_ID_HERE" }]
+            },
+            "description": "Get a user by their ID. Requires authentication."
+          }
+        },
+        {
+          "name": "Create Student",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/users/students", "host": ["{{baseUrl}}"], "path": ["api", "users", "students"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"student@example.com\",\n  \"password\": \"password123\",\n  \"fullName\": \"Nguyen Van A\",\n  \"phone\": \"0901234567\",\n  \"dateOfBirth\": \"2000-01-15\",\n  \"classId\": \"CLASS_ID_HERE\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "[Admin only] Create a new student account."
+          }
+        },
+        {
+          "name": "Create Teacher",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/users/teachers", "host": ["{{baseUrl}}"], "path": ["api", "users", "teachers"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"teacher@example.com\",\n  \"password\": \"password123\",\n  \"fullName\": \"Tran Thi B\",\n  \"phone\": \"0912345678\",\n  \"departmentId\": \"DEPARTMENT_ID_HERE\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "[Admin only] Create a new teacher account."
+          }
+        },
+        {
+          "name": "Bulk Import Users",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/users/bulk-import", "host": ["{{baseUrl}}"], "path": ["api", "users", "bulk-import"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rows\": [\n    { \"email\": \"s1@example.com\", \"fullName\": \"Student One\", \"classId\": \"CLASS_ID\" },\n    { \"email\": \"s2@example.com\", \"fullName\": \"Student Two\", \"classId\": \"CLASS_ID\" }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "[Admin only] Import multiple users at once."
+          }
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", ":id"],
+              "variable": [{ "key": "id", "value": "USER_ID_HERE" }]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Updated Name\",\n  \"phone\": \"0999888777\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Update user information. Requires authentication."
+          }
+        },
+        {
+          "name": "Update User Status",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/:id/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", ":id", "status"],
+              "variable": [{ "key": "id", "value": "USER_ID_HERE" }]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"active\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "[Admin only] Activate or deactivate a user. status: 'active' | 'inactive'."
+          }
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", ":id"],
+              "variable": [{ "key": "id", "value": "USER_ID_HERE" }]
+            },
+            "description": "[Admin only] Delete a user by ID."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Departments",
+      "item": [
+        {
+          "name": "Get All Departments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/departments", "host": ["{{baseUrl}}"], "path": ["api", "departments"] },
+            "description": "Get all departments. Requires authentication."
+          }
+        },
+        {
+          "name": "Get Department By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/departments/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "departments", ":id"],
+              "variable": [{ "key": "id", "value": "DEPARTMENT_ID_HERE" }]
+            },
+            "description": "Get a single department by ID."
+          }
+        },
+        {
+          "name": "Create Department",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/departments", "host": ["{{baseUrl}}"], "path": ["api", "departments"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"CNTT\",\n  \"nameDepartment\": \"Công nghệ thông tin\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "[Admin only] Create a new department."
+          }
+        },
+        {
+          "name": "Update Department",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/departments/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "departments", ":id"],
+              "variable": [{ "key": "id", "value": "DEPARTMENT_ID_HERE" }]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"CNTT\",\n  \"nameDepartment\": \"Công nghệ thông tin - Cập nhật\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "[Admin only] Update department info."
+          }
+        },
+        {
+          "name": "Delete Department",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/departments/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "departments", ":id"],
+              "variable": [{ "key": "id", "value": "DEPARTMENT_ID_HERE" }]
+            },
+            "description": "[Admin only] Delete a department by ID."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Branches",
+      "item": [
+        {
+          "name": "Get All Branches",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/branches?departmentId=",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "branches"],
+              "query": [{ "key": "departmentId", "value": "", "description": "Filter by department ID" }]
+            },
+            "description": "Get all branches, optionally filtered by departmentId."
+          }
+        },
+        {
+          "name": "Get Branch By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/branches/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "branches", ":id"],
+              "variable": [{ "key": "id", "value": "BRANCH_ID_HERE" }]
+            }
+          }
+        },
+        {
+          "name": "Create Branch",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/branches", "host": ["{{baseUrl}}"], "path": ["api", "branches"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"KHMT\",\n  \"nameBranch\": \"Khoa học máy tính\",\n  \"departmentId\": \"DEPARTMENT_ID_HERE\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "[Admin only] Create a new branch."
+          }
+        },
+        {
+          "name": "Update Branch",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/branches/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "branches", ":id"],
+              "variable": [{ "key": "id", "value": "BRANCH_ID_HERE" }]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nameBranch\": \"Khoa học máy tính - Cập nhật\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "[Admin only] Update branch info."
+          }
+        },
+        {
+          "name": "Delete Branch",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/branches/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "branches", ":id"],
+              "variable": [{ "key": "id", "value": "BRANCH_ID_HERE" }]
+            },
+            "description": "[Admin only] Delete a branch."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Classes",
+      "item": [
+        {
+          "name": "Get All Classes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/classes?departmentId=",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "classes"],
+              "query": [{ "key": "departmentId", "value": "", "description": "Filter by department ID" }]
+            },
+            "description": "Get all classes, optionally filtered by departmentId."
+          }
+        },
+        {
+          "name": "Get Class By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/classes/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "classes", ":id"],
+              "variable": [{ "key": "id", "value": "CLASS_ID_HERE" }]
+            }
+          }
+        },
+        {
+          "name": "Create Class",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/classes", "host": ["{{baseUrl}}"], "path": ["api", "classes"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"CNTT01\",\n  \"nameClass\": \"CNTT K01\",\n  \"teacherId\": \"TEACHER_ID_HERE\",\n  \"departmentId\": \"DEPARTMENT_ID_HERE\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "[Admin only] Create a new class."
+          }
+        },
+        {
+          "name": "Update Class",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/classes/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "classes", ":id"],
+              "variable": [{ "key": "id", "value": "CLASS_ID_HERE" }]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nameClass\": \"CNTT K01 - Cập nhật\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "[Admin only] Update class info."
+          }
+        },
+        {
+          "name": "Delete Class",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/classes/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "classes", ":id"],
+              "variable": [{ "key": "id", "value": "CLASS_ID_HERE" }]
+            },
+            "description": "[Admin only] Delete a class."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Subjects",
+      "item": [
+        {
+          "name": "Get All Subjects",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/subjects?departmentId=",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "subjects"],
+              "query": [{ "key": "departmentId", "value": "", "description": "Filter by department ID" }]
+            },
+            "description": "Get all subjects, optionally filtered by departmentId."
+          }
+        },
+        {
+          "name": "Get Subject By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/subjects/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "subjects", ":id"],
+              "variable": [{ "key": "id", "value": "SUBJECT_ID_HERE" }]
+            }
+          }
+        },
+        {
+          "name": "Create Subject",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/subjects", "host": ["{{baseUrl}}"], "path": ["api", "subjects"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"INT101\",\n  \"name\": \"Nhập môn lập trình\",\n  \"credits\": 3,\n  \"departmentId\": \"DEPARTMENT_ID_HERE\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "[Admin only] Create a new subject."
+          }
+        },
+        {
+          "name": "Update Subject",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/subjects/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "subjects", ":id"],
+              "variable": [{ "key": "id", "value": "SUBJECT_ID_HERE" }]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Nhập môn lập trình - Cập nhật\",\n  \"credits\": 4\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "[Admin only] Update subject info."
+          }
+        },
+        {
+          "name": "Delete Subject",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/subjects/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "subjects", ":id"],
+              "variable": [{ "key": "id", "value": "SUBJECT_ID_HERE" }]
+            },
+            "description": "[Admin only] Delete a subject."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Subject Classes (Sections)",
+      "item": [
+        {
+          "name": "Get All Subject Classes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/subject-classes", "host": ["{{baseUrl}}"], "path": ["api", "subject-classes"] },
+            "description": "Get all subject classes. Results are filtered based on the logged-in user's role."
+          }
+        },
+        {
+          "name": "Get My Sections (Teacher)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/subject-classes/my-sections", "host": ["{{baseUrl}}"], "path": ["api", "subject-classes", "my-sections"] },
+            "description": "[Teacher only] Get sections assigned to the current teacher."
+          }
+        },
+        {
+          "name": "Get Subject Class By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/subject-classes/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "subject-classes", ":id"],
+              "variable": [{ "key": "id", "value": "SUBJECT_CLASS_ID_HERE" }]
+            }
+          }
+        },
+        {
+          "name": "Get Class Roster",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/subject-classes/:id/roster",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "subject-classes", ":id", "roster"],
+              "variable": [{ "key": "id", "value": "SUBJECT_CLASS_ID_HERE" }]
+            },
+            "description": "[Teacher, Admin] Get the list of enrolled students for a section."
+          }
+        },
+        {
+          "name": "Create Subject Class",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/subject-classes", "host": ["{{baseUrl}}"], "path": ["api", "subject-classes"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subjectId\": \"SUBJECT_ID_HERE\",\n  \"teacherId\": \"TEACHER_ID_HERE\",\n  \"semester\": \"HK1-2024\",\n  \"maxStudents\": 40,\n  \"schedule\": \"Mon/Wed 7:30-9:30\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "[Admin only] Create a new subject class (section)."
+          }
+        },
+        {
+          "name": "Update Subject Class",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/subject-classes/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "subject-classes", ":id"],
+              "variable": [{ "key": "id", "value": "SUBJECT_CLASS_ID_HERE" }]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"maxStudents\": 45\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "[Admin only] Update a subject class."
+          }
+        },
+        {
+          "name": "Delete Subject Class",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/subject-classes/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "subject-classes", ":id"],
+              "variable": [{ "key": "id", "value": "SUBJECT_CLASS_ID_HERE" }]
+            },
+            "description": "[Admin only] Delete a subject class."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Enrollments",
+      "item": [
+        {
+          "name": "Get My Enrollments (Student)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/enrollments/my", "host": ["{{baseUrl}}"], "path": ["api", "enrollments", "my"] },
+            "description": "[Student only] Get the current student's enrolled courses."
+          }
+        },
+        {
+          "name": "Get My Transcript (Student)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/enrollments/transcript", "host": ["{{baseUrl}}"], "path": ["api", "enrollments", "transcript"] },
+            "description": "[Student only] Get the student's academic transcript."
+          }
+        },
+        {
+          "name": "Get GPA Trend (Student)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/enrollments/gpa-trend", "host": ["{{baseUrl}}"], "path": ["api", "enrollments", "gpa-trend"] },
+            "description": "[Student only] Get GPA trend data over semesters."
+          }
+        },
+        {
+          "name": "Get Grades By Subject Class",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/enrollments/:subjectClassId/grades",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "enrollments", ":subjectClassId", "grades"],
+              "variable": [{ "key": "subjectClassId", "value": "SUBJECT_CLASS_ID_HERE" }]
+            },
+            "description": "[Teacher, Admin] Get grades for all students in a subject class."
+          }
+        },
+        {
+          "name": "Enroll in Subject Class (Student)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/enrollments", "host": ["{{baseUrl}}"], "path": ["api", "enrollments"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subjectClassId\": \"SUBJECT_CLASS_ID_HERE\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "[Student only] Enroll in a subject class."
+          }
+        },
+        {
+          "name": "Drop Enrollment (Student)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/enrollments/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "enrollments", ":id"],
+              "variable": [{ "key": "id", "value": "ENROLLMENT_ID_HERE" }]
+            },
+            "description": "[Student only] Drop (unenroll from) a subject class."
+          }
+        },
+        {
+          "name": "Update Grade (Teacher)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/enrollments/:id/grade",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "enrollments", ":id", "grade"],
+              "variable": [{ "key": "id", "value": "ENROLLMENT_ID_HERE" }]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"attendanceScore\": 8.5,\n  \"midtermScore\": 7.0,\n  \"finalScore\": 8.0\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "[Teacher only] Update a student's grade for an enrollment."
+          }
+        },
+        {
+          "name": "Lock/Unlock Grade",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/enrollments/:id/lock",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "enrollments", ":id", "lock"],
+              "variable": [{ "key": "id", "value": "ENROLLMENT_ID_HERE" }]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"locked\": true\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "[Teacher, Admin] Lock or unlock a grade entry. locked: true | false."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Attendance",
+      "item": [
+        {
+          "name": "Get Attendance By Subject Class",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/attendance/:subjectClassId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "attendance", ":subjectClassId"],
+              "variable": [{ "key": "subjectClassId", "value": "SUBJECT_CLASS_ID_HERE" }]
+            },
+            "description": "[Teacher, Admin] Get all attendance records for a subject class."
+          }
+        },
+        {
+          "name": "Get My Attendance (Student)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/attendance/my/:subjectClassId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "attendance", "my", ":subjectClassId"],
+              "variable": [{ "key": "subjectClassId", "value": "SUBJECT_CLASS_ID_HERE" }]
+            },
+            "description": "[Student only] Get the current student's attendance for a subject class."
+          }
+        },
+        {
+          "name": "Bulk Create Attendance (Teacher)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/attendance/bulk", "host": ["{{baseUrl}}"], "path": ["api", "attendance", "bulk"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subjectClassId\": \"SUBJECT_CLASS_ID_HERE\",\n  \"date\": \"2024-01-15\",\n  \"records\": [\n    { \"studentId\": \"STUDENT_ID_1\", \"status\": \"present\", \"note\": \"\" },\n    { \"studentId\": \"STUDENT_ID_2\", \"status\": \"absent\", \"note\": \"Xin phép\" }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "[Teacher only] Submit attendance for an entire class on a given date."
+          }
+        },
+        {
+          "name": "Update Attendance Record",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/attendance/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "attendance", ":id"],
+              "variable": [{ "key": "id", "value": "ATTENDANCE_ID_HERE" }]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"late\",\n  \"note\": \"Đến muộn 10 phút\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "[Teacher only] Update a single attendance record."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "Get My Notifications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/notifications/my", "host": ["{{baseUrl}}"], "path": ["api", "notifications", "my"] },
+            "description": "Get all notifications for the current user."
+          }
+        },
+        {
+          "name": "Mark All As Read",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/notifications/read-all", "host": ["{{baseUrl}}"], "path": ["api", "notifications", "read-all"] },
+            "description": "Mark all of the current user's notifications as read."
+          }
+        },
+        {
+          "name": "Mark Notification As Read",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/notifications/:id/read",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "notifications", ":id", "read"],
+              "variable": [{ "key": "id", "value": "NOTIFICATION_ID_HERE" }]
+            },
+            "description": "Mark a specific notification as read."
+          }
+        },
+        {
+          "name": "Create Notification",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/notifications", "host": ["{{baseUrl}}"], "path": ["api", "notifications"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Thông báo quan trọng\",\n  \"content\": \"Nội dung thông báo...\",\n  \"targetRole\": \"student\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "[Admin only] Create and broadcast a notification."
+          }
+        },
+        {
+          "name": "Delete Notification",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/notifications/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "notifications", ":id"],
+              "variable": [{ "key": "id", "value": "NOTIFICATION_ID_HERE" }]
+            },
+            "description": "[Admin only] Delete a notification."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "Get Dashboard Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/dashboard", "host": ["{{baseUrl}}"], "path": ["api", "dashboard"] },
+            "description": "[Admin only] Get summary statistics for the admin dashboard."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health Check",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/", "host": ["{{baseUrl}}"], "path": [""] },
+            "description": "Public health check endpoint."
+          }
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "noauth"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    }
+  ]
+}

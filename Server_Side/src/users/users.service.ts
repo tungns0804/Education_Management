@@ -5,13 +5,17 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { EmailService } from '../email/email.service';
 import { Role, UserStatus } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { BCRYPT_SALT_ROUNDS } from '../constants/auth.constants';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly emailService: EmailService,
+  ) {}
 
   private omitPassword<T extends { password: string }>(user: T) {
     const { password: _pw, ...rest } = user;
@@ -97,6 +101,9 @@ export class UsersService {
     personalEmail?: string;
     department?: string;
   }) {
+    if (!data.personalEmail)
+      throw new BadRequestException('Vui lòng cung cấp email cá nhân của sinh viên');
+
     const existing = await this.prisma.user.findFirst({ where: { idStudent: data.idStudent } });
     if (existing) throw new ConflictException(`Mã sinh viên ${data.idStudent} đã tồn tại`);
 
@@ -106,21 +113,27 @@ export class UsersService {
 
     const user = await this.prisma.user.create({
       data: {
-        fullName: data.fullName,
+        fullName:      data.fullName,
         email,
-        password: hashed,
-        role: Role.student,
-        idStudent: data.idStudent,
-        class: data.class,
-        gender: data.gender as any,
-        birthDay: data.birthDay ? new Date(data.birthDay) : undefined,
-        department: data.department,
-        status: UserStatus.studying,
+        password:      hashed,
+        role:          Role.student,
+        idStudent:     data.idStudent,
+        class:         data.class,
+        gender:        data.gender as any,
+        birthDay:      data.birthDay ? new Date(data.birthDay) : undefined,
+        department:    data.department,
+        personalEmail: data.personalEmail,
+        status:        UserStatus.studying,
       },
     });
 
-    // TODO: Gửi email chứa tempPassword tới data.personalEmail qua SMTP
-    console.log(`[CẤP TÀI KHOẢN] ${email} mật khẩu tạm: ${tempPassword}`);
+    await this.emailService.sendAccountCredentials({
+      personalEmail: data.personalEmail,
+      schoolEmail:   email,
+      password:      tempPassword,
+      fullName:      data.fullName,
+      role:          'student',
+    });
     return this.omitPassword(user);
   }
 
@@ -128,12 +141,16 @@ export class UsersService {
     fullName: string;
     idTeacher: string;
     email: string;
+    personalEmail?: string;
     degree?: string;
     phone?: string;
     gender?: string;
     birthDay?: string;
     department?: string;
   }) {
+    if (!data.personalEmail)
+      throw new BadRequestException('Vui lòng cung cấp email cá nhân của giảng viên');
+
     const existing = await this.prisma.user.findUnique({ where: { email: data.email } });
     if (existing) throw new ConflictException('Email đã tồn tại');
 
@@ -142,22 +159,28 @@ export class UsersService {
 
     const user = await this.prisma.user.create({
       data: {
-        fullName: data.fullName,
-        email: data.email,
-        password: hashed,
-        role: Role.teacher,
-        idTeacher: data.idTeacher,
-        degree: data.degree,
-        phone: data.phone,
-        gender: data.gender as any,
-        birthDay: data.birthDay ? new Date(data.birthDay) : undefined,
-        department: data.department,
-        status: UserStatus.teaching,
+        fullName:      data.fullName,
+        email:         data.email,
+        password:      hashed,
+        role:          Role.teacher,
+        idTeacher:     data.idTeacher,
+        degree:        data.degree,
+        phone:         data.phone,
+        gender:        data.gender as any,
+        birthDay:      data.birthDay ? new Date(data.birthDay) : undefined,
+        department:    data.department,
+        personalEmail: data.personalEmail,
+        status:        UserStatus.teaching,
       },
     });
 
-    // TODO: Gửi email chứa mật khẩu tạm tới giảng viên qua SMTP
-    console.log(`[CẤP TÀI KHOẢN] ${data.email} mật khẩu tạm: ${tempPassword}`);
+    await this.emailService.sendAccountCredentials({
+      personalEmail: data.personalEmail,
+      schoolEmail:   data.email,
+      password:      tempPassword,
+      fullName:      data.fullName,
+      role:          'teacher',
+    });
     return this.omitPassword(user);
   }
 

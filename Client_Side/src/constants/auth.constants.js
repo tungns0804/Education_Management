@@ -33,9 +33,10 @@ export const OTP_TIMER_INTERVAL_MS = 1000; // how often the countdown ticks (1 s
 // Must match the passwords set in Server_Side/src/constants/seed.constants.ts
 export const DEMO_USERS = {
   [ROLE_ADMIN]: {
-    email: 'admin@school.edu.vn',
-    name:  'Phạm Quốc Admin',
-    code:  'ADMIN',
+    email:         'admin@school.edu.vn',
+    name:          'Phạm Quốc Admin',
+    code:          'ADMIN',
+    personalEmail: 'nguyensontung0804@gmail.com',
   },
   [ROLE_TEACHER]: {
     email: 'gv1001@school.edu.vn',

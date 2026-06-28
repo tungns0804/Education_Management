@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { I } from '../../materials/icons';
 import { useApp, useToast } from '../../materials/ui';
 import { useAuth } from '../../context/AuthContext';
-import { requestLogin } from '../../config/userRequest';
+import { requestLogin, requestForgotPassword, requestResetPassword } from '../../config/userRequest';
 import {
   DEMO_USERS,
   DEMO_PASSWORDS,
@@ -290,18 +290,44 @@ export default function LoginUser({ renderApp }) {
               <button className="link-btn" onClick={() => setView('login')} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13.5, color: 'var(--muted)', fontWeight: 600, alignSelf: 'flex-start' }}><I.chevL size={15} />{t('backToLogin')}</button>
               <div>
                 <h2 style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: '-0.02em' }}>{t('forgotTitle')}</h2>
-                <p style={{ margin: '7px 0 0', fontSize: 14, color: 'var(--muted)', lineHeight: 1.5 }}>{t('forgotSub')}</p>
+                <p style={{ margin: '7px 0 0', fontSize: 14, color: 'var(--muted)', lineHeight: 1.5 }}>
+                  {lang === 'vi'
+                    ? 'Nhập email trường của bạn. Mã OTP sẽ được gửi tới email cá nhân đã đăng ký.'
+                    : 'Enter your school email. An OTP will be sent to your registered personal email.'}
+                </p>
               </div>
               <div className="field">
-                <label>{t('email')}</label>
+                <label>{lang === 'vi' ? 'Email trường' : 'School email'}</label>
                 <div className="input-group"><I.mail />
-                  <input className={emailError ? 'input input-error' : 'input'} type="email" value={email} onChange={(e) => setEmail(e.target.value)} onBlur={() => setEmailTouched(true)} placeholder="name@school.edu.vn" />
+                  <input className={emailError ? 'input input-error' : 'input'} type="email" value={email} onChange={(e) => { setEmail(e.target.value); setApiError(''); }} onBlur={() => setEmailTouched(true)} placeholder="name@school.edu.vn" />
                 </div>
                 {emailError && <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12.5, color: 'var(--danger)', fontWeight: 500 }}><I.alert size={13} />{emailError}</span>}
               </div>
-              <button className="btn btn-primary" style={{ height: 46 }}
-                onClick={() => { setEmailTouched(true); if (!isEmail(email)) return; setView('otp'); toast(lang === 'vi' ? 'Đã gửi mã OTP' : 'OTP sent', 'success'); }}>
-                {t('sendOtp')}
+              {apiError && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 14px', borderRadius: 10, background: 'var(--danger-soft, rgba(220,38,38,.08))', color: 'var(--danger)', fontSize: 13.5 }}>
+                  <I.alert size={15} />{apiError}
+                </div>
+              )}
+              <button className="btn btn-primary" style={{ height: 46 }} disabled={loading}
+                onClick={async () => {
+                  setEmailTouched(true);
+                  if (!isEmail(email)) return;
+                  setLoading(true);
+                  setApiError('');
+                  try {
+                    await requestForgotPassword({ email: email.trim() });
+                    setView('otp');
+                    setSecs(OTP_EXPIRY_SECONDS);
+                    setOtp(Array(OTP_LENGTH).fill(''));
+                    toast(lang === 'vi' ? 'Đã gửi mã OTP tới email cá nhân' : 'OTP sent to your personal email', 'success');
+                  } catch (err) {
+                    const msg = err?.response?.data?.message || (lang === 'vi' ? 'Gửi OTP thất bại. Vui lòng thử lại.' : 'Failed to send OTP. Please try again.');
+                    setApiError(msg);
+                  } finally {
+                    setLoading(false);
+                  }
+                }}>
+                {loading ? (lang === 'vi' ? 'Đang gửi...' : 'Sending...') : t('sendOtp')}
               </button>
             </div>
           )}
@@ -312,7 +338,10 @@ export default function LoginUser({ renderApp }) {
               <button className="link-btn" onClick={() => setView('forgot')} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13.5, color: 'var(--muted)', fontWeight: 600, alignSelf: 'flex-start' }}><I.chevL size={15} />{t('backToLogin')}</button>
               <div>
                 <h2 style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: '-0.02em' }}>{t('otpTitle')}</h2>
-                <p style={{ margin: '7px 0 0', fontSize: 14, color: 'var(--muted)', lineHeight: 1.5 }}>{t('otpSub')} <b style={{ color: 'var(--text-2)' }}>{mm}:{ss}</b></p>
+                <p style={{ margin: '7px 0 0', fontSize: 14, color: 'var(--muted)', lineHeight: 1.5 }}>
+                  {lang === 'vi' ? 'Nhập mã OTP đã gửi tới email cá nhân của bạn. Hết hạn sau ' : 'Enter the OTP sent to your personal email. Expires in '}
+                  <b style={{ color: 'var(--text-2)' }}>{mm}:{ss}</b>
+                </p>
               </div>
               <div style={{ display: 'flex', gap: 9, justifyContent: 'space-between' }}>
                 {otp.map((d, i) => (
@@ -324,7 +353,22 @@ export default function LoginUser({ renderApp }) {
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13.5 }}>
                 <span style={{ color: 'var(--muted)' }}>{lang === 'vi' ? 'Chưa nhận được mã?' : "Didn't get the code?"}</span>
-                <button className="link-btn" onClick={() => { setSecs(OTP_EXPIRY_SECONDS); toast(lang === 'vi' ? 'Đã gửi lại mã' : 'Code resent'); }} style={{ color: 'var(--accent)', fontWeight: 600 }}>{t('resend')}</button>
+                <button className="link-btn" disabled={loading} style={{ color: 'var(--accent)', fontWeight: 600 }}
+                  onClick={async () => {
+                    setLoading(true);
+                    try {
+                      await requestForgotPassword({ email: email.trim() });
+                      setSecs(OTP_EXPIRY_SECONDS);
+                      setOtp(Array(OTP_LENGTH).fill(''));
+                      toast(lang === 'vi' ? 'Đã gửi lại mã OTP' : 'OTP resent', 'success');
+                    } catch {
+                      toast(lang === 'vi' ? 'Gửi lại thất bại' : 'Resend failed', 'error');
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}>
+                  {t('resend')}
+                </button>
               </div>
               <button className="btn btn-primary" style={{ height: 46 }} disabled={!otpFull} onClick={() => setView('reset')}>{t('verify')}</button>
             </div>
@@ -340,9 +384,32 @@ export default function LoginUser({ renderApp }) {
               <PwField label={t('newPw')} value={npw} onChange={setNpw} placeholder="••••••••" autoFocus />
               <PwChecklist value={npw} lang={lang} />
               <PwField label={t('confirmPw')} value={cpw} onChange={setCpw} placeholder="••••••••" />
-              <button className="btn btn-primary" style={{ height: 46 }} disabled={!pwValid}
-                onClick={() => { toast(lang === 'vi' ? 'Đặt lại mật khẩu thành công' : 'Password reset'); setView('login'); setPw(''); }}>
-                {t('setNewPw')}
+              {cpw && npw !== cpw && <span style={{ fontSize: 12.5, color: 'var(--danger)' }}>{lang === 'vi' ? 'Mật khẩu xác nhận không khớp' : 'Passwords do not match'}</span>}
+              {apiError && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 14px', borderRadius: 10, background: 'var(--danger-soft, rgba(220,38,38,.08))', color: 'var(--danger)', fontSize: 13.5 }}>
+                  <I.alert size={15} />{apiError}
+                </div>
+              )}
+              <button className="btn btn-primary" style={{ height: 46 }} disabled={!pwValid || loading}
+                onClick={async () => {
+                  setLoading(true);
+                  setApiError('');
+                  try {
+                    await requestResetPassword({ email: email.trim(), otp: otp.join(''), newPassword: npw });
+                    toast(lang === 'vi' ? 'Đặt lại mật khẩu thành công' : 'Password reset successfully', 'success');
+                    setView('login');
+                    setPw('');
+                    setNpw('');
+                    setCpw('');
+                    setOtp(Array(OTP_LENGTH).fill(''));
+                  } catch (err) {
+                    const msg = err?.response?.data?.message || (lang === 'vi' ? 'Đặt lại mật khẩu thất bại' : 'Password reset failed');
+                    setApiError(msg);
+                  } finally {
+                    setLoading(false);
+                  }
+                }}>
+                {loading ? (lang === 'vi' ? 'Đang xử lý...' : 'Processing...') : t('setNewPw')}
               </button>
             </div>
           )}

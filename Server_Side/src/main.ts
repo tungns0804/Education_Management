@@ -10,8 +10,15 @@ async function bootstrap() {
 
   app.use(cookieParser());
 
+  const allowedOrigins = (process.env.URL_CLIENT || 'http://localhost:5173')
+    .split(',')
+    .map((o) => o.trim());
+
   app.enableCors({
-    origin: process.env.URL_CLIENT || 'http://localhost:5173',
+    origin: (origin, cb) => {
+      if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+      cb(new Error(`CORS: origin ${origin} not allowed`));
+    },
     credentials: true,
   });
 

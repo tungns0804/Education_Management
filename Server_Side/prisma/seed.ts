@@ -16,7 +16,11 @@ async function main() {
   ];
 
   for (const u of users) {
-    await prisma.user.upsert({ where: { email: u.email }, update: {}, create: u });
+    await prisma.user.upsert({
+      where:  { email: u.email },
+      update: { personalEmail: (u as any).personalEmail },
+      create: u,
+    });
     console.log(`✔ Seeded: ${u.email}`);
   }
 

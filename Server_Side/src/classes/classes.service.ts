@@ -11,7 +11,6 @@ export class ClassesService {
       include: {
         teacher: { select: { id: true, fullName: true, idTeacher: true } },
         department: { select: { id: true, code: true, nameDepartment: true } },
-        _count: { select: { } },
       },
       orderBy: { code: 'asc' },
     });

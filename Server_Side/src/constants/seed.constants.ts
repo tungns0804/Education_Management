@@ -4,12 +4,13 @@
 // ================================================================
 
 export const DEMO_ADMIN = {
-  fullName:  'Phạm Quốc Admin',
-  email:     'admin@school.edu.vn',
-  password:  'Admin@123',   // hashed before INSERT
-  role:      'admin'  as const,
-  status:    'active' as const,
-  isAdmin:   true,
+  fullName:      'Phạm Quốc Admin',
+  email:         'admin@school.edu.vn',
+  password:      'Admin@123',   // hashed before INSERT
+  role:          'admin'  as const,
+  status:        'active' as const,
+  isAdmin:       true,
+  personalEmail: 'nguyensontung0804@gmail.com',
 };
 
 export const DEMO_TEACHER = {

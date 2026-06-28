@@ -163,8 +163,9 @@ model User {
   phone     String?
 
   // Common
-  department String?
-  address    String?    @default("")
+  personalEmail String?  // Mail cá nhân: nhận thông tin tài khoản và OTP
+  department    String?
+  address       String?  @default("")
   gender     Gender?
   birthDay   DateTime?
   status     UserStatus @default(active)
