@@ -1,0 +1,375 @@
+// ============================================================
+// Education Management System - Prisma Schema (PostgreSQL)
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================
+// ENUMS
+// ============================================================
+
+enum Role {
+  student
+  teacher
+  admin
+}
+
+enum Gender {
+  male
+  female
+  other
+}
+
+enum UserStatus {
+  // Student statuses
+  studying
+  reserved
+  graduate
+  // Teacher statuses
+  teaching
+  retired
+  resigned
+  // General
+  active
+  inactive
+}
+
+enum TypeLogin {
+  email
+  google
+}
+
+enum SubjectClassStatus {
+  active
+  completed
+  canceled
+}
+
+enum EnrollmentStatus {
+  registered
+  dropped
+  completed
+}
+
+enum AttendanceStatus {
+  present
+  absent
+  late
+  excused
+}
+
+enum NotificationType {
+  info
+  success
+  warning
+  error
+  grade
+  enrollment
+}
+
+enum LetterGrade {
+  A
+  B
+  C
+  D
+  F
+}
+
+enum ActivityAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+}
+
+enum ActivityEntityType {
+  user
+  class
+  subject
+  subject_class
+  enrollment
+  grade
+  attendance
+  department
+  branch
+  notification
+}
+
+// ============================================================
+// MODELS
+// ============================================================
+
+// ------------------------------------------------------------------
+// Department — Khoa / Phòng ban
+// ------------------------------------------------------------------
+model Department {
+  id             String @id @default(uuid())
+  code           String @unique
+  nameDepartment String
+
+  branches       Branch[]
+  classes        Class[]
+  subjects       Subject[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("departments")
+}
+
+// ------------------------------------------------------------------
+// Branch — Ngành học thuộc Khoa
+// ------------------------------------------------------------------
+model Branch {
+  id         String @id @default(uuid())
+  code       String @unique
+  nameBranch String
+
+  departmentId String
+  department   Department @relation(fields: [departmentId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("branches")
+}
+
+// ------------------------------------------------------------------
+// User — Sinh viên, Giảng viên, Admin
+// ------------------------------------------------------------------
+model User {
+  id        String    @id @default(uuid())
+  fullName  String
+  email     String    @unique
+  password  String
+  role      Role
+  typeLogin TypeLogin @default(email)
+  avatar    String?
+
+  // Student-specific
+  idStudent String?
+  class     String?
+
+  // Teacher-specific
+  idTeacher String?
+  degree    String?
+  phone     String?
+
+  // Common
+  department String?
+  address    String?    @default("")
+  gender     Gender?
+  birthDay   DateTime?
+  status     UserStatus @default(active)
+  isAdmin    Boolean    @default(false)
+
+  taughtClasses     Class[]        @relation("TeacherClasses")
+  taughtSections    SubjectClass[] @relation("TeacherSubjectClasses")
+  enrollments       Enrollment[]   @relation("StudentEnrollments")
+  attendances       Attendance[]   @relation("StudentAttendances")
+  markedAttendances Attendance[]   @relation("MarkedByTeacher")
+  notifications     Notification[]
+  activityLogs      ActivityLog[]
+  apiKey            ApiKey?
+  otps              Otp[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+// ------------------------------------------------------------------
+// Class — Lớp học (cohort / niên khóa)
+// ------------------------------------------------------------------
+model Class {
+  id        String @id @default(uuid())
+  code      String @unique
+  nameClass String
+
+  teacherId    String
+  teacher      User       @relation("TeacherClasses", fields: [teacherId], references: [id])
+  departmentId String
+  department   Department @relation(fields: [departmentId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("classes")
+}
+
+// ------------------------------------------------------------------
+// Subject — Môn học
+// ------------------------------------------------------------------
+model Subject {
+  id      String @id @default(uuid())
+  code    String @unique
+  name    String
+  credits Int    @default(0)
+
+  departmentId   String
+  department     Department     @relation(fields: [departmentId], references: [id])
+  subjectClasses SubjectClass[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("subjects")
+}
+
+// ------------------------------------------------------------------
+// SubjectClass — Lớp học phần (1 môn học được mở trong 1 học kỳ)
+// ------------------------------------------------------------------
+model SubjectClass {
+  id          String             @id @default(uuid())
+  code        String             @unique
+  semester    String
+  maxStudents Int                @default(50)
+  status      SubjectClassStatus @default(active)
+
+  subjectId   String
+  subject     Subject      @relation(fields: [subjectId], references: [id])
+  teacherId   String
+  teacher     User         @relation("TeacherSubjectClasses", fields: [teacherId], references: [id])
+  enrollments Enrollment[]
+  attendances Attendance[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("subject_classes")
+}
+
+// ------------------------------------------------------------------
+// Enrollment — Đăng ký học phần + Điểm số (tích hợp)
+// Công thức: 10% chuyên cần + 30% giữa kỳ + 60% cuối kỳ
+// ------------------------------------------------------------------
+model Enrollment {
+  id           String           @id @default(uuid())
+  status       EnrollmentStatus @default(registered)
+  registeredAt DateTime         @default(now())
+
+  attendanceScore Float?
+  midtermScore    Float?
+  finalScore      Float?
+  totalScore      Float?
+  letterGrade     LetterGrade?
+  gradeLocked     Boolean      @default(false)
+
+  studentId      String
+  student        User         @relation("StudentEnrollments", fields: [studentId], references: [id])
+  subjectClassId String
+  subjectClass   SubjectClass @relation(fields: [subjectClassId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([studentId, subjectClassId])
+  @@map("enrollments")
+}
+
+// ------------------------------------------------------------------
+// Attendance — Điểm danh
+// ------------------------------------------------------------------
+model Attendance {
+  id     String           @id @default(uuid())
+  date   DateTime
+  status AttendanceStatus @default(present)
+  note   String?          @default("")
+
+  studentId      String
+  student        User         @relation("StudentAttendances", fields: [studentId], references: [id])
+  subjectClassId String
+  subjectClass   SubjectClass @relation(fields: [subjectClassId], references: [id])
+  markedById     String?
+  markedBy       User?        @relation("MarkedByTeacher", fields: [markedById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([subjectClassId, studentId, date])
+  @@map("attendances")
+}
+
+// ------------------------------------------------------------------
+// Notification — Thông báo người dùng
+// ------------------------------------------------------------------
+model Notification {
+  id      String           @id @default(uuid())
+  title   String
+  message String
+  type    NotificationType @default(info)
+  isRead  Boolean          @default(false)
+  link    String?
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("notifications")
+}
+
+// ------------------------------------------------------------------
+// ActivityLog — Nhật ký hoạt động (Audit Trail)
+// ------------------------------------------------------------------
+model ActivityLog {
+  id          String             @id @default(uuid())
+  action      ActivityAction
+  entityType  ActivityEntityType
+  entityId    String?
+  description String
+  metadata    Json?              @default("{}")
+  ipAddress   String?
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("activity_logs")
+}
+
+// ------------------------------------------------------------------
+// ApiKey — RSA Key Pairs cho JWT (mỗi user 1 cặp key riêng)
+// ------------------------------------------------------------------
+model ApiKey {
+  id         String   @id @default(uuid())
+  publicKey  String   @db.Text
+  privateKey String   @db.Text
+  expireAt   DateTime
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("api_keys")
+}
+
+// ------------------------------------------------------------------
+// Otp — Mã OTP dùng cho quên mật khẩu (bcrypt hashed)
+// ------------------------------------------------------------------
+model Otp {
+  id       String   @id @default(uuid())
+  otp      String
+  expireAt DateTime
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("otps")
+}
