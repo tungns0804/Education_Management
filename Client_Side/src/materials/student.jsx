@@ -66,9 +66,9 @@ function StudentDashboard({ onNav }) {
   const enrollments = stats?.currentEnrollments ?? [];
 
   const gpaDisplay = stats?.gpa != null ? stats.gpa.toFixed(2) : '—';
-  const standing = stats?.gpa >= 3.6 ? (lang==='vi'?'Xuất sắc':'Excellent')
-    : stats?.gpa >= 3.2 ? (lang==='vi'?'Giỏi':'Good')
-    : stats?.gpa >= 2.5 ? (lang==='vi'?'Khá':'Fair')
+  const standing = stats?.gpa >= 8.5 ? (lang==='vi'?'Xuất sắc':'Excellent')
+    : stats?.gpa >= 7.0 ? (lang==='vi'?'Giỏi':'Good')
+    : stats?.gpa >= 5.5 ? (lang==='vi'?'Khá':'Fair')
     : (lang==='vi'?'Trung bình':'Average');
 
   // Map GPA 4.0 scale to 10-point for ring (rough)
@@ -120,7 +120,7 @@ function StudentDashboard({ onNav }) {
               <SectionHead title={lang==='vi'?'Tiến trình GPA':'GPA progression'} desc={lang==='vi'?'Theo từng học kỳ':'By semester'}/>
               <div style={{ marginTop: 16 }}>
                 {gpaTrend.length > 0
-                  ? <LineChart data={gpaTrend.map(x => ({ term: x.term, value: x.gpa }))} height={210} yMax={4} fmt={v => v.toFixed(1)}/>
+                  ? <LineChart data={gpaTrend.map(x => ({ term: x.term, value: x.gpa }))} height={210} yMax={10} fmt={v => v.toFixed(1)}/>
                   : <Empty text={lang==='vi'?'Chưa có dữ liệu GPA':'No GPA data yet'}/>
                 }
               </div>
@@ -182,12 +182,15 @@ function RegistrationScreen() {
   const { t, lang } = useApp();
   const toast = useToast();
 
-  const [available,    setAvailable]    = useState([]);  // all active subject classes
-  const [myEnrollments, setMyEnrollments] = useState([]); // student's current enrollments
-  const [loading,      setLoading]      = useState(true);
-  const [actionBusy,   setActionBusy]   = useState({});  // { sectionId: true/false }
-  const [q,            setQ]            = useState('');
-  const [page,         setPage]         = useState(1);
+  const [available,      setAvailable]      = useState([]);
+  const [myEnrollments,  setMyEnrollments]  = useState([]);
+  const [loading,        setLoading]        = useState(true);
+  const [actionBusy,     setActionBusy]     = useState({});
+  const [filterSubject,  setFilterSubject]  = useState('');
+  const [filterCode,     setFilterCode]     = useState('');
+  const [filterTeacher,  setFilterTeacher]  = useState('');
+  const [filterSemester, setFilterSemester] = useState('');
+  const [page,           setPage]           = useState(1);
   const PAGE_SIZE = 8;
 
   const load = async () => {
@@ -219,15 +222,32 @@ function RegistrationScreen() {
     regSections.reduce((a, s) => a + (s.subject?.credits ?? 0), 0),
     [regSections]);
 
-  const filtered = useMemo(() =>
-    available.filter(s => {
-      if (!q) return true;
-      return (
-        s.subject?.name?.toLowerCase().includes(q.toLowerCase()) ||
-        s.code?.toLowerCase().includes(q.toLowerCase()) ||
-        s.teacher?.fullName?.toLowerCase().includes(q.toLowerCase())
-      );
-    }), [available, q]);
+  const semesters = useMemo(() =>
+    [...new Set(available.map(s => s.semester).filter(Boolean))].sort(),
+    [available]);
+
+  const hasFilter = !!(filterSubject || filterCode || filterTeacher || filterSemester);
+
+  const clearFilters = () => {
+    setFilterSubject('');
+    setFilterCode('');
+    setFilterTeacher('');
+    setFilterSemester('');
+    setPage(1);
+  };
+
+  const filtered = useMemo(() => {
+    const subj    = filterSubject.toLowerCase();
+    const code    = filterCode.toLowerCase();
+    const teacher = filterTeacher.toLowerCase();
+    return available.filter(s => {
+      if (subj    && !s.subject?.name?.toLowerCase().includes(subj))       return false;
+      if (code    && !s.code?.toLowerCase().includes(code))                 return false;
+      if (teacher && !s.teacher?.fullName?.toLowerCase().includes(teacher)) return false;
+      if (filterSemester && s.semester !== filterSemester)                  return false;
+      return true;
+    });
+  }, [available, filterSubject, filterCode, filterTeacher, filterSemester]);
 
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
@@ -271,21 +291,45 @@ function RegistrationScreen() {
         <div className="grid-2-1" style={{ alignItems: 'start' }}>
           {/* Left: available sections */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-              <div className="input-group" style={{ flex: '1 1 260px', maxWidth: 420 }}>
-                <I.search size={16}/>
-                <input className="input" style={{ height: 44 }} value={q}
-                  onChange={e => { setQ(e.target.value); setPage(1); }}
-                  placeholder={lang==='vi'?'Tìm môn học, mã lớp HP, giảng viên…':'Search subject, section code, teacher…'}/>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+                <div className="input-group" style={{ flex: '1 1 190px' }}>
+                  <I.book size={15}/>
+                  <input className="input" style={{ height: 40 }} value={filterSubject}
+                    onChange={e => { setFilterSubject(e.target.value); setPage(1); }}
+                    placeholder={lang==='vi'?'Tên môn học…':'Subject name…'}/>
+                </div>
+                <div className="input-group" style={{ flex: '1 1 140px' }}>
+                  <I.layers size={15}/>
+                  <input className="input" style={{ height: 40 }} value={filterCode}
+                    onChange={e => { setFilterCode(e.target.value); setPage(1); }}
+                    placeholder={lang==='vi'?'Mã lớp HP…':'Section code…'}/>
+                </div>
+                <div className="input-group" style={{ flex: '1 1 170px' }}>
+                  <I.user size={15}/>
+                  <input className="input" style={{ height: 40 }} value={filterTeacher}
+                    onChange={e => { setFilterTeacher(e.target.value); setPage(1); }}
+                    placeholder={lang==='vi'?'Giảng viên…':'Teacher…'}/>
+                </div>
+                <select className="input" style={{ height: 40, flex: '1 1 150px', paddingLeft: 12, cursor: 'pointer' }}
+                  value={filterSemester} onChange={e => { setFilterSemester(e.target.value); setPage(1); }}>
+                  <option value="">{lang==='vi'?'— Tất cả học kỳ —':'— All semesters —'}</option>
+                  {semesters.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+                {hasFilter && (
+                  <button className="btn btn-ghost btn-sm" onClick={clearFilters} style={{ whiteSpace: 'nowrap' }}>
+                    <I.x size={14}/>{lang==='vi'?'Xóa bộ lọc':'Clear filters'}
+                  </button>
+                )}
+                <span style={{ fontSize: 13, color: 'var(--muted)', whiteSpace: 'nowrap' }}>
+                  {filtered.length} {lang==='vi'?'lớp học phần':'sections'}
+                </span>
               </div>
-              <span style={{ fontSize: 13, color: 'var(--muted)' }}>
-                {filtered.length} {lang==='vi'?'lớp học phần':'sections'}
-              </span>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
               {paginated.length === 0
-                ? <Empty text={q ? (lang==='vi'?'Không tìm thấy kết quả':'No results') : (lang==='vi'?'Không có lớp học phần nào':'No sections available')}/>
+                ? <Empty text={hasFilter ? (lang==='vi'?'Không tìm thấy kết quả':'No results') : (lang==='vi'?'Không có lớp học phần nào':'No sections available')}/>
                 : paginated.map(s => {
                   const isReg  = !!registeredMap[s.id];
                   const busy   = !!actionBusy[s.id];
@@ -399,9 +443,9 @@ function TranscriptScreen() {
   const gpa  = typeof data.gpa === 'number' ? data.gpa.toFixed(2) : '—';
   const semesters = useMemo(() => [...new Set(rows.map(r => r.subjectClass?.semester))].filter(Boolean).sort(), [rows]);
 
-  const standing = data.gpa >= 3.6 ? (lang==='vi'?'Xuất sắc':'Excellent')
-    : data.gpa >= 3.2 ? (lang==='vi'?'Giỏi':'Good')
-    : data.gpa >= 2.5 ? (lang==='vi'?'Khá':'Fair')
+  const standing = data.gpa >= 8.5 ? (lang==='vi'?'Xuất sắc':'Excellent')
+    : data.gpa >= 7.0 ? (lang==='vi'?'Giỏi':'Good')
+    : data.gpa >= 5.5 ? (lang==='vi'?'Khá':'Fair')
     : (lang==='vi'?'Trung bình':'Average');
 
   const letterCounts = useMemo(() => {
@@ -482,7 +526,7 @@ function TranscriptScreen() {
               <SectionHead title={lang==='vi'?'Biểu đồ GPA':'GPA trend'}/>
               <div style={{ marginTop: 16 }}>
                 {gpaTrend.length > 0
-                  ? <LineChart data={gpaTrend.map(x => ({ term: x.term, value: x.gpa }))} height={200} yMax={4} fmt={v => v.toFixed(1)}/>
+                  ? <LineChart data={gpaTrend.map(x => ({ term: x.term, value: x.gpa }))} height={200} yMax={10} fmt={v => v.toFixed(1)}/>
                   : <Empty text={lang==='vi'?'Chưa có dữ liệu':'No data yet'}/>
                 }
               </div>

@@ -49,6 +49,22 @@ export class UsersController {
     return { success: true, message: 'success', metadata: data };
   }
 
+  @Get('next-student-id')
+  @UseGuards(RolesGuard)
+  @Roles('admin')
+  async getNextStudentId() {
+    const nextId = await this.usersService.getNextStudentId();
+    return { success: true, message: 'success', metadata: { nextId } };
+  }
+
+  @Get('next-teacher-id')
+  @UseGuards(RolesGuard)
+  @Roles('admin')
+  async getNextTeacherId() {
+    const nextId = await this.usersService.getNextTeacherId();
+    return { success: true, message: 'success', metadata: { nextId } };
+  }
+
   @Get('me')
   async getMe(@Req() req: AuthReq) {
     const data = await this.usersService.findById(req.user.id);
@@ -65,7 +81,9 @@ export class UsersController {
   @UseGuards(RolesGuard)
   @Roles('admin')
   async createStudent(@Body() body: any) {
-    const data = await this.usersService.createStudent(body);
+    // idStudent không nhận từ client — tự động sinh phía server
+    const { idStudent: _ignored, ...rest } = body;
+    const data = await this.usersService.createStudent(rest);
     return { success: true, message: 'Tạo sinh viên thành công', metadata: data };
   }
 
@@ -73,7 +91,9 @@ export class UsersController {
   @UseGuards(RolesGuard)
   @Roles('admin')
   async createTeacher(@Body() body: any) {
-    const data = await this.usersService.createTeacher(body);
+    // idTeacher và email không nhận từ client — tự động sinh phía server
+    const { idTeacher: _ignored, email: _email, ...rest } = body;
+    const data = await this.usersService.createTeacher(rest);
     return { success: true, message: 'Tạo giảng viên thành công', metadata: data };
   }
 

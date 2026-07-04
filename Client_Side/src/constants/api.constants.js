@@ -24,6 +24,8 @@ export const API_ENDPOINTS = {
   ME:          `${USERS_BASE}/me`,
   STUDENTS:    `${USERS_BASE}/students`,
   TEACHERS:    `${USERS_BASE}/teachers`,
+  NEXT_STUDENT_ID: `${USERS_BASE}/next-student-id`,
+  NEXT_TEACHER_ID: `${USERS_BASE}/next-teacher-id`,
   BULK_IMPORT:          `${USERS_BASE}/bulk-import`,
   BULK_IMPORT_TEACHERS: `${USERS_BASE}/bulk-import-teachers`,
   USER:        (id) => `${USERS_BASE}/${id}`,

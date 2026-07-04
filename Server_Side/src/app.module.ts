@@ -11,7 +11,6 @@ import { SubjectsModule } from './subjects/subjects.module';
 import { SubjectClassesModule } from './subject-classes/subject-classes.module';
 import { EnrollmentsModule } from './enrollments/enrollments.module';
 import { AttendanceModule } from './attendance/attendance.module';
-import { NotificationsModule } from './notifications/notifications.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { SemestersModule } from './semesters/semesters.module';
 
@@ -27,7 +26,6 @@ import { SemestersModule } from './semesters/semesters.module';
     SubjectClassesModule,
     EnrollmentsModule,
     AttendanceModule,
-    NotificationsModule,
     DashboardModule,
     SemestersModule,
   ],

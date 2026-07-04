@@ -21,14 +21,16 @@ export const requestTeacherDashboard = ()  => apiClient.get(API_ENDPOINTS.TEACHE
 export const requestStudentDashboard = ()  => apiClient.get(API_ENDPOINTS.STUDENT_DASHBOARD).then((r) => r.data);
 
 // ── Students ─────────────────────────────────────────────────────────────────
-export const requestStudents      = (params) => apiClient.get(API_ENDPOINTS.STUDENTS, { params }).then((r) => r.data);
-export const requestCreateStudent = (data)   => apiClient.post(API_ENDPOINTS.STUDENTS, data)    .then((r) => r.data);
+export const requestStudents        = (params) => apiClient.get(API_ENDPOINTS.STUDENTS, { params }).then((r) => r.data);
+export const requestCreateStudent   = (data)   => apiClient.post(API_ENDPOINTS.STUDENTS, data)    .then((r) => r.data);
+export const requestNextStudentId   = ()       => apiClient.get(API_ENDPOINTS.NEXT_STUDENT_ID)    .then((r) => r.data);
 export const requestBulkImport         = (data) => apiClient.post(API_ENDPOINTS.BULK_IMPORT,          data).then((r) => r.data);
 export const requestBulkImportTeachers = (data) => apiClient.post(API_ENDPOINTS.BULK_IMPORT_TEACHERS, data).then((r) => r.data);
 
 // ── Teachers ─────────────────────────────────────────────────────────────────
-export const requestTeachers      = (params) => apiClient.get(API_ENDPOINTS.TEACHERS, { params }).then((r) => r.data);
-export const requestCreateTeacher = (data)   => apiClient.post(API_ENDPOINTS.TEACHERS, data)    .then((r) => r.data);
+export const requestTeachers        = (params) => apiClient.get(API_ENDPOINTS.TEACHERS, { params }).then((r) => r.data);
+export const requestCreateTeacher   = (data)   => apiClient.post(API_ENDPOINTS.TEACHERS, data)    .then((r) => r.data);
+export const requestNextTeacherId   = ()       => apiClient.get(API_ENDPOINTS.NEXT_TEACHER_ID)    .then((r) => r.data);
 
 // ── User CRUD (shared for students & teachers) ───────────────────────────────
 export const requestUser             = (id)         => apiClient.get(API_ENDPOINTS.USER(id))                 .then((r) => r.data);

@@ -80,6 +80,61 @@ export class UsersService {
   }
 
   // ----------------------------------------------------------------
+  // Tự động sinh mã sinh viên / giảng viên
+  // ----------------------------------------------------------------
+
+  // Sinh N mã sinh viên liên tiếp theo pattern SV{year}{seq:4}
+  private async generateStudentIds(count: number): Promise<string[]> {
+    const year = new Date().getFullYear();
+    const prefix = `SV${year}`;
+    const existing = await this.prisma.user.findMany({
+      where: { role: Role.student, idStudent: { startsWith: prefix } },
+      select: { idStudent: true },
+    });
+    let maxSeq = 0;
+    for (const u of existing) {
+      const suffix = u.idStudent?.slice(prefix.length);
+      if (suffix && /^\d+$/.test(suffix)) {
+        maxSeq = Math.max(maxSeq, parseInt(suffix, 10));
+      }
+    }
+    return Array.from({ length: count }, (_, i) =>
+      `${prefix}${String(maxSeq + 1 + i).padStart(4, '0')}`,
+    );
+  }
+
+  // Sinh N mã giảng viên liên tiếp theo pattern GV{year}{seq:3}
+  private async generateTeacherIds(count: number): Promise<string[]> {
+    const year = new Date().getFullYear();
+    const prefix = `GV${year}`;
+    const existing = await this.prisma.user.findMany({
+      where: { role: Role.teacher, idTeacher: { startsWith: prefix } },
+      select: { idTeacher: true },
+    });
+    let maxSeq = 0;
+    for (const u of existing) {
+      const suffix = u.idTeacher?.slice(prefix.length);
+      if (suffix && /^\d+$/.test(suffix)) {
+        maxSeq = Math.max(maxSeq, parseInt(suffix, 10));
+      }
+    }
+    return Array.from({ length: count }, (_, i) =>
+      `${prefix}${String(maxSeq + 1 + i).padStart(3, '0')}`,
+    );
+  }
+
+  // Endpoint preview: trả về mã sẽ được cấp tiếp theo
+  async getNextStudentId(): Promise<string> {
+    const [id] = await this.generateStudentIds(1);
+    return id;
+  }
+
+  async getNextTeacherId(): Promise<string> {
+    const [id] = await this.generateTeacherIds(1);
+    return id;
+  }
+
+  // ----------------------------------------------------------------
   // Tạo người dùng mới
   // ----------------------------------------------------------------
 
@@ -94,7 +149,6 @@ export class UsersService {
 
   async createStudent(data: {
     fullName: string;
-    idStudent: string;
     gender?: string;
     birthDay?: string;
     class?: string;
@@ -104,10 +158,14 @@ export class UsersService {
     if (!data.personalEmail)
       throw new BadRequestException('Vui lòng cung cấp email cá nhân của sinh viên');
 
-    const existing = await this.prisma.user.findFirst({ where: { idStudent: data.idStudent } });
-    if (existing) throw new ConflictException(`Mã sinh viên ${data.idStudent} đã tồn tại`);
+    const [idStudent] = await this.generateStudentIds(1);
 
-    const email = this.generateSchoolEmail(data.idStudent);
+    // Phòng trường hợp race condition: kiểm tra mã có bị trùng không
+    const existing = await this.prisma.user.findFirst({ where: { idStudent } });
+    if (existing)
+      throw new ConflictException(`Mã sinh viên ${idStudent} đã tồn tại, vui lòng thực hiện lại`);
+
+    const email = this.generateSchoolEmail(idStudent);
     const tempPassword = this.generateTempPassword();
     const hashed = await bcrypt.hash(tempPassword, BCRYPT_SALT_ROUNDS);
 
@@ -117,7 +175,7 @@ export class UsersService {
         email,
         password:      hashed,
         role:          Role.student,
-        idStudent:     data.idStudent,
+        idStudent,
         class:         data.class,
         gender:        data.gender as any,
         birthDay:      data.birthDay ? new Date(data.birthDay) : undefined,
@@ -139,8 +197,6 @@ export class UsersService {
 
   async createTeacher(data: {
     fullName: string;
-    idTeacher: string;
-    email: string;
     personalEmail?: string;
     degree?: string;
     phone?: string;
@@ -151,8 +207,13 @@ export class UsersService {
     if (!data.personalEmail)
       throw new BadRequestException('Vui lòng cung cấp email cá nhân của giảng viên');
 
-    const existing = await this.prisma.user.findUnique({ where: { email: data.email } });
-    if (existing) throw new ConflictException('Email đã tồn tại');
+    const [idTeacher] = await this.generateTeacherIds(1);
+    const email = `${idTeacher.toLowerCase()}@teacher.school.edu.vn`;
+
+    // Phòng trường hợp race condition
+    const existing = await this.prisma.user.findUnique({ where: { email } });
+    if (existing)
+      throw new ConflictException(`Mã giảng viên ${idTeacher} đã tồn tại, vui lòng thực hiện lại`);
 
     const tempPassword = this.generateTempPassword();
     const hashed = await bcrypt.hash(tempPassword, BCRYPT_SALT_ROUNDS);
@@ -160,10 +221,10 @@ export class UsersService {
     const user = await this.prisma.user.create({
       data: {
         fullName:      data.fullName,
-        email:         data.email,
+        email,
         password:      hashed,
         role:          Role.teacher,
-        idTeacher:     data.idTeacher,
+        idTeacher,
         degree:        data.degree,
         phone:         data.phone,
         gender:        data.gender as any,
@@ -176,7 +237,7 @@ export class UsersService {
 
     await this.emailService.sendAccountCredentials({
       personalEmail: data.personalEmail,
-      schoolEmail:   data.email,
+      schoolEmail:   email,
       password:      tempPassword,
       fullName:      data.fullName,
       role:          'teacher',
@@ -184,24 +245,91 @@ export class UsersService {
     return this.omitPassword(user);
   }
 
+  // ----------------------------------------------------------------
+  // Import hàng loạt — kiểm tra toàn bộ trước, chỉ insert khi hợp lệ 100%
+  // ----------------------------------------------------------------
+
+  private validateImportRows(
+    rows: Array<{ fullName?: string; personalEmail?: string }>,
+  ): Array<{ row: number; reason: string }> {
+    const errors: Array<{ row: number; reason: string }> = [];
+    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    for (let i = 0; i < rows.length; i++) {
+      const r = rows[i];
+      if (!r.fullName?.trim())
+        errors.push({ row: i + 1, reason: 'Họ tên không được để trống' });
+      if (!r.personalEmail || !emailRe.test(r.personalEmail.trim()))
+        errors.push({ row: i + 1, reason: 'Email cá nhân không hợp lệ hoặc để trống' });
+    }
+    return errors;
+  }
+
   async bulkImportStudents(rows: Array<{
     fullName: string;
-    idStudent: string;
     gender?: string;
     birthDay?: string;
     class?: string;
     personalEmail?: string;
     department?: string;
   }>) {
-    const results = await Promise.allSettled(rows.map(r => this.createStudent(r)));
-    const created = results.filter(r => r.status === 'fulfilled').length;
-    const failed  = results.filter(r => r.status === 'rejected').length;
-    return { created, failed };
+    // Bước 1: kiểm tra toàn bộ dữ liệu
+    const errors = this.validateImportRows(rows);
+    if (errors.length > 0)
+      throw new BadRequestException({ message: 'Dữ liệu không hợp lệ', errors });
+
+    // Bước 2: sinh mã sinh viên liên tiếp cho toàn bộ danh sách
+    const ids = await this.generateStudentIds(rows.length);
+
+    // Bước 3: chuẩn bị hash password (bên ngoài transaction để không timeout)
+    const prepared = await Promise.all(
+      rows.map(async (r, i) => {
+        const idStudent    = ids[i];
+        const email        = this.generateSchoolEmail(idStudent);
+        const tempPassword = this.generateTempPassword();
+        const hashed       = await bcrypt.hash(tempPassword, BCRYPT_SALT_ROUNDS);
+        return { ...r, idStudent, email, tempPassword, hashed };
+      }),
+    );
+
+    // Bước 4: insert toàn bộ trong một transaction — tất cả hoặc không có gì
+    const users = await this.prisma.$transaction(
+      prepared.map(r =>
+        this.prisma.user.create({
+          data: {
+            fullName:      r.fullName,
+            email:         r.email,
+            password:      r.hashed,
+            role:          Role.student,
+            idStudent:     r.idStudent,
+            class:         r.class,
+            gender:        r.gender as any,
+            birthDay:      r.birthDay ? new Date(r.birthDay) : undefined,
+            department:    r.department,
+            personalEmail: r.personalEmail,
+            status:        UserStatus.studying,
+          },
+        }),
+      ),
+    );
+
+    // Bước 5: gửi email (fire-and-forget, không ảnh hưởng kết quả)
+    void Promise.allSettled(
+      prepared.map(r =>
+        this.emailService.sendAccountCredentials({
+          personalEmail: r.personalEmail!,
+          schoolEmail:   r.email,
+          password:      r.tempPassword,
+          fullName:      r.fullName,
+          role:          'student',
+        }),
+      ),
+    );
+
+    return { created: users.length, failed: 0 };
   }
 
   async bulkImportTeachers(rows: Array<{
     fullName: string;
-    idTeacher: string;
     personalEmail?: string;
     degree?: string;
     phone?: string;
@@ -209,24 +337,61 @@ export class UsersService {
     birthDay?: string;
     department?: string;
   }>) {
-    const results = await Promise.allSettled(
-      rows.map(r =>
-        this.createTeacher({
-          ...r,
-          email: `${r.idTeacher.toLowerCase()}@teacher.school.edu.vn`,
+    // Bước 1: kiểm tra toàn bộ dữ liệu
+    const errors = this.validateImportRows(rows);
+    if (errors.length > 0)
+      throw new BadRequestException({ message: 'Dữ liệu không hợp lệ', errors });
+
+    // Bước 2: sinh mã giảng viên liên tiếp
+    const ids = await this.generateTeacherIds(rows.length);
+
+    // Bước 3: chuẩn bị
+    const prepared = await Promise.all(
+      rows.map(async (r, i) => {
+        const idTeacher    = ids[i];
+        const email        = `${idTeacher.toLowerCase()}@teacher.school.edu.vn`;
+        const tempPassword = this.generateTempPassword();
+        const hashed       = await bcrypt.hash(tempPassword, BCRYPT_SALT_ROUNDS);
+        return { ...r, idTeacher, email, tempPassword, hashed };
+      }),
+    );
+
+    // Bước 4: insert toàn bộ trong một transaction
+    const users = await this.prisma.$transaction(
+      prepared.map(r =>
+        this.prisma.user.create({
+          data: {
+            fullName:      r.fullName,
+            email:         r.email,
+            password:      r.hashed,
+            role:          Role.teacher,
+            idTeacher:     r.idTeacher,
+            degree:        r.degree,
+            phone:         r.phone,
+            gender:        r.gender as any,
+            birthDay:      r.birthDay ? new Date(r.birthDay) : undefined,
+            department:    r.department,
+            personalEmail: r.personalEmail,
+            status:        UserStatus.teaching,
+          },
         }),
       ),
     );
-    const created = results.filter(r => r.status === 'fulfilled').length;
-    const failed  = results.filter(r => r.status === 'rejected').length;
-    const errors  = results
-      .map((r, i) =>
-        r.status === 'rejected'
-          ? { row: i + 1, reason: (r as PromiseRejectedResult).reason?.message }
-          : null,
-      )
-      .filter(Boolean);
-    return { created, failed, errors };
+
+    // Bước 5: gửi email
+    void Promise.allSettled(
+      prepared.map(r =>
+        this.emailService.sendAccountCredentials({
+          personalEmail: r.personalEmail!,
+          schoolEmail:   r.email,
+          password:      r.tempPassword,
+          fullName:      r.fullName,
+          role:          'teacher',
+        }),
+      ),
+    );
+
+    return { created: users.length, failed: 0 };
   }
 
   // ----------------------------------------------------------------

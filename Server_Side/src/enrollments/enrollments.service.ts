@@ -180,6 +180,7 @@ export class EnrollmentsService {
         finalScore:      fin,
         totalScore:      total,
         letterGrade:     letter,
+        status:          EnrollmentStatus.completed,
       },
     });
   }

@@ -5,7 +5,7 @@ import { downloadCSV } from './tools';
 import { DataTable, Page, SectionHead } from './shell';
 import { FilterSelect, RowAction, TableToolbar } from './admin';
 import {
-  requestTeachers, requestCreateTeacher, requestUpdateUser,
+  requestTeachers, requestCreateTeacher, requestNextTeacherId, requestUpdateUser,
   requestToggleUserStatus, requestDeleteUser, requestBulkImportTeachers,
   requestDepartments, requestCreateDepartment, requestUpdateDepartment, requestDeleteDepartment,
   requestBranches,   requestCreateBranch,   requestUpdateBranch,   requestDeleteBranch,
@@ -38,38 +38,41 @@ const toTeacher = (tc) => ({
 // ── Teacher Drawer (add / edit) ───────────────────────────────────────────────
 const DEGREES = ['ThS', 'TS', 'PGS', 'GS', 'CN'];
 
-function TeacherDrawer({ state, depts, existingCodes, onClose, onSave }) {
+function TeacherDrawer({ state, depts, onClose, onSave }) {
   const { t, lang } = useApp();
   const open   = !!state;
   const row    = state?.row;
   const isEdit = state?.mode === 'edit';
 
+  const [previewId, setPreviewId] = useState('...');
+
   const validators = useMemo(() => ({
     name:          validate.fullName(t),
-    code:          (v) => {
-      if (!v || !v.trim()) return t('errRequired');
-      if (!/^[A-Za-z0-9]{3,15}$/.test(v.trim())) return lang === 'vi' ? 'Mã 3–15 ký tự chữ/số' : 'Code: 3–15 alphanumeric chars';
-      if (!isEdit && existingCodes.includes(v.trim().toUpperCase())) return lang === 'vi' ? 'Mã đã tồn tại' : 'Code already exists';
-      return null;
-    },
-    email:         isEdit ? () => null : validate.email(t, false),
     personalEmail: validate.email(t, false),
-  }), [t, lang, existingCodes, isEdit]);
+  }), [t]);
 
   const { form, set, touch, showError, submit, reset } = useForm(
-    { name: '', code: '', email: '', personalEmail: '', degree: 'ThS', phone: '', gender: 'male', birthDay: '', department: '' },
+    { name: '', personalEmail: '', degree: 'ThS', phone: '', gender: 'male', birthDay: '', department: '' },
     validators,
   );
   const toast = useToast();
 
   useEffect(() => {
     if (!state) return;
-    reset(row ? {
-      name: row.name, code: row.code, email: row.email,
-      personalEmail: row.personalEmail, degree: row.degree || 'ThS',
-      phone: row.phone, gender: row.gender || 'male',
-      birthDay: row.birthDay || '', department: row.deptName || '',
-    } : { name: '', code: '', email: '', personalEmail: '', degree: 'ThS', phone: '', gender: 'male', birthDay: '', department: '' });
+    if (!row) {
+      setPreviewId('...');
+      requestNextTeacherId()
+        .then(r => setPreviewId(r.metadata?.nextId || '—'))
+        .catch(() => setPreviewId('—'));
+      reset({ name: '', personalEmail: '', degree: 'ThS', phone: '', gender: 'male', birthDay: '', department: '' });
+    } else {
+      setPreviewId(row.code || '—');
+      reset({
+        name: row.name, personalEmail: row.personalEmail, degree: row.degree || 'ThS',
+        phone: row.phone, gender: row.gender || 'male',
+        birthDay: row.birthDay || '', department: row.deptName || '',
+      });
+    }
   }, [state]);
 
   const handleSave = () => {
@@ -79,7 +82,7 @@ function TeacherDrawer({ state, depts, existingCodes, onClose, onSave }) {
   return (
     <Drawer open={open} onClose={onClose}
       title={isEdit ? (lang === 'vi' ? 'Sửa giảng viên' : 'Edit teacher') : (lang === 'vi' ? 'Thêm giảng viên' : 'Add teacher')}
-      subtitle={isEdit ? row?.code : (lang === 'vi' ? 'Email trường tự sinh từ mã GV' : 'School email auto-generated from teacher code')}
+      subtitle={isEdit ? row?.code : (lang === 'vi' ? 'Mã giảng viên & email trường tự động sinh' : 'Teacher code & school email auto-generated')}
       footer={<>
         <button className="btn btn-ghost" onClick={onClose}>{t('cancel')}</button>
         <button className="btn btn-primary" onClick={handleSave}>
@@ -89,7 +92,7 @@ function TeacherDrawer({ state, depts, existingCodes, onClose, onSave }) {
       {isEdit && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 13, padding: 14, background: 'var(--surface-3)', borderRadius: 12, marginBottom: 20 }}>
           <Avatar name={form.name} hue={160} size={48}/>
-          <div><div style={{ fontWeight: 700 }}>{form.name}</div><div style={{ fontSize: 12.5, color: 'var(--muted)' }}>{form.email}</div></div>
+          <div><div style={{ fontWeight: 700 }}>{form.name}</div><div style={{ fontSize: 12.5, color: 'var(--muted)' }}>{row?.email}</div></div>
           <div style={{ marginLeft: 'auto' }}><StatusBadge active={row?.active !== false}/></div>
         </div>
       )}
@@ -99,8 +102,8 @@ function TeacherDrawer({ state, depts, existingCodes, onClose, onSave }) {
         </FormField>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-          <FormField label={lang === 'vi' ? 'Mã giảng viên' : 'Teacher code'} error={showError('code')}>
-            <input className={fieldCls(showError('code'))} value={form.code} onChange={e => set('code', e.target.value.toUpperCase())} onBlur={() => touch('code')} placeholder="GV2025001" disabled={isEdit} style={isEdit ? { opacity: .6 } : {}}/>
+          <FormField label={lang === 'vi' ? 'Mã giảng viên' : 'Teacher code'} hint={lang === 'vi' ? 'Tự động sinh' : 'Auto-generated'}>
+            <input className="input" value={previewId} disabled style={{ opacity: .7, fontFamily: 'var(--mono)', cursor: 'not-allowed' }}/>
           </FormField>
           <FormField label={t('degree')} optional optionalLabel={t('optional') || 'tùy chọn'}>
             <select className="select" value={form.degree} onChange={e => set('degree', e.target.value)}>
@@ -136,7 +139,7 @@ function TeacherDrawer({ state, depts, existingCodes, onClose, onSave }) {
 
         {isEdit && (
           <FormField label={t('email')} hint={lang === 'vi' ? 'Email trường (không đổi)' : 'School email (read-only)'}>
-            <input className="input" value={form.email} disabled style={{ opacity: .7 }}/>
+            <input className="input" value={row?.email || ''} disabled style={{ opacity: .7 }}/>
           </FormField>
         )}
         <FormField label={lang === 'vi' ? 'Email cá nhân (nhận OTP)' : 'Personal email (receives OTP)'} error={showError('personalEmail')}>
@@ -147,8 +150,8 @@ function TeacherDrawer({ state, depts, existingCodes, onClose, onSave }) {
           <div style={{ display: 'flex', gap: 11, padding: 13, background: 'var(--info-soft)', borderRadius: 11, fontSize: 13, color: 'var(--text-2)', lineHeight: 1.5 }}>
             <I.spark size={18} style={{ color: 'var(--accent)', flexShrink: 0, marginTop: 1 }}/>
             {lang === 'vi'
-              ? `Email trường sẽ là: ${form.code ? form.code.toLowerCase() + '@teacher.school.edu.vn' : '<mã GV>@teacher.school.edu.vn'}. Mật khẩu tạm sẽ gửi về email cá nhân.`
-              : `School email: ${form.code ? form.code.toLowerCase() + '@teacher.school.edu.vn' : '<code>@teacher.school.edu.vn'}. Temp password sent to personal email.`}
+              ? `Mã GV, email trường và mật khẩu tạm sẽ được tạo tự động và gửi tới email cá nhân.`
+              : `Teacher code, school email and temporary password are auto-generated and emailed.`}
           </div>
         )}
       </div>
@@ -156,12 +159,126 @@ function TeacherDrawer({ state, depts, existingCodes, onClose, onSave }) {
   );
 }
 
-// ── Teacher Bulk Import Drawer ────────────────────────────────────────────────
-const TEACHER_SAMPLE_CSV = `Họ tên,Mã GV,Học hàm vị,Điện thoại,Khoa,Email cá nhân
-Nguyễn Văn An,GV2025001,ThS,0912345678,Công nghệ Thông tin,an.nv@gmail.com
-Trần Thị Bình,GV2025002,TS,0987654321,Kinh tế - Kế toán,binh.tt@gmail.com
-Lê Minh Quân,GV2025003,ThS,,Kỹ thuật - Xây dựng,quan.lm@gmail.com`;
+// ── Teacher Excel template ────────────────────────────────────────────────────
+async function generateTeacherExcelTemplate(lang) {
+  const { default: writeXlsxFile } = await import('write-excel-file/browser');
+  const vi = lang === 'vi';
 
+  const NAVY   = '#1E3A5F';
+  const TEAL   = '#0F6B61';
+  const COL_H  = '#134E4A';
+  const WHITE  = '#FFFFFF';
+  const ROW_A  = '#ECFDF5';
+  const NOTE_B = '#FFFBEB';
+  const NOTE_T = '#92400E';
+  const INFO_T = '#0369A1';
+  const MUTED  = '#64748B';
+  const BORD   = '#A7C4BC';
+  const FONT   = 'Times New Roman';
+
+  const hdr = (v) => ({
+    value: v, fontFamily: FONT, fontSize: 11, fontWeight: 'bold',
+    color: WHITE, backgroundColor: COL_H, align: 'center', alignVertical: 'middle',
+    height: 28, borderStyle: 'thin', borderColor: COL_H,
+  });
+  const dat = (v, ri, center = false) => ({
+    value: v,
+    type: typeof v === 'number' ? Number : String,
+    fontFamily: FONT, fontSize: 11,
+    backgroundColor: ri % 2 === 0 ? ROW_A : WHITE,
+    align: center ? 'center' : 'left', alignVertical: 'middle',
+    height: 20, borderStyle: 'thin', borderColor: BORD,
+  });
+  const span6 = (v, extra = {}) => ({ value: v, span: 6, fontFamily: FONT, ...extra });
+
+  const hdrs = vi
+    ? ['STT', 'Họ và tên (*)', 'Học hàm/học vị', 'Số điện thoại', 'Khoa', 'Email cá nhân (*)']
+    : ['No.', 'Full name (*)', 'Academic degree', 'Phone number', 'Faculty', 'Personal email (*)'];
+
+  const samples = vi ? [
+    [1, 'Nguyễn Văn An',  'ThS', '0912 345 678', 'Công nghệ Thông tin',   'an.nv@gmail.com'],
+    [2, 'Trần Thị Bình',  'TS',  '0987 654 321', 'Kinh tế - Kế toán',     'binh.tt@gmail.com'],
+    [3, 'Lê Minh Quân',   'ThS', '',             'Kỹ thuật - Xây dựng',   'quan.lm@gmail.com'],
+    [4, 'Phạm Thu Hà',    'PGS', '0901 234 567', 'Công nghệ Thông tin',   'ha.pt@gmail.com'],
+  ] : [
+    [1, 'Nguyen Van An',  'M.Sc.',  '0912 345 678', 'Information Technology', 'an.nv@gmail.com'],
+    [2, 'Tran Thi Binh',  'Ph.D.',  '0987 654 321', 'Economics & Accounting', 'binh.tt@gmail.com'],
+    [3, 'Le Minh Quan',   'M.Sc.',  '',             'Engineering',            'quan.lm@gmail.com'],
+    [4, 'Pham Thu Ha',    'Assoc.', '0901 234 567', 'Information Technology', 'ha.pt@gmail.com'],
+  ];
+
+  const data = [
+    // Row 1 — university name
+    [span6(vi ? 'TRƯỜNG ĐẠI HỌC KHOA HỌC VÀ CÔNG NGHỆ VIỆT NAM' : 'VIETNAM UNIVERSITY OF SCIENCE AND TECHNOLOGY', {
+      fontSize: 15, fontWeight: 'bold', color: WHITE, backgroundColor: NAVY,
+      align: 'center', alignVertical: 'middle', height: 44,
+    })],
+    // Row 2 — department
+    [span6(vi ? 'PHÒNG TỔ CHỨC NHÂN SỰ  ·  PHÒNG ĐÀO TẠO' : 'HUMAN RESOURCES OFFICE  ·  ACADEMIC AFFAIRS OFFICE', {
+      fontSize: 11, fontStyle: 'italic', color: WHITE, backgroundColor: TEAL,
+      align: 'center', alignVertical: 'middle', height: 24,
+    })],
+    // Row 3 — spacer
+    [span6(null, { height: 12 })],
+    // Row 4 — document title
+    [span6(vi ? 'DANH SÁCH GIẢNG VIÊN' : 'FACULTY & STAFF ROSTER', {
+      fontSize: 14, fontWeight: 'bold', textDecoration: 'underline', color: NAVY,
+      align: 'center', alignVertical: 'middle', height: 38,
+    })],
+    // Row 5 — year / dept fill-in
+    [span6(vi
+      ? 'Năm học: ____________________      Khoa/Bộ môn: __________________________      Bậc đào tạo: _______________'
+      : 'Academic Year: __________________      Faculty/Department: __________________________      Level: _______________', {
+      fontSize: 11, fontStyle: 'italic', color: MUTED,
+      align: 'center', alignVertical: 'middle', height: 22,
+    })],
+    // Row 6 — spacer
+    [span6(null, { height: 10 })],
+    // Row 7 — column headers
+    hdrs.map(h => hdr(h)),
+    // Rows 8-11 — sample data
+    ...samples.map((row, ri) => [
+      dat(row[0], ri, true),
+      dat(row[1], ri),
+      dat(row[2], ri, true),
+      dat(row[3], ri, true),
+      dat(row[4], ri),
+      dat(row[5], ri),
+    ]),
+    // Row 12 — spacer
+    [span6(null, { height: 10 })],
+    // Row 13 — required note
+    [span6(vi
+      ? '(*) Cột bắt buộc điền. Học hàm/học vị hợp lệ: ThS, TS, PGS, GS, CN (để trống nếu không có). Xóa các dòng mẫu trước khi nhập.'
+      : '(*) Required fields. Valid degrees: M.Sc., Ph.D., Assoc., Prof., B.Sc. (leave blank if none). Remove sample rows before importing.', {
+      fontSize: 10, fontStyle: 'italic', color: NOTE_T, backgroundColor: NOTE_B,
+      align: 'left', alignVertical: 'middle', wrap: true, height: 34,
+    })],
+    // Row 14 — auto-generation note
+    [span6(vi
+      ? 'ℹ  Mã giảng viên và email trường (.edu.vn) sẽ được hệ thống tự động sinh. Thông tin đăng nhập gửi về email cá nhân sau khi nhập thành công.'
+      : 'ℹ  Teacher code and school email (.edu.vn) are auto-generated. Login credentials will be sent to personal email after successful import.', {
+      fontSize: 10, fontStyle: 'italic', color: INFO_T,
+      align: 'left', alignVertical: 'middle', wrap: true, height: 34,
+    })],
+  ];
+
+  const columns = [
+    { width: 6 }, { width: 28 }, { width: 16 }, { width: 16 }, { width: 26 }, { width: 28 },
+  ];
+
+  const fileName = vi ? 'mau-danh-sach-giang-vien.xlsx' : 'teacher-import-template.xlsx';
+  await writeXlsxFile(data, { columns, sheet: vi ? 'DS Giảng Viên' : 'Faculty List' }).toFile(fileName);
+}
+
+// ── Teacher Bulk Import Drawer ────────────────────────────────────────────────
+// Cột Mã GV đã bỏ — mã được sinh tự động phía server
+const TEACHER_SAMPLE_CSV = `Họ tên,Học hàm vị,Điện thoại,Khoa,Email cá nhân
+Nguyễn Văn An,ThS,0912345678,Công nghệ Thông tin,an.nv@gmail.com
+Trần Thị Bình,TS,0987654321,Kinh tế - Kế toán,binh.tt@gmail.com
+Lê Minh Quân,ThS,,Kỹ thuật - Xây dựng,quan.lm@gmail.com`;
+
+// Cột: Họ tên, Học hàm vị, Điện thoại, Khoa, Email cá nhân (Mã GV tự sinh server)
 function parseTeacherCSV(text) {
   const lines = text.trim().split(/\r?\n/).filter(l => l.trim());
   if (!lines.length) return { rows: [] };
@@ -179,16 +296,15 @@ function parseTeacherCSV(text) {
   const header = splitLine(lines[0]);
   const looksHeader = /họ tên|full name|name/i.test(header[0]);
   const dataLines = looksHeader ? lines.slice(1) : lines;
+  const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
   const rows = dataLines.map((l, i) => {
-    const [name, code, degree, phone, dept, pmail] = splitLine(l);
+    const [name, degree, phone, dept, pmail] = splitLine(l);
     const errors = [];
     if (!name || !name.trim()) errors.push('name');
-    if (!code || !code.trim() || !/^[A-Za-z0-9]{3,15}$/.test(code.trim())) errors.push('code');
-    if (!pmail || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(pmail.trim())) errors.push('personalEmail');
+    if (!pmail || !emailRe.test(pmail.trim())) errors.push('personalEmail');
     return {
-      i, name: name || '', code: (code || '').toUpperCase(), degree: degree || '',
+      i, name: name || '', degree: degree || '',
       phone: phone || '', department: dept || '', personalEmail: pmail || '',
-      schoolEmail: code ? code.toLowerCase() + '@teacher.school.edu.vn' : '',
       errors,
     };
   });
@@ -224,8 +340,15 @@ function TeacherBulkImportDrawer({ open, onClose, onProvision }) {
     }
   };
 
+  const downloadTemplate = async (e) => {
+    e.stopPropagation();
+    await generateTeacherExcelTemplate(lang);
+  };
+
   const validRows  = parsed ? parsed.rows.filter(r => r.errors.length === 0) : [];
   const errorRows  = parsed ? parsed.rows.filter(r => r.errors.length > 0) : [];
+  // Chỉ cho phép import khi TẤT CẢ dòng đều hợp lệ
+  const canProvision = parsed && parsed.rows.length > 0 && errorRows.length === 0;
 
   return (
     <Drawer open={open} onClose={onClose} width={640}
@@ -233,7 +356,7 @@ function TeacherBulkImportDrawer({ open, onClose, onProvision }) {
       subtitle={lang === 'vi' ? 'Tải file CSV — mỗi dòng 1 giảng viên' : 'Upload CSV — one teacher per row'}
       footer={<>
         <button className="btn btn-ghost" onClick={onClose}>{t('cancel')}</button>
-        <button className="btn btn-primary" disabled={validRows.length === 0} onClick={() => onProvision(validRows)}>
+        <button className="btn btn-primary" disabled={!canProvision} onClick={() => onProvision(validRows)}>
           <I.shield size={16}/>{lang === 'vi' ? `Cấp tài khoản (${validRows.length})` : `Provision (${validRows.length})`}
         </button>
       </>}>
@@ -248,8 +371,16 @@ function TeacherBulkImportDrawer({ open, onClose, onProvision }) {
           <div style={{ width: 46, height: 46, borderRadius: 12, background: 'var(--info-soft)', color: 'var(--accent)', display: 'grid', placeItems: 'center', margin: '0 auto 12px' }}><I.upload size={22}/></div>
           <div style={{ fontSize: 14.5, fontWeight: 600 }}>{lang === 'vi' ? 'Kéo & thả file CSV hoặc Excel (.xlsx) vào đây' : 'Drag & drop CSV or Excel (.xlsx) file here'}</div>
           <div style={{ fontSize: 12.5, color: 'var(--muted)', marginTop: 4 }}>
-            {lang === 'vi' ? 'Cột: Họ tên · Mã GV · Học hàm vị · Điện thoại · Khoa · Email cá nhân' : 'Columns: Name · Code · Degree · Phone · Faculty · Personal email'}
+            {lang === 'vi' ? 'Cột: Họ tên · Học hàm vị · Điện thoại · Khoa · Email cá nhân (Mã GV tự động sinh)' : 'Columns: Name · Degree · Phone · Faculty · Personal email (Teacher code auto-generated)'}
           </div>
+          <div style={{ height: 1, background: 'var(--border)', margin: '14px auto 0', width: 48 }}/>
+          <button
+            onClick={downloadTemplate}
+            style={{ marginTop: 12, display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 14px', borderRadius: 8, fontSize: 12.5, fontWeight: 600, color: 'var(--accent)', background: 'color-mix(in srgb, var(--accent) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 25%, transparent)', cursor: 'pointer', transition: 'all .15s' }}
+            onMouseEnter={e => e.currentTarget.style.background = 'color-mix(in srgb, var(--accent) 18%, transparent)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'color-mix(in srgb, var(--accent) 10%, transparent)'}>
+            <I.download size={14}/>{lang === 'vi' ? 'Tải file mẫu (.xlsx)' : 'Download template (.xlsx)'}
+          </button>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -266,7 +397,7 @@ function TeacherBulkImportDrawer({ open, onClose, onProvision }) {
             </button>
           </div>
           <textarea className="input" rows={5} style={{ fontFamily: 'var(--mono)', fontSize: 12.5, lineHeight: 1.6 }} value={text} onChange={e => setText(e.target.value)}
-            placeholder={lang === 'vi' ? "Họ tên,Mã GV,Học hàm vị,Điện thoại,Khoa,Email cá nhân\n(hoặc tải lên file Excel .xlsx)" : "Full name,Code,Degree,Phone,Faculty,Personal email\n(or upload Excel .xlsx file)"}/>
+            placeholder={lang === 'vi' ? "Họ tên,Học hàm vị,Điện thoại,Khoa,Email cá nhân\n(Mã giảng viên sẽ tự động sinh khi import)" : "Full name,Degree,Phone,Faculty,Personal email\n(Teacher code is auto-generated on import)"}/>
         </div>
 
         {parsed && (
@@ -275,12 +406,24 @@ function TeacherBulkImportDrawer({ open, onClose, onProvision }) {
               <span className="badge badge-success"><I.check size={13}/>{validRows.length} {lang === 'vi' ? 'hợp lệ' : 'valid'}</span>
               {errorRows.length > 0 && <span className="badge badge-danger"><I.alert size={13}/>{errorRows.length} {lang === 'vi' ? 'lỗi' : 'errors'}</span>}
             </div>
+
+            {errorRows.length > 0 && (
+              <div style={{ display: 'flex', gap: 10, padding: '10px 13px', background: 'var(--danger-soft)', borderRadius: 10, fontSize: 12.5, color: 'var(--danger)' }}>
+                <I.alert size={16} style={{ flexShrink: 0, marginTop: 1 }}/>
+                <span>
+                  {lang === 'vi'
+                    ? 'File phải hợp lệ 100% để import. Vui lòng sửa các dòng lỗi trước khi tiếp tục.'
+                    : 'All rows must be valid before importing. Fix the errors highlighted in red.'}
+                </span>
+              </div>
+            )}
+
             <div className="card" style={{ overflow: 'hidden', boxShadow: 'none', border: '1px solid var(--border)' }}>
               <div style={{ overflowX: 'auto', maxHeight: 280, overflowY: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 560 }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 480 }}>
                   <thead>
                     <tr style={{ background: 'var(--surface-2)', position: 'sticky', top: 0, zIndex: 1 }}>
-                      {[t('name'), lang === 'vi' ? 'Mã GV' : 'Code', t('degree'), lang === 'vi' ? 'Email trường (sinh)' : 'School email (generated)', lang === 'vi' ? 'Email cá nhân' : 'Personal email'].map((h, i) => (
+                      {[t('name'), t('degree'), lang === 'vi' ? 'Khoa' : 'Faculty', lang === 'vi' ? 'Email cá nhân' : 'Personal email'].map((h, i) => (
                         <th key={i} style={{ textAlign: 'left', padding: '9px 12px', fontSize: 10.5, fontWeight: 700, letterSpacing: '0.03em', textTransform: 'uppercase', color: 'var(--muted)', whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>{h}</th>
                       ))}
                     </tr>
@@ -291,10 +434,12 @@ function TeacherBulkImportDrawer({ open, onClose, onProvision }) {
                       const has = (f) => r.errors.includes(f);
                       return (
                         <tr key={ri} style={{ borderBottom: '1px solid var(--border)', background: bad ? 'color-mix(in srgb, var(--danger) 5%, transparent)' : 'transparent' }}>
-                          <td style={{ padding: '8px 12px', fontSize: 13, fontWeight: 600, color: has('name') ? 'var(--danger)' : 'var(--text)' }}>{r.name || (lang === 'vi' ? '(thiếu)' : '(missing)')}</td>
-                          <td style={{ padding: '8px 12px', fontSize: 12.5, fontFamily: 'var(--mono)', color: has('code') ? 'var(--danger)' : 'var(--text-2)' }}>{r.code || '—'}</td>
+                          <td style={{ padding: '8px 12px', fontSize: 13, fontWeight: 600, color: has('name') ? 'var(--danger)' : 'var(--text)' }}>
+                            {r.name || (lang === 'vi' ? '(thiếu)' : '(missing)')}
+                            {bad && <span style={{ marginLeft: 6, fontSize: 11, color: 'var(--danger)' }}>← dòng {ri + 1}</span>}
+                          </td>
                           <td style={{ padding: '8px 12px', fontSize: 12.5, color: 'var(--text-2)' }}>{r.degree || '—'}</td>
-                          <td style={{ padding: '8px 12px', fontSize: 12, fontFamily: 'var(--mono)', color: 'var(--muted)' }}>{bad ? '—' : r.schoolEmail}</td>
+                          <td style={{ padding: '8px 12px', fontSize: 12.5, color: 'var(--text-2)' }}>{r.department || '—'}</td>
                           <td style={{ padding: '8px 12px', fontSize: 12, color: has('personalEmail') ? 'var(--danger)' : 'var(--muted)' }}>{r.personalEmail || (lang === 'vi' ? '(thiếu)' : '(missing)')}</td>
                         </tr>
                       );
@@ -306,8 +451,8 @@ function TeacherBulkImportDrawer({ open, onClose, onProvision }) {
             <div style={{ display: 'flex', gap: 11, padding: 13, background: 'var(--info-soft)', borderRadius: 11, fontSize: 12.5, color: 'var(--text-2)', lineHeight: 1.5 }}>
               <I.spark size={18} style={{ color: 'var(--accent)', flexShrink: 0, marginTop: 1 }}/>
               {lang === 'vi'
-                ? 'Mỗi dòng hợp lệ sẽ tạo email trường từ Mã GV + mật khẩu tạm, gửi tới email cá nhân.'
-                : 'Each valid row gets a school email from the teacher code + a temp password, emailed to the personal address.'}
+                ? 'Mã GV, email trường và mật khẩu tạm sẽ được sinh tự động và gửi tới email cá nhân. Import chỉ thành công khi toàn bộ danh sách hợp lệ.'
+                : 'Teacher codes, school emails and temporary passwords are auto-generated and emailed. Import succeeds only when all rows are valid.'}
             </div>
           </div>
         )}
@@ -347,8 +492,6 @@ function TeachersScreen() {
     if (deptFilter && tc.deptName !== deptFilter) return false;
     return true;
   });
-
-  const existingCodes = useMemo(() => teachers.map(tc => tc.code?.toUpperCase()), [teachers]);
 
   const columns = [
     { header: t('teachers'), nowrap: true, cell: tc => (
@@ -407,14 +550,12 @@ function TeachersScreen() {
       <TeacherDrawer
         state={drawer}
         depts={depts}
-        existingCodes={existingCodes}
         onClose={() => setDrawer(null)}
         onSave={async (data) => {
           try {
             if (drawer.mode === 'add') {
               await requestCreateTeacher({
-                fullName: data.name, idTeacher: data.code,
-                email: data.email || `${data.code.toLowerCase()}@teacher.school.edu.vn`,
+                fullName: data.name,
                 personalEmail: data.personalEmail, degree: data.degree || undefined,
                 phone: data.phone || undefined, gender: data.gender,
                 birthDay: data.birthDay || undefined, department: data.department || undefined,
@@ -443,19 +584,26 @@ function TeachersScreen() {
           try {
             const res = await requestBulkImportTeachers({
               rows: rows.map(r => ({
-                fullName: r.name, idTeacher: r.code,
+                fullName: r.name,
                 personalEmail: r.personalEmail, degree: r.degree || undefined,
                 phone: r.phone || undefined, department: r.department || undefined,
               })),
             });
             const meta = res.metadata;
             toast(lang === 'vi'
-              ? `Đã tạo ${meta.created} GV${meta.failed ? ` · ${meta.failed} lỗi` : ''}`
-              : `Created ${meta.created} teachers${meta.failed ? ` · ${meta.failed} failed` : ''}`,
-              meta.failed ? 'warn' : 'success');
+              ? `Đã tạo ${meta.created} giảng viên`
+              : `Created ${meta.created} teachers`,
+              'success');
             loadData();
           } catch (err) {
-            toast(err?.response?.data?.message || (lang === 'vi' ? 'Nhập hàng loạt thất bại' : 'Bulk import failed'), 'danger');
+            const data = err?.response?.data;
+            const errs = data?.errors;
+            if (errs?.length) {
+              const detail = errs.slice(0, 3).map(e => `Dòng ${e.row}: ${e.reason}`).join(' · ');
+              toast(`${data.message} · ${detail}`, 'danger');
+            } else {
+              toast(data?.message || (lang === 'vi' ? 'Nhập hàng loạt thất bại' : 'Bulk import failed'), 'danger');
+            }
           }
           setImportOpen(false);
         }}/>

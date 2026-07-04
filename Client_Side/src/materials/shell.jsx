@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { I } from './icons';
 import { Avatar, EmptyRow, Pagination, useApp } from './ui';
-import { NotificationBell } from './tools';
 
 /* EduManage — App shell: Sidebar, Topbar, DataTable */
 
@@ -66,7 +65,7 @@ function Sidebar({ nav, route, setRoute, user, role, collapsed, mobileOpen, onCl
   );
 }
 
-function Topbar({ title, subtitle, onToggleSidebar, onToggleMobile, onLogout, onSwitchRole, onOpenSearch, onGoto, onProfile, user, role }) {
+function Topbar({ title, subtitle, onToggleSidebar, onToggleMobile, onLogout, onSwitchRole, onOpenSearch, onProfile, user, role }) {
   const { t, lang, toggleLang, theme, toggleTheme } = useApp();
   const [menu, setMenu] = useState(false);
   const [roleMenu, setRoleMenu] = useState(false);
@@ -84,7 +83,6 @@ function Topbar({ title, subtitle, onToggleSidebar, onToggleMobile, onLogout, on
 
       <button className="btn btn-icon btn-sm btn-ghost" onClick={toggleLang} title="Language"><span style={{ fontSize: 12, fontWeight: 800 }}>{lang.toUpperCase()}</span></button>
       <button className="btn btn-icon btn-sm btn-ghost" onClick={toggleTheme}>{theme === 'light' ? <I.moon size={18}/> : <I.sun size={18}/>}</button>
-      <NotificationBell role={role} onGoto={onGoto}/>
       <div style={{ width: 1, height: 26, background: 'var(--border)' }}/>
       <div style={{ position: 'relative' }}>
         <button onClick={() => setMenu(m => !m)} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '4px 6px 4px 4px', borderRadius: 999 }}>

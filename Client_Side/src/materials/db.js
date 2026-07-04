@@ -60,9 +60,6 @@ const DB = (function () {
       errCode: 'Mã gồm 6–10 chữ số', errCodeTaken: 'Mã này đã tồn tại', errEmail: 'Email không hợp lệ',
       errDob: 'Ngày sinh dạng dd/mm/yyyy', errDobAge: 'Tuổi phải từ 15–60', errFixForm: 'Vui lòng sửa các lỗi được đánh dấu',
       optional: 'không bắt buộc', autoFilled: 'Tự tạo khi lưu',
-      notifications: 'Thông báo', markAllRead: 'Đánh dấu tất cả đã đọc', noNotifications: 'Không có thông báo mới',
-      unread: 'chưa đọc', viewAllNotif: 'Xem tất cả thông báo', justNow: 'Vừa xong', minsAgo: 'phút trước', hoursAgo: 'giờ trước', daysAgo: 'ngày trước',
-      filterAll: 'Tất cả', filterUnread: 'Chưa đọc',
       // profile
       myProfile: 'Hồ sơ của tôi', phone: 'Số điện thoại', address: 'Địa chỉ',
       changePassword: 'Đổi mật khẩu', profileSaved: 'Đã lưu hồ sơ',
@@ -122,9 +119,6 @@ const DB = (function () {
       errCode: 'Code must be 6–10 digits', errCodeTaken: 'This code already exists', errEmail: 'Invalid email address',
       errDob: 'Use date format dd/mm/yyyy', errDobAge: 'Age must be 15–60', errFixForm: 'Please fix the highlighted fields',
       optional: 'optional', autoFilled: 'Auto-generated on save',
-      notifications: 'Notifications', markAllRead: 'Mark all as read', noNotifications: 'No new notifications',
-      unread: 'unread', viewAllNotif: 'View all notifications', justNow: 'Just now', minsAgo: 'min ago', hoursAgo: 'h ago', daysAgo: 'd ago',
-      filterAll: 'All', filterUnread: 'Unread',
       // profile
       myProfile: 'My Profile', phone: 'Phone number', address: 'Address',
       changePassword: 'Change password', profileSaved: 'Profile saved',
@@ -273,32 +267,9 @@ const DB = (function () {
     { term: 'HK1·24', gpa: 3.55 },
   ];
 
-  // ---------------- Notifications (per role) ----------------
-  const NOTIFICATIONS = {
-    ADMIN: [
-      { id: 'an1', tone: 'success', icon: 'users', mins: 4, title_vi: '5 sinh viên mới được cấp tài khoản', title_en: '5 new students provisioned', body_vi: 'Lớp KTPM2021A · email & mật khẩu tạm đã gửi', body_en: 'Class KTPM2021A · credentials emailed', goto: ['ADMIN', 'a-students'] },
-      { id: 'an2', tone: 'warn', icon: 'layers', mins: 38, title_vi: 'Lớp học phần IT4409.1 sắp đầy', title_en: 'Section IT4409.1 nearly full', body_vi: 'Đã đăng ký 58/60 chỗ', body_en: '58 of 60 seats filled', goto: ['ADMIN', 'a-sections'] },
-      { id: 'an3', tone: 'info', icon: 'pen', mins: 120, title_vi: 'TS. Nguyễn Văn Minh đã nộp điểm', title_en: 'Dr. Minh submitted grades', body_vi: 'Môn Cơ sở dữ liệu · IT3080.1', body_en: 'Databases · IT3080.1', goto: ['ADMIN', 'a-teachers'] },
-      { id: 'an4', tone: 'danger', icon: 'lock', mins: 200, title_vi: 'Tài khoản 20216005 bị khóa', title_en: 'Account 20216005 locked', body_vi: 'Sau 5 lần đăng nhập sai liên tiếp', body_en: 'After 5 failed login attempts', goto: ['ADMIN', 'a-students'] },
-      { id: 'an5', tone: 'info', icon: 'calendar', mins: 1440, title_vi: 'Học kỳ 2 đã mở cổng đăng ký', title_en: 'Semester 2 registration opened', body_vi: 'Sinh viên có thể đăng ký từ hôm nay', body_en: 'Students can register from today' },
-    ],
-    TEACHER: [
-      { id: 'tn1', tone: 'danger', icon: 'bell', mins: 15, title_vi: '3 sinh viên vắng quá 20%', title_en: '3 students exceed 20% absence', body_vi: 'Lớp Cơ sở dữ liệu · cần cảnh báo', body_en: 'Databases section · needs warning', goto: ['TEACHER', 't-attendance'] },
-      { id: 'tn2', tone: 'warn', icon: 'clock', mins: 90, title_vi: 'Hạn nộp điểm cuối kỳ còn 2 ngày', title_en: 'Final grades due in 2 days', body_vi: 'Môn Công nghệ Web · IT4409.1', body_en: 'Web Technologies · IT4409.1', goto: ['TEACHER', 't-grades'] },
-      { id: 'tn3', tone: 'success', icon: 'users', mins: 240, title_vi: '12 sinh viên mới đăng ký lớp của bạn', title_en: '12 students enrolled in your section', body_vi: 'Lập trình hướng đối tượng · IT3100.1', body_en: 'OOP · IT3100.1', goto: ['TEACHER', 't-sections'] },
-      { id: 'tn4', tone: 'info', icon: 'pin', mins: 360, title_vi: 'Phòng học buổi Thứ 3 đã đổi', title_en: 'Tuesday room changed', body_vi: 'P.205 → P.305', body_en: 'P.205 → P.305', goto: ['TEACHER', 't-schedule'] },
-    ],
-    STUDENT: [
-      { id: 'sn1', tone: 'success', icon: 'award', mins: 8, title_vi: 'Điểm môn Công nghệ Web đã cập nhật', title_en: 'Web Technologies grade posted', body_vi: 'Tổng kết: 8.4 · điểm chữ B+', body_en: 'Total: 8.4 · letter B+', goto: ['STUDENT', 's-transcript'] },
-      { id: 'sn2', tone: 'warn', icon: 'clock', mins: 60, title_vi: 'Cổng đăng ký HK1 đóng sau 3 ngày', title_en: 'Registration closes in 3 days', body_vi: 'Hạn chót: 20/06/2025', body_en: 'Deadline: 20/06/2025', goto: ['STUDENT', 's-reg'] },
-      { id: 'sn3', tone: 'danger', icon: 'bell', mins: 180, title_vi: 'Bạn đã vắng 2 buổi môn Cơ sở dữ liệu', title_en: 'You missed 2 Databases sessions', body_vi: 'Vắng quá 20% sẽ bị cấm thi', body_en: 'Over 20% absence bars the exam' },
-      { id: 'sn4', tone: 'info', icon: 'calendar', mins: 1500, title_vi: 'Lịch thi cuối kỳ đã công bố', title_en: 'Final exam schedule published', body_vi: 'Kiểm tra thời khóa biểu của bạn', body_en: 'Check your timetable', goto: ['STUDENT', 's-schedule'] },
-    ],
-  };
-
   return {
     I18N, FACULTIES, MAJORS, CLASSES, SUBJECTS, STUDENTS, TEACHERS, SECTIONS, MAP,
-    DEMO_TRANSCRIPT, GPA_TREND, letterOf, NOTIFICATIONS,
+    DEMO_TRANSCRIPT, GPA_TREND, letterOf,
     // dashboards aggregate
     stats: {
       students: STUDENTS.length, teachers: TEACHERS.length,

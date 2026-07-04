@@ -5,7 +5,6 @@ import { useAuth } from '../../context/AuthContext';
 import { requestLogin, requestForgotPassword, requestVerifyOtp, requestResetPassword } from '../../config/userRequest';
 import {
   DEMO_USERS,
-  DEMO_PASSWORDS,
   PW_RULES,
   ROLE_ADMIN,
   ROLE_TEACHER,
@@ -122,7 +121,14 @@ export default function LoginUser({ renderApp }) {
   const [apiError, setApiError]     = useState('');
   const otpRefs = useRef([]);
 
-  const navigate = (v) => { setApiError(''); setView(v); };
+  const navigate = (v) => {
+    setApiError('');
+    if (v === 'forgot') {
+      setIdentifier('');
+      setIdTouched(false);
+    }
+    setView(v);
+  };
 
   // Must be declared before any early returns (Rules of Hooks)
   useEffect(() => {
@@ -131,6 +137,17 @@ export default function LoginUser({ renderApp }) {
     const iv = setInterval(() => setSecs((s) => (s > 0 ? s - 1 : 0)), OTP_TIMER_INTERVAL_MS);
     return () => clearInterval(iv);
   }, [view]);
+
+  // Clear form whenever the login screen is shown (logout, session expiry, initial load)
+  useEffect(() => {
+    if (!user && !authLoading) {
+      setIdentifier('');
+      setPw('');
+      setView('login');
+      setApiError('');
+      setIdTouched(false);
+    }
+  }, [user, authLoading]);
 
   if (authLoading) {
     return (
@@ -152,12 +169,12 @@ export default function LoginUser({ renderApp }) {
     ? (lang === 'vi' ? 'Vui lòng nhập mã tài khoản' : 'Please enter your account ID')
     : '';
 
-  // Fill demo credentials into the form for quick testing
   const quick = (r) => {
     setRole(r);
-    setIdentifier(DEMO_USERS[r].identifier);
-    setPw(DEMO_PASSWORDS[r]);
+    setIdentifier('');
+    setPw('');
     setApiError('');
+    setIdTouched(false);
   };
 
   const submitLogin = async (e) => {

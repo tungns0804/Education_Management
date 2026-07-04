@@ -64,14 +64,6 @@ enum AttendanceStatus {
   excused
 }
 
-enum NotificationType {
-  info
-  success
-  warning
-  error
-  grade
-  enrollment
-}
 
 enum LetterGrade {
   A
@@ -176,7 +168,6 @@ model User {
   enrollments       Enrollment[]   @relation("StudentEnrollments")
   attendances       Attendance[]   @relation("StudentAttendances")
   markedAttendances Attendance[]   @relation("MarkedByTeacher")
-  notifications     Notification[]
   activityLogs      ActivityLog[]
   apiKey            ApiKey?
   otps              Otp[]
@@ -299,25 +290,6 @@ model Attendance {
   @@map("attendances")
 }
 
-// ------------------------------------------------------------------
-// Notification — Thông báo người dùng
-// ------------------------------------------------------------------
-model Notification {
-  id      String           @id @default(uuid())
-  title   String
-  message String
-  type    NotificationType @default(info)
-  isRead  Boolean          @default(false)
-  link    String?
-
-  userId String
-  user   User   @relation(fields: [userId], references: [id])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("notifications")
-}
 
 // ------------------------------------------------------------------
 // ActivityLog — Nhật ký hoạt động (Audit Trail)
