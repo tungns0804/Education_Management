@@ -63,6 +63,12 @@ const DB = (function () {
       notifications: 'Thông báo', markAllRead: 'Đánh dấu tất cả đã đọc', noNotifications: 'Không có thông báo mới',
       unread: 'chưa đọc', viewAllNotif: 'Xem tất cả thông báo', justNow: 'Vừa xong', minsAgo: 'phút trước', hoursAgo: 'giờ trước', daysAgo: 'ngày trước',
       filterAll: 'Tất cả', filterUnread: 'Chưa đọc',
+      // profile
+      myProfile: 'Hồ sơ của tôi', phone: 'Số điện thoại', address: 'Địa chỉ',
+      changePassword: 'Đổi mật khẩu', profileSaved: 'Đã lưu hồ sơ',
+      pwChanged: 'Mật khẩu đã thay đổi, vui lòng đăng nhập lại',
+      currentPwWrong: 'Mật khẩu hiện tại không đúng', pwMismatch: 'Mật khẩu không khớp',
+      studentId: 'Mã sinh viên', teacherId: 'Mã giảng viên', chooseAvatar: 'Chọn ảnh đại diện',
     },
     en: {
       appName: 'EduManage',
@@ -119,6 +125,12 @@ const DB = (function () {
       notifications: 'Notifications', markAllRead: 'Mark all as read', noNotifications: 'No new notifications',
       unread: 'unread', viewAllNotif: 'View all notifications', justNow: 'Just now', minsAgo: 'min ago', hoursAgo: 'h ago', daysAgo: 'd ago',
       filterAll: 'All', filterUnread: 'Unread',
+      // profile
+      myProfile: 'My Profile', phone: 'Phone number', address: 'Address',
+      changePassword: 'Change password', profileSaved: 'Profile saved',
+      pwChanged: 'Password changed, please sign in again',
+      currentPwWrong: 'Current password is incorrect', pwMismatch: 'Passwords do not match',
+      studentId: 'Student ID', teacherId: 'Teacher ID', chooseAvatar: 'Choose avatar',
     }
   };
 

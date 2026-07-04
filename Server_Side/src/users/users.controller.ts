@@ -49,6 +49,12 @@ export class UsersController {
     return { success: true, message: 'success', metadata: data };
   }
 
+  @Get('me')
+  async getMe(@Req() req: AuthReq) {
+    const data = await this.usersService.findById(req.user.id);
+    return { success: true, message: 'success', metadata: data };
+  }
+
   @Get(':id')
   async getOne(@Param('id') id: string) {
     const data = await this.usersService.findById(id);
@@ -85,6 +91,12 @@ export class UsersController {
   async bulkImportTeachers(@Body() body: { rows: any[] }) {
     const data = await this.usersService.bulkImportTeachers(body.rows);
     return { success: true, message: `Đã tạo ${data.created} giảng viên`, metadata: data };
+  }
+
+  @Put('change-password')
+  async changePassword(@Req() req: AuthReq, @Body() body: any) {
+    const data = await this.usersService.changePassword(req.user.id, body.currentPassword, body.newPassword);
+    return { success: true, message: data.message, metadata: data };
   }
 
   @Put(':id')

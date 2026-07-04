@@ -21,6 +21,7 @@ export const API_ENDPOINTS = {
   CHANGE_PASSWORD: `${USERS_BASE}/change-password`,
 
   // ---- User management ----
+  ME:          `${USERS_BASE}/me`,
   STUDENTS:    `${USERS_BASE}/students`,
   TEACHERS:    `${USERS_BASE}/teachers`,
   BULK_IMPORT:          `${USERS_BASE}/bulk-import`,

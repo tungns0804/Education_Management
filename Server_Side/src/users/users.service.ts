@@ -247,6 +247,20 @@ export class UsersService {
     return this.omitPassword(user);
   }
 
+  async changePassword(userId: string, currentPassword: string, newPassword: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('Người dùng không tồn tại');
+
+    const match = await bcrypt.compare(currentPassword, user.password);
+    if (!match) throw new BadRequestException('Mật khẩu hiện tại không đúng');
+
+    const hashed = await bcrypt.hash(newPassword, BCRYPT_SALT_ROUNDS);
+    await this.prisma.user.update({ where: { id: userId }, data: { password: hashed } });
+    await this.prisma.apiKey.deleteMany({ where: { userId } });
+
+    return { message: 'Mật khẩu đã được cập nhật. Vui lòng đăng nhập lại.' };
+  }
+
   async toggleStatus(id: string, status: 'active' | 'inactive') {
     await this.findById(id);
     const newStatus = status === 'active' ? UserStatus.active : UserStatus.inactive;

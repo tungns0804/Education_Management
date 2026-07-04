@@ -10,6 +10,7 @@ export const requestVerifyOtp      = (data) => request.post(API_ENDPOINTS.VERIFY
 export const requestResetPassword  = (data) => request.post(API_ENDPOINTS.RESET_PASSWORD,  data).then((r) => r.data);
 
 // ── Authenticated calls ──────────────────────────────────────────────────────
+export const requestMe             = ()     => apiClient.get(API_ENDPOINTS.ME)                          .then((r) => r.data);
 export const requestAuth           = ()     => request.get(API_ENDPOINTS.AUTH)                        .then((r) => r.data);
 export const requestLogout         = ()     => apiClient.post(API_ENDPOINTS.LOGOUT)                   .then((r) => r.data);
 export const requestChangePassword = (data) => apiClient.put(API_ENDPOINTS.CHANGE_PASSWORD, data)     .then((r) => r.data);

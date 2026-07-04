@@ -66,7 +66,7 @@ function Sidebar({ nav, route, setRoute, user, role, collapsed, mobileOpen, onCl
   );
 }
 
-function Topbar({ title, subtitle, onToggleSidebar, onToggleMobile, onLogout, onSwitchRole, onOpenSearch, onGoto, user, role }) {
+function Topbar({ title, subtitle, onToggleSidebar, onToggleMobile, onLogout, onSwitchRole, onOpenSearch, onGoto, onProfile, user, role }) {
   const { t, lang, toggleLang, theme, toggleTheme } = useApp();
   const [menu, setMenu] = useState(false);
   const [roleMenu, setRoleMenu] = useState(false);
@@ -106,7 +106,7 @@ function Topbar({ title, subtitle, onToggleSidebar, onToggleMobile, onLogout, on
                   <div style={{ fontSize: 11.5, color: 'var(--muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.email}</div>
                 </div>
               </div>
-              <MenuRow icon={<I.user size={16}/>} label={t('profile')}/>
+              <MenuRow icon={<I.user size={16}/>} label={t('profile')} onClick={() => { setMenu(false); onProfile?.(); }}/>
               <div style={{ height: 1, background: 'var(--border)', margin: '6px 0' }}/>
               <button onClick={onLogout} style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '9px 12px', borderRadius: 8, fontSize: 13.5, fontWeight: 600, color: 'var(--danger)' }}
                 onMouseEnter={e => e.currentTarget.style.background = 'var(--danger-soft)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>

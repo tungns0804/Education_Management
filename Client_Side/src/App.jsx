@@ -9,6 +9,7 @@ import { TeachersScreen, CatalogScreen, SubjectsScreen, SectionsScreen } from '.
 import { TeacherDashboard, MySectionsScreen, AttendanceScreen, GradeEntryScreen } from './materials/teacher';
 import { StudentDashboard, RegistrationScreen, TranscriptScreen } from './materials/student';
 import { StudentProfile, ScheduleScreen } from './materials/details';
+import ProfilePage from './pages/profile/ProfilePage';
 import { NAV as ADMIN_NAV } from './layouts/AdminLayout';
 import { NAV as TEACHER_NAV } from './layouts/TeacherLayout';
 import { NAV as STUDENT_NAV } from './layouts/StudentLayout';
@@ -46,6 +47,7 @@ function titleFor(route, t) {
     'a-subject':       [t('subjects'),  t('academic')],
     'a-sections':      [t('sections'),  t('academic')],
     'a-student-detail':[t('students'),  t('management')],
+    'profile':         [t('myProfile'), ''],
     't-dash':          [t('dashboard'), t('teaching')],
     't-sections':      [t('mySections'),t('teaching')],
     't-attendance':    [t('attendance'),t('teaching')],
@@ -100,6 +102,7 @@ function Shell({ apiUser, onSignOut }) {
     case 's-reg':           screen = <RegistrationScreen />;                                                                               break;
     case 's-schedule':      screen = <ScheduleScreen role="STUDENT" />;                                                                    break;
     case 's-transcript':    screen = <TranscriptScreen />;                                                                                 break;
+    case 'profile':         screen = <ProfilePage />;                                                                                      break;
     default:                screen = <AdminDashboard />;
   }
 
@@ -110,7 +113,8 @@ function Shell({ apiUser, onSignOut }) {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
         <Topbar title={title} subtitle={subtitle} user={user} role={role}
           onToggleSidebar={() => setCollapsed((c) => !c)} onToggleMobile={() => setMobileOpen(true)}
-          onLogout={() => setLogoutAsk(true)} onSwitchRole={() => {}} onGoto={goto} />
+          onLogout={() => setLogoutAsk(true)} onSwitchRole={() => {}} onGoto={goto}
+          onProfile={() => nav('profile')} />
         <main className="hide-scroll" key={route} style={{ flex: 1, overflowY: 'auto', background: 'var(--bg)' }}>{screen}</main>
       </div>
 <Modal open={logoutAsk} onClose={() => setLogoutAsk(false)} icon={<I.logout size={22} />}
