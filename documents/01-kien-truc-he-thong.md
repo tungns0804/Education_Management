@@ -52,9 +52,9 @@ NestJS theo mẫu phân lớp chuẩn: **Controller → Service → PrismaServic
 | `auth/` | ✅ (chia sẻ prefix `api/users`) | Đăng nhập, đăng xuất, làm mới token, quên/đặt lại mật khẩu, đổi mật khẩu |
 | `users/` | ✅ (`api/users`) | CRUD sinh viên/giảng viên, nhập hàng loạt, cập nhật hồ sơ |
 | `departments/` | ✅ (`api/departments`) | CRUD Khoa |
-| `branches/` | ✅ (`api/branches`) | CRUD Ngành |
-| `classes/` | ✅ (`api/classes`) | CRUD Lớp hành chính |
-| `subjects/` | ✅ (`api/subjects`) | CRUD Môn học |
+| `branches/` | ✅ (`api/branches`) | CRUD Ngành (thuộc Khoa) |
+| `classes/` | ✅ (`api/classes`) | CRUD Lớp hành chính (thuộc **Ngành** — lọc `?branchId`) |
+| `subjects/` | ✅ (`api/subjects`) | CRUD Môn học (thuộc **Ngành** — lọc `?branchId`) |
 | `subject-classes/` | ✅ (`api/subject-classes`) | CRUD Lớp học phần, danh sách lớp theo vai trò |
 | `enrollments/` | ✅ (`api/enrollments`) | Đăng ký/hủy học phần, nhập điểm, khóa điểm, bảng điểm, GPA |
 | `attendance/` | ✅ (`api/attendance`) | Điểm danh (đơn lẻ + hàng loạt) |
@@ -188,9 +188,10 @@ Cung cấp `{ user, loading, login, logout, lockedMessage, clearLockedMessage }`
 
 Cả theme (sáng/tối) và ngôn ngữ (`vi`/`en`) đều là tùy chọn **hoàn toàn phía client**, lưu trong `localStorage` (`em_theme`, `em_lang`), không có endpoint backend nào liên quan. Theme áp dụng qua thuộc tính `data-theme` trên `<html>` + CSS custom properties (`styles.css`). i18n tra cứu qua `DB.I18N[lang][key]` (nay `db.js` chỉ còn từ điển này, không còn dữ liệu giả — đã được thay hoàn toàn bằng API thật ở mọi màn hình).
 
-### 3.8 Quy tắc mật khẩu (`constants/auth.constants.js` → `PW_RULES`)
+### 3.8 Quy tắc mật khẩu & định dạng mã đăng nhập (`constants/auth.constants.js`)
 
-Tối thiểu 8 ký tự · có chữ hoa · có chữ số · có ký tự đặc biệt. Áp dụng ở màn hình đặt lại mật khẩu (`LoginUser.jsx`) và đổi mật khẩu (`ProfilePage.jsx`).
+- **`PW_RULES`**: tối thiểu 8 ký tự · có chữ hoa · có chữ số · có ký tự đặc biệt. Áp dụng ở màn hình đặt lại mật khẩu (`LoginUser.jsx`) và đổi mật khẩu (`ProfilePage.jsx`).
+- **`ROLE_ID_PATTERNS`** (mới): màn hình đăng nhập có 3 tab vai trò (Admin / Giảng viên / Sinh viên); mã tài khoản nhập vào phải khớp định dạng của vai trò đang chọn — Admin phải là `admin`, Giảng viên dạng `GV` + số (VD `GV1001`), Sinh viên là dãy số (VD `20216001`). Nhập sai định dạng sẽ bị chặn ngay phía client trước khi gọi API, tránh việc đổi tab vai trò sau khi đã gõ mã của vai trò khác mà vẫn đăng nhập được.
 
 ### 3.9 Nhập hàng loạt (`materials/tools.jsx`)
 

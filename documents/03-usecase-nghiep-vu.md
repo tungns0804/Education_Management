@@ -1,19 +1,45 @@
 # Đặc Tả Nghiệp Vụ (Use Case) — Education Management System
 
-> Khuôn mẫu đặc tả theo `00-phan-tich-tai-lieu-mau.md` (mục 3.3). Nội dung nghiệp vụ lấy từ mã nguồn thực tế của `server_side/` (service layer) và `client_side/` (màn hình thao tác), không phải suy diễn.
+> Khuôn mẫu đặc tả theo `00-phan-tich-tai-lieu-mau.md` (mục 3.3). Nội dung nghiệp vụ lấy từ mã nguồn thực tế của `server_side/` (service layer) và `client_side/` (màn hình thao tác), không phải suy diễn. Phiên bản này (v2) mở rộng từ 14 lên **21 use case**, bổ sung các nghiệp vụ đã có trong source nhưng chưa được tài liệu hóa: cập nhật hồ sơ, khóa/mở khóa & xóa tài khoản, xem chi tiết người dùng, xuất danh sách, xem lớp phụ trách, xem lịch học/lịch dạy.
 
 ## 1. Danh sách tác nhân (Actor)
 
 | STT | Tác nhân | Mô tả |
 |---|---|---|
 | 1 | **Khách (chưa đăng nhập)** | Người truy cập ứng dụng nhưng chưa xác thực. Chỉ có thể đăng nhập, hoặc thực hiện quên/đặt lại mật khẩu. |
-| 2 | **Admin** | Toàn quyền quản trị: tài khoản (Sinh viên/Giảng viên), danh mục (Khoa, Ngành, Lớp, Môn học, Lớp học phần, Học kỳ), xem thống kê toàn hệ thống. Không trực tiếp nhập điểm/điểm danh nhưng có quyền khóa/mở khóa điểm và xem toàn bộ lớp học phần. |
-| 3 | **Giảng viên (Teacher)** | Xem các lớp học phần mình phụ trách, điểm danh sinh viên, nhập/sửa điểm (khi chưa khóa), khóa/mở khóa điểm, xem thống kê lớp mình dạy. |
-| 4 | **Sinh viên (Student)** | Đăng ký/hủy đăng ký học phần, xem điểm danh của bản thân, xem bảng điểm & GPA, xem thống kê cá nhân. |
+| 2 | **Admin** | Toàn quyền quản trị: tài khoản (Sinh viên/Giảng viên — tạo, sửa, khóa/mở khóa, xóa), danh mục (Khoa, Ngành, Lớp, Môn học, Lớp học phần, Học kỳ), xuất danh sách, xem thống kê toàn hệ thống. Không trực tiếp nhập điểm/điểm danh nhưng có quyền khóa/mở khóa điểm và xem toàn bộ lớp học phần. |
+| 3 | **Giảng viên (Teacher)** | Xem các lớp học phần mình phụ trách và danh sách sinh viên, điểm danh, nhập/sửa điểm (khi chưa khóa), khóa/mở khóa điểm, xem lịch dạy, xem thống kê lớp mình dạy. |
+| 4 | **Sinh viên (Student)** | Đăng ký/hủy đăng ký học phần, xem môn đã đăng ký & lịch học, xem bảng điểm & GPA, xem thống kê cá nhân. |
 
 Cả 3 vai trò đã đăng nhập đều dùng chung: đăng xuất, đổi mật khẩu, cập nhật hồ sơ cá nhân.
 
-## 2. Biểu đồ Use Case tổng quát
+## 2. Danh mục Use Case
+
+| Mã | Tên Use Case | Tác nhân | Nhóm |
+|---|---|---|---|
+| UC#01 | Đăng nhập (theo vai trò) | Khách | Xác thực |
+| UC#02 | Quên mật khẩu (OTP qua email) | Khách | Xác thực |
+| UC#03 | Đổi mật khẩu | Mọi vai trò | Xác thực |
+| UC#04 | Đăng xuất | Mọi vai trò | Xác thực |
+| UC#05 | Cập nhật hồ sơ cá nhân | Mọi vai trò | Tài khoản |
+| UC#06 | Tạo tài khoản Sinh viên / Giảng viên | Admin | Tài khoản |
+| UC#07 | Nhập danh sách hàng loạt (Bulk Import) | Admin | Tài khoản |
+| UC#08 | Xem chi tiết & cập nhật thông tin người dùng | Admin | Tài khoản |
+| UC#09 | Khóa / mở khóa tài khoản | Admin | Tài khoản |
+| UC#10 | Xóa tài khoản | Admin | Tài khoản |
+| UC#11 | Quản lý danh mục (Khoa / Ngành / Lớp / Môn học) | Admin | Danh mục |
+| UC#12 | Quản lý Lớp học phần & Học kỳ | Admin | Danh mục |
+| UC#13 | Xuất danh sách (CSV / Excel) | Admin | Danh mục |
+| UC#14 | Xem lớp phụ trách & danh sách sinh viên | Giảng viên | Học vụ |
+| UC#15 | Điểm danh sinh viên | Giảng viên | Học vụ |
+| UC#16 | Nhập điểm & Khóa điểm | Giảng viên (+ Admin khóa) | Học vụ |
+| UC#17 | Đăng ký học phần | Sinh viên | Học vụ |
+| UC#18 | Hủy đăng ký học phần | Sinh viên | Học vụ |
+| UC#19 | Xem môn đã đăng ký & lịch học / lịch dạy | Sinh viên, Giảng viên | Học vụ |
+| UC#20 | Xem bảng điểm & GPA | Sinh viên | Học vụ |
+| UC#21 | Xem thống kê Dashboard | Mọi vai trò | Thống kê |
+
+## 3. Biểu đồ Use Case tổng quát
 
 ```mermaid
 flowchart LR
@@ -22,101 +48,105 @@ flowchart LR
     Teacher(("Giảng viên"))
     Student(("Sinh viên"))
 
-    subgraph SYS["Hệ thống Quản lý Sinh viên"]
-        UC1(["Đăng nhập"])
-        UC2(["Quên mật khẩu (OTP)"])
-        UC3(["Đổi mật khẩu"])
-        UC4(["Đăng xuất"])
-        UC5(["Quản lý tài khoản<br/>Sinh viên/Giảng viên"])
-        UC6(["Nhập danh sách hàng loạt"])
-        UC7(["Quản lý danh mục<br/>Khoa/Ngành/Lớp/Môn học"])
-        UC7b(["Quản lý Lớp học phần & Học kỳ"])
-        UC8(["Đăng ký học phần"])
-        UC9(["Hủy đăng ký học phần"])
-        UC10(["Nhập điểm & Khóa điểm"])
-        UC11(["Điểm danh sinh viên"])
-        UC12(["Xem thống kê Dashboard"])
-        UC13(["Xem bảng điểm & GPA"])
+    subgraph AUTH["Xác thực & Tài khoản cá nhân"]
+        UC1(["UC01 Đăng nhập"])
+        UC2(["UC02 Quên mật khẩu (OTP)"])
+        UC3(["UC03 Đổi mật khẩu"])
+        UC4(["UC04 Đăng xuất"])
+        UC5(["UC05 Cập nhật hồ sơ"])
     end
+
+    subgraph ADM["Quản trị (Admin)"]
+        UC6(["UC06 Tạo tài khoản"])
+        UC7(["UC07 Nhập hàng loạt"])
+        UC8(["UC08 Xem/sửa người dùng"])
+        UC9(["UC09 Khóa/mở khóa tài khoản"])
+        UC10(["UC10 Xóa tài khoản"])
+        UC11(["UC11 Danh mục Khoa/Ngành/Lớp/Môn"])
+        UC12(["UC12 Lớp học phần & Học kỳ"])
+        UC13(["UC13 Xuất CSV/Excel"])
+    end
+
+    subgraph HV["Học vụ"]
+        UC14(["UC14 Lớp phụ trách & DS sinh viên"])
+        UC15(["UC15 Điểm danh"])
+        UC16(["UC16 Nhập điểm & Khóa điểm"])
+        UC17(["UC17 Đăng ký học phần"])
+        UC18(["UC18 Hủy đăng ký"])
+        UC19(["UC19 Lịch học / lịch dạy"])
+        UC20(["UC20 Bảng điểm & GPA"])
+    end
+
+    UC21(["UC21 Dashboard thống kê"])
 
     Guest --> UC1
     Guest --> UC2
 
-    Admin --> UC3
-    Admin --> UC4
-    Admin --> UC5
-    Admin --> UC6
-    Admin --> UC7
-    Admin --> UC7b
-    Admin --> UC12
-    Admin -.->|"khóa/mở khóa bất kỳ lớp nào"| UC10
+    Admin --> UC3 & UC4 & UC5
+    Admin --> UC6 & UC7 & UC8 & UC9 & UC10 & UC11 & UC12 & UC13
+    Admin -.->|"khóa/mở khóa điểm"| UC16
+    Admin --> UC21
 
-    Teacher --> UC3
-    Teacher --> UC4
-    Teacher --> UC10
-    Teacher --> UC11
-    Teacher --> UC12
+    Teacher --> UC3 & UC4 & UC5
+    Teacher --> UC14 & UC15 & UC16 & UC19
+    Teacher --> UC21
 
-    Student --> UC3
-    Student --> UC4
-    Student --> UC8
-    Student --> UC9
-    Student --> UC12
-    Student --> UC13
+    Student --> UC3 & UC4 & UC5
+    Student --> UC17 & UC18 & UC19 & UC20
+    Student --> UC21
 ```
 
-## 3. Đặc tả chi tiết Use Case
+## 4. Đặc tả chi tiết Use Case
 
-### UC#01: Đăng nhập
+### UC#01: Đăng nhập (theo vai trò)
 
 | | |
 |---|---|
 | **Độ phức tạp** | Cao |
-| **Mô tả** | Cho phép người dùng (Admin/Giảng viên/Sinh viên) đăng nhập bằng định danh + mật khẩu để sử dụng hệ thống. |
+| **Mô tả** | Người dùng chọn tab vai trò (Admin / Giảng viên / Sinh viên) và đăng nhập bằng mã định danh + mật khẩu. |
 | **Tác nhân** | Khách |
 | **Tiền điều kiện** | Tài khoản đã được Admin tạo trước đó (hệ thống không có chức năng tự đăng ký). |
-| **Hậu điều kiện — Thành công** | 3 cookie được thiết lập (`token`, `refreshToken`, `logged`); người dùng được điều hướng vào giao diện theo vai trò (`role`). |
+| **Hậu điều kiện — Thành công** | 3 cookie được thiết lập (`token`, `refreshToken`, `logged`); người dùng vào giao diện theo vai trò. |
 | **Hậu điều kiện — Lỗi** | Không đăng nhập được; không có cookie nào được thiết lập. |
 
 **Luồng sự kiện chính**
-1. Người dùng nhập **định danh** (phần trước `@` trong email trường, VD mã sinh viên `20216001`) và **mật khẩu**.
-2. Hệ thống kiểm tra đã nhập đủ 2 trường bắt buộc — thiếu thì thực hiện Luồng A.
-3. Server tìm `User` có email khớp `identifier + '@...'`, so khớp `password` bằng bcrypt.
-4. Nếu hợp lệ: xóa toàn bộ `ApiKey` cũ của user → sinh cặp khóa RSA-2048 mới → ký access token (15 phút) + refresh token (7 ngày) bằng private key vừa tạo → set 3 cookie → trả về thông tin `user`.
-5. Nếu tài khoản có `status` không active (VD `inactive`, `resigned`...) → thực hiện Luồng B.
-6. Nếu sai định danh/mật khẩu → thực hiện Luồng C.
-7. Client lưu `user` vào `AuthContext`, điều hướng theo `role`.
+1. Người dùng chọn **tab vai trò** trên màn hình đăng nhập (Admin / Giảng viên / Sinh viên).
+2. Nhập **mã định danh** và **mật khẩu**. Client kiểm tra định dạng mã theo vai trò đang chọn (`ROLE_ID_PATTERNS`): Admin phải là `admin`, Giảng viên dạng `GV` + số (VD `GV1001`), Sinh viên là dãy số (VD `20216001`) — sai định dạng → Luồng A (chặn ngay, không gọi API).
+3. `POST /api/users/login`: server tìm `User` có email khớp `identifier + '@...'`, so khớp mật khẩu bằng bcrypt.
+4. Nếu hợp lệ: xóa toàn bộ `ApiKey` cũ → sinh cặp khóa RSA-2048 mới → ký access token (15 phút) + refresh token (7 ngày) → set 3 cookie → trả về `user`.
+5. Nếu tài khoản bị khóa (`status` không active) → Luồng B. Sai thông tin → Luồng C.
+6. Client lưu `user` vào `AuthContext`, điều hướng vào giao diện theo `role`.
 
 **Luồng sự kiện phát sinh**
-- **Luồng A** — Thiếu trường bắt buộc: hiển thị lỗi inline tương ứng ("Vui lòng nhập tài khoản/mật khẩu").
-- **Luồng B** — Tài khoản bị khóa: trả lỗi `403 ACCOUNT_LOCKED`; client hiển thị modal thông báo tài khoản đã bị khóa.
-- **Luồng C** — Sai thông tin: trả lỗi xác thực; client hiển thị "Tài khoản hoặc mật khẩu không chính xác".
+- **Luồng A** — Mã không khớp định dạng vai trò: hiển thị lỗi inline (VD "Mã Giảng viên phải có dạng GV kèm số"), nút đăng nhập không gửi request.
+- **Luồng B** — Tài khoản bị khóa: server trả `403 ACCOUNT_LOCKED`; client hiển thị modal "Tài khoản đã bị khóa".
+- **Luồng C** — Sai định danh/mật khẩu: hiển thị "Tài khoản hoặc mật khẩu không chính xác".
 
 ---
 
-### UC#02: Quên mật khẩu (xác thực qua OTP)
+### UC#02: Quên mật khẩu (OTP qua email)
 
 | | |
 |---|---|
 | **Độ phức tạp** | Cao |
-| **Mô tả** | Cho phép người dùng đặt lại mật khẩu khi quên, thông qua mã OTP gửi tới **email cá nhân** (`personalEmail`). |
+| **Mô tả** | Đặt lại mật khẩu khi quên, thông qua mã OTP gửi tới **email cá nhân** (`personalEmail`). |
 | **Tác nhân** | Khách |
-| **Tiền điều kiện** | Tài khoản đã có `personalEmail` được Admin thiết lập khi tạo tài khoản. |
-| **Hậu điều kiện — Thành công** | Mật khẩu mới được lưu (bcrypt hash); toàn bộ `ApiKey` của user bị xóa (đăng xuất khỏi mọi phiên đang mở). |
-| **Hậu điều kiện — Lỗi** | Mật khẩu không đổi; OTP không hợp lệ hoặc hết hạn. |
+| **Tiền điều kiện** | Tài khoản đã có `personalEmail` được thiết lập. |
+| **Hậu điều kiện — Thành công** | Mật khẩu mới được lưu (bcrypt hash); toàn bộ `ApiKey` bị xóa (đăng xuất mọi phiên). |
+| **Hậu điều kiện — Lỗi** | Mật khẩu không đổi. |
 
 **Luồng sự kiện chính**
-1. Người dùng nhập định danh tài khoản, chọn "Quên mật khẩu".
-2. `POST /api/users/forgot-password`: hệ thống tìm user; nếu `personalEmail` rỗng → Luồng A. Ngược lại sinh OTP 6 số, bcrypt-hash, lưu bảng `otps` (xóa OTP cũ trước đó của user, hiệu lực **5 phút**), gửi email OTP tới `personalEmail` qua `EmailService.sendOtp`.
-3. Người dùng nhập mã OTP nhận được → `POST /api/users/verify-otp` xác thực (bcrypt compare) trước khi cho nhập mật khẩu mới (trải nghiệm 2 bước trên UI).
-4. Người dùng nhập mật khẩu mới (phải thỏa `PW_RULES`: ≥8 ký tự, có hoa, có số, có ký tự đặc biệt) → `POST /api/users/reset-password` với `{identifier, otp, newPassword}`.
-5. Server xác thực lại OTP, cập nhật mật khẩu, xóa toàn bộ bản ghi `Otp` và `ApiKey` của user.
+1. Người dùng nhập định danh, chọn "Quên mật khẩu" → `POST /api/users/forgot-password`.
+2. Server: nếu `personalEmail` rỗng → Luồng A. Ngược lại sinh OTP 6 số, bcrypt-hash, lưu bảng `otps` (xóa OTP cũ, hiệu lực **5 phút**), gửi email qua `EmailService.sendOtp`.
+3. Người dùng nhập OTP → `POST /api/users/verify-otp` xác thực trước khi cho nhập mật khẩu mới.
+4. Nhập mật khẩu mới (thỏa `PW_RULES`) → `POST /api/users/reset-password`.
+5. Server xác thực lại OTP, cập nhật mật khẩu, xóa `Otp` + `ApiKey`.
 
 **Luồng sự kiện phát sinh**
-- **Luồng A** — Không có `personalEmail`: trả lỗi 400, không gửi được OTP; người dùng phải liên hệ Admin cập nhật email cá nhân.
-- **Luồng B** — OTP sai/hết hạn: hiển thị lỗi, cho phép gửi lại OTP.
-- **Luồng C** — Mật khẩu mới không thỏa quy tắc: hiển thị checklist các điều kiện chưa đạt (`PwChecklist`).
-- **Luồng D** — Gửi email SMTP thất bại: server ném lỗi 500, luồng quên mật khẩu bị chặn (khác với luồng gửi thông tin tài khoản, luồng OTP **không** có fallback im lặng).
+- **Luồng A** — Không có `personalEmail`: lỗi 400, người dùng phải liên hệ Admin.
+- **Luồng B** — OTP sai/hết hạn: hiển thị lỗi, cho gửi lại OTP.
+- **Luồng C** — Mật khẩu mới không thỏa quy tắc: hiển thị checklist điều kiện chưa đạt.
+- **Luồng D** — Gửi email SMTP thất bại: lỗi 500, luồng bị chặn (không có fallback im lặng).
 
 ---
 
@@ -125,21 +155,19 @@ flowchart LR
 | | |
 |---|---|
 | **Độ phức tạp** | Trung bình |
-| **Mô tả** | Người dùng đã đăng nhập tự đổi mật khẩu của chính mình. |
+| **Mô tả** | Người dùng đã đăng nhập tự đổi mật khẩu của mình. |
 | **Tác nhân** | Admin, Giảng viên, Sinh viên |
 | **Tiền điều kiện** | Đã đăng nhập. |
 | **Hậu điều kiện — Thành công** | Mật khẩu cập nhật; toàn bộ `ApiKey` bị xóa → buộc đăng nhập lại ở mọi thiết bị. |
-| **Hậu điều kiện — Lỗi** | Mật khẩu không đổi. |
 
 **Luồng sự kiện chính**
-1. Người dùng vào trang Hồ sơ cá nhân (`ProfilePage.jsx`), nhập mật khẩu hiện tại + mật khẩu mới + xác nhận.
-2. `PUT /api/users/change-password`: server bcrypt-compare mật khẩu hiện tại.
-3. Nếu đúng và mật khẩu mới thỏa `PW_RULES` → hash mật khẩu mới, xóa `ApiKey` của user.
-4. Client nhận phản hồi thành công, buộc người dùng đăng nhập lại (do cookie hiện tại bị vô hiệu).
+1. Vào trang Hồ sơ cá nhân, nhập mật khẩu hiện tại + mật khẩu mới + xác nhận.
+2. `PUT /api/users/change-password`: server bcrypt-compare mật khẩu hiện tại, kiểm tra `PW_RULES`.
+3. Cập nhật hash mới, xóa `ApiKey`. Client hiển thị thông báo "Đổi mật khẩu thành công! Hệ thống sẽ tự động đăng xuất..." rồi tự đăng xuất về màn hình đăng nhập (client tự reset trạng thái trước, không phụ thuộc vào việc gọi API logout thành công — vì token lúc này đã bị thu hồi).
 
 **Luồng sự kiện phát sinh**
-- **Luồng A** — Mật khẩu hiện tại sai: hiển thị lỗi, không cho phép tiếp tục.
-- **Luồng B** — Mật khẩu mới không đạt yêu cầu: hiển thị checklist lỗi tương ứng.
+- **Luồng A** — Mật khẩu hiện tại sai: hiển thị lỗi.
+- **Luồng B** — Mật khẩu mới không đạt yêu cầu: hiển thị checklist lỗi.
 
 ---
 
@@ -150,239 +178,319 @@ flowchart LR
 | **Độ phức tạp** | Thấp |
 | **Mô tả** | Kết thúc phiên làm việc hiện tại. |
 | **Tác nhân** | Admin, Giảng viên, Sinh viên |
-| **Tiền điều kiện** | Đã đăng nhập. |
-| **Hậu điều kiện — Thành công** | `ApiKey` bị xóa khỏi DB; 3 cookie bị xóa khỏi trình duyệt; điều hướng về màn hình đăng nhập. |
+| **Hậu điều kiện — Thành công** | `ApiKey` bị xóa khỏi DB; 3 cookie bị xóa; quay về màn hình đăng nhập. |
 
 **Luồng sự kiện chính**
-1. Người dùng chọn "Đăng xuất" trên menu tài khoản.
-2. `POST /api/users/logout` (yêu cầu `JwtAuthGuard`): server xóa toàn bộ `ApiKey` của user, xóa 3 cookie.
-3. Client xóa `user` khỏi `AuthContext`, quay về màn hình đăng nhập.
-
-*(Không có luồng phát sinh — thao tác không có điều kiện lỗi nghiệp vụ.)*
+1. Người dùng chọn "Đăng xuất" → client reset trạng thái đăng nhập ngay (quay về màn hình đăng nhập), đồng thời gọi `POST /api/users/logout`.
+2. Server xóa toàn bộ `ApiKey` của user, xóa 3 cookie. Nếu API lỗi (VD token đã bị thu hồi trước đó), client vẫn đăng xuất bình thường.
 
 ---
 
-### UC#05: Admin tạo tài khoản Sinh viên / Giảng viên
+### UC#05: Cập nhật hồ sơ cá nhân
+
+| | |
+|---|---|
+| **Độ phức tạp** | Trung bình |
+| **Mô tả** | Người dùng tự cập nhật thông tin cá nhân (họ tên, số điện thoại, địa chỉ, ngày sinh...). |
+| **Tác nhân** | Admin, Giảng viên, Sinh viên |
+| **Tiền điều kiện** | Đã đăng nhập. |
+| **Hậu điều kiện — Thành công** | Hồ sơ được cập nhật; các trường nhạy cảm không bị thay đổi. |
+
+**Luồng sự kiện chính**
+1. Người dùng vào trang Hồ sơ cá nhân (`ProfilePage.jsx`), sửa các trường cho phép.
+2. `PUT /api/users/:id`: server kiểm tra người gọi chỉ được sửa chính mình (Admin được sửa bất kỳ ai — xem UC#08).
+3. Server **tự động loại bỏ** các trường `password`, `email`, `role` khỏi dữ liệu gửi lên — 3 trường này không thể thay đổi qua endpoint cập nhật hồ sơ (mật khẩu đổi qua UC#03; email/vai trò do hệ thống quản lý).
+
+**Luồng sự kiện phát sinh**
+- **Luồng A** — Cố sửa hồ sơ người khác (không phải Admin): trả `403 Forbidden`.
+
+---
+
+### UC#06: Tạo tài khoản Sinh viên / Giảng viên
 
 | | |
 |---|---|
 | **Độ phức tạp** | Cao |
-| **Mô tả** | Admin tạo tài khoản mới; hệ thống tự sinh mã định danh, email trường, mật khẩu tạm, và gửi thông tin đăng nhập tới email cá nhân. |
+| **Mô tả** | Admin tạo tài khoản mới; hệ thống tự sinh mã định danh, email trường, mật khẩu tạm và gửi qua email cá nhân. |
 | **Tác nhân** | Admin |
-| **Tiền điều kiện** | Đã đăng nhập với vai trò `admin`. |
-| **Hậu điều kiện — Thành công** | Tài khoản mới được tạo với `status` mặc định (`studying` cho sinh viên / `teaching` cho giảng viên); email chứa email trường + mật khẩu tạm được gửi tới `personalEmail`. |
-| **Hậu điều kiện — Lỗi** | Không tạo được tài khoản (thiếu `personalEmail`, hoặc trùng mã định danh do race condition). |
+| **Hậu điều kiện — Thành công** | Tài khoản mới với `status` mặc định (`studying`/`teaching`); email thông tin đăng nhập được gửi tới `personalEmail`. |
 
 **Luồng sự kiện chính**
-1. Admin mở màn hình "Sinh viên" (hoặc "Giảng viên"), chọn "Thêm mới".
-2. Nhập thông tin (họ tên, giới tính, ngày sinh, lớp/khoa, **email cá nhân bắt buộc**...).
-3. `POST /api/users/students` (hoặc `/teachers`): server gọi `getNextStudentId()`/`getNextTeacherId()` sinh mã tự động (`SV{năm}{4 số}` hoặc `GV{năm}{3 số}`, dựa trên số lớn nhất hiện có trong năm đó +1).
-4. Server sinh email trường (`{idStudent}@student.school.edu.vn` hoặc `{idTeacher}@teacher.school.edu.vn`), sinh mật khẩu tạm ngẫu nhiên 10 ký tự, bcrypt-hash, tạo `User`.
-5. Gọi `EmailService.sendAccountCredentials(...)` gửi email trường + mật khẩu tạm tới `personalEmail`.
-6. Nếu thiếu `personalEmail` → thực hiện Luồng A trước khi tạo (chặn ngay từ đầu, trả 400).
-7. Nếu trùng mã do có request đồng thời → thực hiện Luồng B.
+1. Admin mở màn hình "Sinh viên"/"Giảng viên", chọn "Thêm mới", nhập thông tin (**email cá nhân bắt buộc**).
+2. `POST /api/users/students` (hoặc `/teachers`): server tự sinh mã (`SV{năm}{4 số}` / `GV{năm}{3 số}`) dựa trên mã lớn nhất hiện có của năm +1 (có kiểm tra lại chống trùng khi tạo đồng thời).
+3. Sinh email trường (`{mã}@student.school.edu.vn` / `@teacher.school.edu.vn`), mật khẩu tạm 10 ký tự ngẫu nhiên (bcrypt-hash), tạo `User`.
+4. Gửi `EmailService.sendAccountCredentials` tới `personalEmail`.
 
 **Luồng sự kiện phát sinh**
-- **Luồng A** — Thiếu `personalEmail`: hệ thống từ chối tạo tài khoản, yêu cầu nhập.
-- **Luồng B** — Trùng mã sinh viên/giảng viên do đồng thời tạo: server phát hiện khi kiểm tra lại, trả lỗi 409, Admin thử lại.
-- **Luồng C** — Gửi email thất bại (SMTP lỗi): tài khoản **vẫn được tạo thành công**, hệ thống chỉ ghi log cảnh báo (không rollback) — Admin cần cung cấp mật khẩu thủ công nếu email không tới nơi.
+- **Luồng A** — Thiếu `personalEmail`: từ chối tạo (400).
+- **Luồng B** — Trùng mã do tạo đồng thời: lỗi 409, thử lại.
+- **Luồng C** — Gửi email thất bại: tài khoản **vẫn được tạo**, chỉ ghi log cảnh báo.
 
 ---
 
-### UC#06: Nhập danh sách hàng loạt (Bulk Import)
+### UC#07: Nhập danh sách hàng loạt (Bulk Import)
 
 | | |
 |---|---|
 | **Độ phức tạp** | Cao |
 | **Mô tả** | Admin nhập nhiều Sinh viên/Giảng viên cùng lúc từ file CSV/Excel. |
 | **Tác nhân** | Admin |
-| **Tiền điều kiện** | Có file CSV/XLSX theo đúng mẫu cột yêu cầu. |
-| **Hậu điều kiện — Thành công** | Toàn bộ tài khoản hợp lệ được tạo trong **1 transaction** (tất cả hoặc không có gì); email thông tin đăng nhập được gửi (không đồng bộ, không ảnh hưởng kết quả tạo). |
-| **Hậu điều kiện — Lỗi** | Không tài khoản nào được tạo nếu có bất kỳ dòng dữ liệu không hợp lệ. |
+| **Hậu điều kiện — Thành công** | Toàn bộ tài khoản hợp lệ được tạo trong **1 transaction** (tất cả hoặc không gì); email gửi không đồng bộ. |
 
 **Luồng sự kiện chính**
-1. Admin tải lên file `.csv`/`.xlsx`/`.xls` (Excel được parse phía client bằng thư viện `xlsx`), hoặc dán trực tiếp CSV.
-2. Client parse & validate sơ bộ từng dòng (họ tên, `personalEmail` hợp lệ, lớp tồn tại...), hiển thị preview dòng hợp lệ/lỗi.
-3. Admin xác nhận → `POST /api/users/bulk-import` (sinh viên) hoặc `/bulk-import-teachers` (giảng viên) với toàn bộ `rows`.
-4. Server validate lại **toàn bộ** danh sách — nếu có bất kỳ dòng lỗi (`fullName` rỗng, `personalEmail` sai định dạng) → từ chối toàn bộ (Luồng A), không tạo dòng nào.
-5. Nếu tất cả hợp lệ: sinh N mã định danh tuần tự, tính trước email trường + mật khẩu tạm cho từng dòng, **insert toàn bộ trong 1 `prisma.$transaction`** (đảm bảo tính nguyên tử — tạo hết hoặc không tạo gì).
-6. Sau khi transaction thành công: gửi email cho từng user mới theo kiểu **fire-and-forget** (`Promise.allSettled`, không chờ, không ảnh hưởng response) — một vài email gửi lỗi không làm rollback dữ liệu đã tạo.
+1. Admin tải lên `.csv`/`.xlsx`/`.xls` (Excel parse phía client bằng thư viện `xlsx`) hoặc dán CSV; có thể tải file mẫu Excel (`mau-danh-sach-sinh-vien.xlsx`).
+2. Client validate sơ bộ từng dòng, hiển thị preview hợp lệ/lỗi.
+3. `POST /api/users/bulk-import` (SV) hoặc `/bulk-import-teachers` (GV): server validate lại **toàn bộ** — có dòng lỗi → từ chối toàn bộ (Luồng A).
+4. Hợp lệ: sinh N mã tuần tự, insert toàn bộ trong 1 `prisma.$transaction`, sau đó gửi email từng người kiểu fire-and-forget.
 
 **Luồng sự kiện phát sinh**
-- **Luồng A** — Có dòng dữ liệu không hợp lệ: server trả về danh sách lỗi theo từng dòng, **không tạo bất kỳ tài khoản nào** (all-or-nothing ở bước validate).
-- **Luồng B** — Một số email gửi thất bại sau khi đã tạo tài khoản thành công: không có cơ chế thông báo lại cho Admin biết dòng nào gửi lỗi (hạn chế hiện tại).
+- **Luồng A** — Có dòng không hợp lệ: trả danh sách lỗi theo dòng, không tạo tài khoản nào.
+- **Luồng B** — Một số email gửi thất bại sau khi tạo: không có cơ chế báo lại Admin (hạn chế hiện tại).
 
 ---
 
-### UC#07: Quản lý danh mục (Khoa / Ngành / Lớp / Môn học)
+### UC#08: Xem chi tiết & cập nhật thông tin người dùng
 
 | | |
 |---|---|
 | **Độ phức tạp** | Trung bình |
-| **Mô tả** | CRUD các danh mục nền tảng: Khoa (`Department`), Ngành (`Branch`), Lớp hành chính (`Class`), Môn học (`Subject`). |
+| **Mô tả** | Admin xem trang hồ sơ chi tiết của một sinh viên (thông tin cá nhân, thống kê học tập) và chỉnh sửa thông tin của bất kỳ người dùng nào. |
 | **Tác nhân** | Admin |
-| **Tiền điều kiện** | Đã đăng nhập vai trò `admin`. |
-| **Hậu điều kiện — Thành công** | Danh mục được thêm/sửa/xóa; các màn hình khác (tạo lớp học phần, tạo tài khoản...) dùng dữ liệu mới ngay lập tức. |
-| **Hậu điều kiện — Lỗi** | Không lưu được (trùng mã, hoặc còn ràng buộc khóa ngoại khi xóa). |
+| **Hậu điều kiện — Thành công** | Thông tin người dùng được cập nhật (trừ `password`/`email`/`role`). |
 
 **Luồng sự kiện chính**
-1. Admin vào từng màn hình danh mục tương ứng (`admin2.jsx`), xem danh sách (`GET`, mở cho mọi vai trò đã đăng nhập).
-2. Thêm mới/sửa: nhập mã + tên (+ `departmentId` nếu là Ngành/Lớp/Môn học) → `POST`/`PUT` (yêu cầu vai trò `admin`).
-3. Xóa: `DELETE` (yêu cầu vai trò `admin`) — nếu còn dữ liệu con tham chiếu tới (VD Khoa còn Ngành/Lớp/Môn học) → Luồng A.
-
-**Luồng sự kiện phát sinh**
-- **Luồng A** — Xóa khi còn ràng buộc khóa ngoại: PostgreSQL từ chối, server trả lỗi, Admin phải xóa/di chuyển dữ liệu con trước.
-- **Luồng B** — Trùng mã (`code`) khi tạo/sửa: vi phạm ràng buộc `unique`, trả lỗi 409/400.
+1. Từ danh sách sinh viên, Admin bấm vào một dòng → mở màn hình Hồ sơ chi tiết (`StudentProfile` trong `details.jsx`) — `GET /api/users/:id`.
+2. Màn hình hiển thị đầy đủ thông tin cá nhân, trạng thái, và có nút chỉnh sửa (mở lại drawer form).
+3. `PUT /api/users/:id`: Admin được phép cập nhật bất kỳ user nào (khác người dùng thường chỉ được sửa chính mình — UC#05); server vẫn loại bỏ `password`/`email`/`role`.
 
 ---
 
-### UC#07b: Quản lý Lớp học phần & Học kỳ
-
-| | |
-|---|---|
-| **Độ phức tạp** | Cao |
-| **Mô tả** | Admin tạo Lớp học phần (gắn Môn học + Giảng viên + tên học kỳ dạng chuỗi) và quản lý danh sách Học kỳ (`Semester`), đánh dấu học kỳ nào đang hoạt động. |
-| **Tác nhân** | Admin |
-| **Tiền điều kiện** | Đã có Môn học và Giảng viên trong hệ thống. |
-| **Hậu điều kiện — Thành công** | Lớp học phần mới sẵn sàng cho Sinh viên đăng ký (nếu `status = active` và tên học kỳ trùng với một `Semester.isActive = true`). |
-
-**Luồng sự kiện chính**
-1. Admin vào màn hình "Học kỳ" (`SemestersScreen`), tạo học kỳ mới (`POST /api/semesters`) hoặc bật/tắt `isActive` (`PATCH /:id/toggle-active`).
-2. Admin vào màn hình "Lớp học phần", tạo mới: chọn Môn học, Giảng viên, **gõ tên học kỳ dạng chuỗi** (không chọn từ danh sách `Semester` — hai nơi này độc lập), sĩ số tối đa, trạng thái.
-3. Hệ thống các module khác (đăng ký học phần, dashboard) sẽ tự lọc theo `SubjectClass.semester` có tên khớp với `Semester` đang `isActive = true`.
-
-**Luồng sự kiện phát sinh**
-- **Luồng A** — Admin gõ sai/khác chính tả tên học kỳ so với tên trong bảng `Semester`: lớp học phần đó sẽ **không xuất hiện** trong các bộ lọc "học kỳ hiện hành" dù `status = active`, do so khớp chuỗi thất bại (rủi ro dữ liệu — xem `02-co-so-du-lieu.md` mục 4).
-
----
-
-### UC#08: Sinh viên đăng ký học phần
-
-| | |
-|---|---|
-| **Độ phức tạp** | Cao |
-| **Mô tả** | Sinh viên xem danh sách lớp học phần khả dụng và đăng ký. |
-| **Tác nhân** | Sinh viên |
-| **Tiền điều kiện** | Đã đăng nhập vai trò `student`. |
-| **Hậu điều kiện — Thành công** | Bản ghi `Enrollment` mới với `status = registered`. |
-| **Hậu điều kiện — Lỗi** | Không đăng ký được (lớp đầy, đã đăng ký, lớp không mở). |
-
-**Luồng sự kiện chính**
-1. Sinh viên vào màn hình "Đăng ký học phần", xem danh sách lớp học phần (`GET /api/subject-classes` — với vai trò student chỉ trả về lớp `status = active` và thuộc học kỳ đang hoạt động).
-2. Chọn 1 lớp học phần, nhấn "Đăng ký" → `POST /api/enrollments { subjectClassId }`.
-3. Server kiểm tra: lớp tồn tại và `status === active` (ngược lại → Luồng A); số lượng đã đăng ký `< maxStudents` (ngược lại → Luồng B); sinh viên chưa đăng ký lớp này trước đó (ràng buộc `unique studentId+subjectClassId`, ngược lại → Luồng C).
-4. Tạo `Enrollment` mới với `status = registered`.
-
-**Luồng sự kiện phát sinh**
-- **Luồng A** — Lớp học phần không còn mở (`status ≠ active`): trả lỗi, không cho đăng ký.
-- **Luồng B** — Lớp đã đủ sĩ số (`enrolledCount ≥ maxStudents`): trả lỗi "Lớp học phần đã đầy".
-- **Luồng C** — Đã đăng ký trước đó: trả lỗi trùng đăng ký.
-
----
-
-### UC#09: Sinh viên hủy đăng ký học phần
+### UC#09: Khóa / mở khóa tài khoản
 
 | | |
 |---|---|
 | **Độ phức tạp** | Trung bình |
-| **Mô tả** | Sinh viên hủy một đăng ký đang ở trạng thái `registered`. |
-| **Tác nhân** | Sinh viên |
-| **Tiền điều kiện** | Đã đăng ký lớp học phần đó; điểm chưa bị khóa (`gradeLocked = false`). |
-| **Hậu điều kiện — Thành công** | Bản ghi `Enrollment` bị xóa hẳn khỏi hệ thống. |
-| **Hậu điều kiện — Lỗi** | Không hủy được (không sở hữu đăng ký, hoặc điểm đã khóa). |
+| **Mô tả** | Admin tạm ngưng (khóa) hoặc kích hoạt lại một tài khoản mà không xóa dữ liệu. |
+| **Tác nhân** | Admin |
+| **Hậu điều kiện — Thành công** | `status` chuyển `active` ⇄ `inactive`. Tài khoản `inactive` không thể đăng nhập; phiên đang mở cũng bị chặn ngay ở lần gọi API kế tiếp. |
 
 **Luồng sự kiện chính**
-1. Sinh viên chọn "Hủy đăng ký" trên môn đã đăng ký → `DELETE /api/enrollments/:id`.
-2. Server kiểm tra `enrollment.studentId === request.user.id` (ngược lại → Luồng A), và `gradeLocked === false` (ngược lại → Luồng B).
-3. Xóa bản ghi `Enrollment`.
-
-**Luồng sự kiện phát sinh**
-- **Luồng A** — Không phải chủ sở hữu đăng ký: trả `403 Forbidden`.
-- **Luồng B** — Điểm đã bị khóa (`gradeLocked = true`): trả lỗi, không cho hủy.
+1. Admin bấm nút khóa/mở khóa trên dòng người dùng → `PATCH /api/users/:id/status { status: 'active' | 'inactive' }`.
+2. Server cập nhật `status`.
+3. Hệ quả với người bị khóa: (a) đăng nhập mới bị từ chối `403 ACCOUNT_LOCKED`; (b) phiên đang mở — mỗi request đều verify token kèm kiểm tra `user.status`, nên request kế tiếp trả 403, client bắt sự kiện và hiển thị modal "Tài khoản đã bị khóa" rồi đưa về màn hình đăng nhập.
 
 ---
 
-### UC#10: Giảng viên nhập điểm & khóa điểm
+### UC#10: Xóa tài khoản
+
+| | |
+|---|---|
+| **Độ phức tạp** | Thấp |
+| **Mô tả** | Admin xóa vĩnh viễn một tài khoản khỏi hệ thống. |
+| **Tác nhân** | Admin |
+| **Hậu điều kiện — Thành công** | Bản ghi `User` bị xóa; `ApiKey`/`Otp` của user tự xóa theo (cascade). |
+
+**Luồng sự kiện chính**
+1. Admin chọn "Xóa" trên dòng người dùng, xác nhận qua hộp thoại.
+2. `DELETE /api/users/:id`: server xóa cứng bản ghi.
+
+**Luồng sự kiện phát sinh**
+- **Luồng A** — User còn dữ liệu ràng buộc không cascade (VD đang là giảng viên phụ trách lớp học phần, có bản ghi đăng ký/điểm danh): PostgreSQL từ chối do khóa ngoại, server trả lỗi — cần xử lý dữ liệu liên quan trước.
+
+---
+
+### UC#11: Quản lý danh mục (Khoa / Ngành / Lớp / Môn học)
+
+| | |
+|---|---|
+| **Độ phức tạp** | Trung bình |
+| **Mô tả** | CRUD danh mục nền tảng theo phân cấp **Khoa → Ngành → Lớp/Môn học**. |
+| **Tác nhân** | Admin |
+| **Hậu điều kiện — Thành công** | Danh mục được thêm/sửa/xóa; các màn hình khác dùng dữ liệu mới ngay. |
+
+**Luồng sự kiện chính**
+1. Admin vào từng màn hình danh mục (`admin2.jsx`), xem danh sách (`GET`, mở cho mọi vai trò đã đăng nhập).
+2. Tạo/sửa **Ngành**: chọn Khoa cha (`departmentId`). Tạo/sửa **Lớp hành chính** hoặc **Môn học**: chọn **Ngành** cha (`branchId`) — *lưu ý: từ bản cập nhật mới nhất, Lớp và Môn học gắn với Ngành, không còn gắn trực tiếp với Khoa*.
+3. Xóa: `DELETE` — nếu còn dữ liệu con tham chiếu → Luồng A.
+
+**Luồng sự kiện phát sinh**
+- **Luồng A** — Xóa khi còn ràng buộc khóa ngoại (Khoa còn Ngành; Ngành còn Lớp/Môn học): PostgreSQL từ chối.
+- **Luồng B** — Trùng mã `code`: vi phạm unique, lỗi 409/400.
+
+---
+
+### UC#12: Quản lý Lớp học phần & Học kỳ
 
 | | |
 |---|---|
 | **Độ phức tạp** | Cao |
-| **Mô tả** | Giảng viên nhập điểm chuyên cần/giữa kỳ/cuối kỳ cho từng sinh viên trong lớp phụ trách; sau khi hoàn tất, khóa điểm để tránh chỉnh sửa. |
-| **Tác nhân** | Giảng viên (nhập điểm); Giảng viên hoặc Admin (khóa/mở khóa) |
-| **Tiền điều kiện** | Lớp học phần thuộc quyền phụ trách của giảng viên (chỉ áp dụng cho thao tác **nhập điểm**). |
-| **Hậu điều kiện — Thành công** | `totalScore`/`letterGrade` được tự tính lại; `status` chuyển thành `completed`; điểm có thể bị khóa để chống sửa tiếp. |
-| **Hậu điều kiện — Lỗi** | Không cập nhật được điểm (không đúng giáo viên phụ trách, hoặc điểm đã khóa). |
+| **Mô tả** | Admin tạo Lớp học phần (gắn Môn học + Giảng viên + tên học kỳ) và quản lý danh sách Học kỳ, đánh dấu học kỳ đang hoạt động. |
+| **Tác nhân** | Admin |
+| **Hậu điều kiện — Thành công** | Lớp học phần sẵn sàng cho Sinh viên đăng ký (khi `status = active` và tên học kỳ khớp một `Semester.isActive = true`). |
 
 **Luồng sự kiện chính**
-1. Giảng viên vào "Nhập điểm", chọn lớp học phần mình phụ trách (`GET /api/enrollments/:subjectClassId/grades`).
-2. Nhập/sửa điểm chuyên cần, giữa kỳ, cuối kỳ cho từng sinh viên → `PUT /api/enrollments/:id/grade`.
-3. Server kiểm tra `subjectClass.teacherId === request.user.id` (ngược lại → Luồng A) và `gradeLocked === false` (ngược lại → Luồng B).
-4. Server gộp điểm mới với điểm cũ (giá trị chưa nhập giữ nguyên/mặc định 0), tính `totalScore = round((CC×0.1 + GK×0.3 + CK×0.6)×10)/10`, suy ra `letterGrade` theo ngưỡng, đặt `status = completed`.
-5. Sau khi nhập xong toàn bộ lớp, Giảng viên hoặc Admin chọn "Khóa điểm" → `PATCH /api/enrollments/:id/lock { locked: true }` cho từng sinh viên/hoặc theo lớp.
+1. Màn hình "Học kỳ": tạo mới (`POST /api/semesters`), bật/tắt hoạt động (`PATCH /:id/toggle-active`), sửa/xóa.
+2. Màn hình "Lớp học phần": tạo mới — chọn Môn học, Giảng viên, nhập tên học kỳ, sĩ số tối đa, trạng thái.
+3. Các module khác (đăng ký, dashboard) tự lọc theo `SubjectClass.semester` khớp tên với `Semester` đang hoạt động.
 
 **Luồng sự kiện phát sinh**
-- **Luồng A** — Giảng viên không phụ trách lớp này: trả `403 Forbidden` khi nhập điểm.
-- **Luồng B** — Điểm đã bị khóa: từ chối cập nhật.
-- **Luồng C** *(lưu ý thiết kế)* — Thao tác khóa/mở khóa **không kiểm tra quyền sở hữu lớp** — bất kỳ tài khoản `teacher` hoặc `admin` nào cũng gọi được `PATCH /:id/lock` cho bất kỳ enrollment nào, khác với logic chặt hơn ở bước nhập điểm.
+- **Luồng A** — Tên học kỳ gõ sai/khác chính tả so với bảng `Semester`: lớp học phần không xuất hiện trong bộ lọc "học kỳ hiện hành" (liên kết bằng so khớp chuỗi — xem `02-co-so-du-lieu.md` mục 4).
 
 ---
 
-### UC#11: Giảng viên điểm danh sinh viên
+### UC#13: Xuất danh sách (CSV / Excel)
 
 | | |
 |---|---|
-| **Độ phức tạp** | Cao |
-| **Mô tả** | Giảng viên điểm danh cả lớp theo buổi học (ngày cụ thể), có thể điểm danh lại (upsert) mà không tạo trùng bản ghi. |
+| **Độ phức tạp** | Thấp |
+| **Mô tả** | Admin xuất danh sách hiện có ra file để dùng ngoài hệ thống (báo cáo, in ấn). |
+| **Tác nhân** | Admin |
+| **Hậu điều kiện — Thành công** | File được tải xuống trình duyệt. |
+
+**Luồng sự kiện chính**
+1. Trên màn hình danh sách (Sinh viên / Giảng viên / Môn học), Admin bấm nút "Xuất".
+2. Client tự tạo file từ dữ liệu đang hiển thị (không cần gọi API riêng): CSV UTF-8 (hàm `downloadCSV` — `sinh-vien.csv`, `giang-vien.csv`, `mon-hoc.csv`) hoặc Excel định dạng đẹp (thư viện `write-excel-file` — "DS Sinh Viên", "DS Giảng Viên").
+3. Trình duyệt tải file xuống.
+
+---
+
+### UC#14: Xem lớp phụ trách & danh sách sinh viên
+
+| | |
+|---|---|
+| **Độ phức tạp** | Trung bình |
+| **Mô tả** | Giảng viên xem các lớp học phần mình được phân công và danh sách sinh viên đã đăng ký từng lớp. |
 | **Tác nhân** | Giảng viên |
-| **Tiền điều kiện** | Lớp học phần thuộc quyền phụ trách của giảng viên. |
-| **Hậu điều kiện — Thành công** | Mỗi sinh viên trong danh sách có đúng 1 bản ghi `Attendance` cho ngày đó (tạo mới hoặc cập nhật). |
-| **Hậu điều kiện — Lỗi** | Điểm danh thất bại toàn bộ hoặc một phần. |
+| **Tiền điều kiện** | Đã được Admin phân công ít nhất một lớp học phần. |
 
 **Luồng sự kiện chính**
-1. Giảng viên chọn lớp học phần + ngày điểm danh.
-2. Đánh dấu trạng thái từng sinh viên (`present`/`absent`/`late`/`excused`) + ghi chú (tùy chọn).
-3. `POST /api/attendance/bulk { subjectClassId, date, records: [...] }`.
-4. Server kiểm tra `subjectClass.teacherId === request.user.id` (ngược lại → Luồng A).
-5. Với từng sinh viên, thực hiện `upsert` theo khóa duy nhất `(subjectClassId, studentId, date)` — đã có bản ghi thì cập nhật, chưa có thì tạo mới. Thực hiện đồng thời (`Promise.allSettled`), trả về số lượng thành công/thất bại — **một dòng lỗi không làm hỏng toàn bộ yêu cầu**.
-6. Giảng viên có thể sửa lại một bản ghi điểm danh đơn lẻ qua `PUT /api/attendance/:id`.
+1. Giảng viên vào "Lớp của tôi" → `GET /api/subject-classes/my-sections`: chỉ trả về lớp có `teacherId` là giảng viên đang đăng nhập (kèm lọc học kỳ hiện hành).
+2. Chọn một lớp → `GET /api/subject-classes/:id/roster`: danh sách sinh viên đã đăng ký (kèm thông tin cơ bản).
+3. Từ đây giảng viên chuyển sang điểm danh (UC#15) hoặc nhập điểm (UC#16) cho lớp đó.
+
+---
+
+### UC#15: Điểm danh sinh viên
+
+| | |
+|---|---|
+| **Độ phức tạp** | Cao |
+| **Mô tả** | Giảng viên điểm danh cả lớp theo buổi học; điểm danh lại sẽ cập nhật (upsert), không tạo trùng. |
+| **Tác nhân** | Giảng viên |
+| **Tiền điều kiện** | Lớp học phần thuộc quyền phụ trách. |
+| **Hậu điều kiện — Thành công** | Mỗi sinh viên có đúng 1 bản ghi `Attendance` cho ngày đó. |
+
+**Luồng sự kiện chính**
+1. Chọn lớp + ngày, đánh dấu trạng thái từng sinh viên (`present`/`absent`/`late`/`excused`) + ghi chú.
+2. `POST /api/attendance/bulk`: server kiểm tra `subjectClass.teacherId === user.id` (sai → Luồng A).
+3. Upsert từng sinh viên theo khóa `(subjectClassId, studentId, date)`, chạy song song (`Promise.allSettled`), trả `{saved, failed}` — một dòng lỗi không làm hỏng cả yêu cầu.
 
 **Luồng sự kiện phát sinh**
-- **Luồng A** — Giảng viên không phụ trách lớp: trả `403 Forbidden`, không điểm danh được dòng nào.
-- **Luồng B** *(lưu ý thiết kế)* — Hệ thống **không kiểm tra sinh viên có thực sự đăng ký (`Enrollment`) lớp học phần đó hay không** trước khi ghi nhận điểm danh — có thể điểm danh cho một sinh viên chưa đăng ký nếu client gửi sai `studentId`.
+- **Luồng A** — Không phải giảng viên phụ trách: `403 Forbidden`.
+- **Luồng B** *(lưu ý thiết kế)* — Chưa kiểm tra sinh viên có đăng ký lớp hay không trước khi ghi nhận điểm danh.
+- *(Ghi chú: server có sẵn API sửa 1 bản ghi điểm danh — `PUT /api/attendance/:id` — và API sinh viên tự xem điểm danh — `GET /api/attendance/my/:subjectClassId` — nhưng giao diện hiện chưa nối 2 API này; sinh viên hiện chỉ thấy tỷ lệ điểm danh tổng trên Dashboard.)*
 
 ---
 
-### UC#12: Xem thống kê Dashboard (theo vai trò)
+### UC#16: Nhập điểm & Khóa điểm
 
 | | |
 |---|---|
-| **Độ phức tạp** | Trung bình |
-| **Mô tả** | Mỗi vai trò xem một bộ thống kê khác nhau ngay khi đăng nhập. |
-| **Tác nhân** | Admin, Giảng viên, Sinh viên |
-| **Tiền điều kiện** | Đã đăng nhập. |
-| **Hậu điều kiện — Thành công** | Hiển thị đúng bộ số liệu theo vai trò. |
+| **Độ phức tạp** | Cao |
+| **Mô tả** | Giảng viên nhập điểm chuyên cần/giữa kỳ/cuối kỳ; hệ thống tự tính điểm tổng + xếp loại; sau đó khóa điểm chống chỉnh sửa. |
+| **Tác nhân** | Giảng viên (nhập); Giảng viên hoặc Admin (khóa/mở khóa) |
+| **Hậu điều kiện — Thành công** | `totalScore`/`letterGrade` tự tính; `status` chuyển `completed`; điểm có thể bị khóa. |
 
 **Luồng sự kiện chính**
-1. **Admin** (`GET /api/dashboard`): tổng số sinh viên/giảng viên/lớp học phần/môn học/khoa, số lớp `active`, phân bố giới tính, phân bố điểm chữ (A–F, toàn hệ thống, không lọc theo học kỳ), số đăng ký mới trong 7 ngày qua.
-2. **Giảng viên** (`GET /api/dashboard/teacher`): số lớp phụ trách (lọc học kỳ hiện hành), tổng sinh viên, tỷ lệ điểm danh (%), số bài chưa chấm điểm (`totalScore = null`), biểu đồ xu hướng điểm danh 8 buổi gần nhất.
-3. **Sinh viên** (`GET /api/dashboard/student`): số tín chỉ đang học (học kỳ hiện hành), GPA hiện tại (công thức trọng số theo tín chỉ), tỷ lệ điểm danh cá nhân, xu hướng GPA theo từng học kỳ.
+1. Chọn lớp phụ trách → `GET /api/enrollments/:subjectClassId/grades`.
+2. Nhập điểm từng sinh viên → `PUT /api/enrollments/:id/grade`: server kiểm tra đúng giảng viên phụ trách (Luồng A) và `gradeLocked = false` (Luồng B).
+3. Server gộp điểm mới với điểm cũ, tính `totalScore = round((CC×0.1 + GK×0.3 + CK×0.6)×10)/10`, xếp loại `A≥8.5 / B≥7.0 / C≥5.5 / D≥4.0 / F<4.0`, đặt `status = completed`.
+4. Khóa điểm: `PATCH /api/enrollments/:id/lock { locked: true }`.
 
-*(Không có luồng phát sinh — thao tác chỉ đọc dữ liệu.)*
+**Luồng sự kiện phát sinh**
+- **Luồng A** — Không phụ trách lớp: `403 Forbidden` khi nhập điểm.
+- **Luồng B** — Điểm đã khóa: từ chối cập nhật.
+- **Luồng C** *(lưu ý thiết kế)* — Khóa/mở khóa không kiểm tra quyền sở hữu lớp: mọi `teacher`/`admin` đều thao tác được trên mọi enrollment.
 
 ---
 
-### UC#13: Sinh viên xem bảng điểm & GPA
+### UC#17: Đăng ký học phần
 
 | | |
 |---|---|
-| **Độ phức tạp** | Trung bình |
-| **Mô tả** | Sinh viên xem bảng điểm tích lũy toàn khóa và GPA. |
+| **Độ phức tạp** | Cao |
+| **Mô tả** | Sinh viên xem danh sách lớp học phần còn mở (thuộc học kỳ đang hoạt động) và đăng ký. |
 | **Tác nhân** | Sinh viên |
-| **Tiền điều kiện** | Có ít nhất một `Enrollment` ở trạng thái `completed`. |
-| **Hậu điều kiện — Thành công** | Hiển thị đầy đủ điểm từng môn + GPA tổng + xu hướng GPA theo học kỳ. |
+| **Hậu điều kiện — Thành công** | Bản ghi `Enrollment` mới với `status = registered`. |
 
 **Luồng sự kiện chính**
-1. Sinh viên vào "Bảng điểm" → `GET /api/enrollments/transcript`: trả toàn bộ `Enrollment` có `status = completed`, cùng `gpa = round(Σ(totalScore×credits) / Σ(credits), 2)` và `totalCredits`.
-2. Xem biểu đồ xu hướng: `GET /api/enrollments/gpa-trend` — nhóm điểm theo `subjectClass.semester` (chuỗi), tính GPA riêng từng học kỳ, sắp xếp theo tên học kỳ.
+1. Vào "Đăng ký học phần" → `GET /api/subject-classes` (vai trò student chỉ thấy lớp `active` thuộc học kỳ hoạt động).
+2. Nhấn "Đăng ký" → `POST /api/enrollments { subjectClassId }`.
+3. Server kiểm tra: lớp tồn tại và `active` (Luồng A); đã đăng ký `< maxStudents` (Luồng B); chưa đăng ký trước đó — ràng buộc unique (Luồng C).
+4. Tạo `Enrollment` mới.
 
-*(Không có luồng phát sinh — thao tác chỉ đọc dữ liệu; nếu chưa có môn nào `completed` thì hiển thị bảng trống/GPA rỗng.)*
+**Luồng sự kiện phát sinh**
+- **Luồng A** — Lớp không mở: từ chối. · **Luồng B** — Lớp đầy: "Lớp học phần đã đầy". · **Luồng C** — Đã đăng ký: lỗi trùng.
+
+---
+
+### UC#18: Hủy đăng ký học phần
+
+| | |
+|---|---|
+| **Độ phức tạp** | Trung bình |
+| **Mô tả** | Sinh viên hủy một đăng ký khi điểm chưa bị khóa. |
+| **Tác nhân** | Sinh viên |
+| **Hậu điều kiện — Thành công** | Bản ghi `Enrollment` bị xóa hẳn. |
+
+**Luồng sự kiện chính**
+1. Chọn "Hủy đăng ký" → `DELETE /api/enrollments/:id`.
+2. Server kiểm tra đúng chủ sở hữu (Luồng A) và `gradeLocked = false` (Luồng B), rồi xóa bản ghi.
+
+**Luồng sự kiện phát sinh**
+- **Luồng A** — Không phải chủ sở hữu: `403`. · **Luồng B** — Điểm đã khóa: từ chối.
+
+---
+
+### UC#19: Xem môn đã đăng ký & lịch học / lịch dạy
+
+| | |
+|---|---|
+| **Độ phức tạp** | Thấp |
+| **Mô tả** | Xem danh sách môn học nhóm theo học kỳ: Sinh viên xem môn đã đăng ký (lịch học); Giảng viên xem lớp được phân công (lịch dạy). |
+| **Tác nhân** | Sinh viên, Giảng viên |
+
+**Luồng sự kiện chính**
+1. Vào màn hình "Lịch học" (SV) / "Lịch dạy" (GV) — cùng một component `ScheduleScreen` dùng chung.
+2. Sinh viên: `GET /api/enrollments/my` (các đăng ký đang `registered`, học kỳ hiện hành). Giảng viên: `GET /api/subject-classes/my-sections`.
+3. Danh sách được **nhóm theo học kỳ** và hiển thị thông tin môn/lớp; chưa có dữ liệu → hiển thị trạng thái trống thân thiện.
+
+---
+
+### UC#20: Xem bảng điểm & GPA
+
+| | |
+|---|---|
+| **Độ phức tạp** | Trung bình |
+| **Mô tả** | Sinh viên xem bảng điểm tích lũy toàn khóa, GPA và xu hướng GPA theo học kỳ. |
+| **Tác nhân** | Sinh viên |
+| **Tiền điều kiện** | Có ít nhất một `Enrollment` trạng thái `completed`. |
+
+**Luồng sự kiện chính**
+1. Vào "Bảng điểm" → `GET /api/enrollments/transcript`: toàn bộ môn `completed`, `gpa = round(Σ(totalScore×credits) / Σ(credits), 2)`, tổng tín chỉ.
+2. Xu hướng: `GET /api/enrollments/gpa-trend` — GPA riêng từng học kỳ (nhóm theo tên học kỳ).
+
+---
+
+### UC#21: Xem thống kê Dashboard
+
+| | |
+|---|---|
+| **Độ phức tạp** | Trung bình |
+| **Mô tả** | Mỗi vai trò thấy một bộ thống kê riêng ngay khi đăng nhập. |
+| **Tác nhân** | Admin, Giảng viên, Sinh viên |
+
+**Luồng sự kiện chính**
+1. **Admin** (`GET /api/dashboard`): tổng SV/GV/lớp học phần/môn học/khoa, lớp `active`, phân bố giới tính, phân bố điểm chữ toàn hệ thống, đăng ký mới 7 ngày.
+2. **Giảng viên** (`GET /api/dashboard/teacher`): số lớp phụ trách (học kỳ hiện hành), tổng SV, tỷ lệ điểm danh, số bài chưa chấm, xu hướng điểm danh 8 buổi gần nhất.
+3. **Sinh viên** (`GET /api/dashboard/student`): tín chỉ đang học, GPA hiện tại, tỷ lệ điểm danh cá nhân, xu hướng GPA theo học kỳ.

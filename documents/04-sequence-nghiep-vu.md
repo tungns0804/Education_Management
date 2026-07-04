@@ -1,8 +1,8 @@
-# Sơ Đồ Tuần Tự (Sequence Diagram) — Các Luồng Nghiệp Vụ Chính
+# Sơ Đồ Tuần Tự (Sequence Diagram) — Toàn Bộ 21 Use Case
 
-> Vẽ bằng Mermaid `sequenceDiagram` (render trực tiếp trong Markdown/VS Code/GitHub) thay cho hình ảnh UML chèn tay như trong tài liệu mẫu (`00-phan-tich-tai-lieu-mau.md`, mục 3.4). Mỗi sơ đồ tương ứng với một Use Case trong `03-usecase-nghiep-vu.md`. Chi tiết kỹ thuật (tên hàm, bảng, guard) được lấy trực tiếp từ mã nguồn hiện tại của `server_side/` và `client_side/`.
+> Vẽ bằng Mermaid `sequenceDiagram` (render trực tiếp trong Markdown/VS Code/GitHub) thay cho hình ảnh UML chèn tay như trong tài liệu mẫu (`00-phan-tich-tai-lieu-mau.md`, mục 3.4). **Mỗi use case trong `03-usecase-nghiep-vu.md` đều có một sơ đồ tuần tự tương ứng** — không có luồng nào chỉ mô tả bằng danh sách bước. Chi tiết kỹ thuật (tên hàm, bảng, guard) được lấy trực tiếp từ mã nguồn hiện tại của `server_side/` và `client_side/`.
 
-## 1. Đăng nhập (UC#01)
+## 1. UC#01 — Đăng nhập (theo vai trò)
 
 ```mermaid
 sequenceDiagram
@@ -13,7 +13,9 @@ sequenceDiagram
     participant Svc as AuthService
     participant DB as PostgreSQL
 
-    U->>C: Nhập identifier + password
+    U->>C: Chọn tab vai trò (Admin/GV/SV), nhập tài khoản + mật khẩu
+    C->>C: Kiểm tra định dạng mã theo vai trò (ROLE_ID_PATTERNS)
+    Note over C: Sai định dạng → chặn ngay tại client,<br/>không gọi API
     C->>Http: requestLogin({identifier, password})
     Http->>Ctrl: POST /api/users/login
     Ctrl->>Svc: login(identifier, password)
@@ -41,7 +43,7 @@ sequenceDiagram
     end
 ```
 
-## 2. Làm mới Access Token (401 Interceptor)
+**Sơ đồ phụ — Làm mới Access Token (401 Interceptor)**: mọi request đã xác thực đều có thể kích hoạt luồng này bất kỳ lúc nào access token hết hạn, không riêng gì sau khi đăng nhập.
 
 ```mermaid
 sequenceDiagram
@@ -75,7 +77,7 @@ sequenceDiagram
     end
 ```
 
-## 3. Quên mật khẩu → Xác thực OTP → Đặt lại mật khẩu (UC#02)
+## 2. UC#02 — Quên mật khẩu → Xác thực OTP → Đặt lại mật khẩu
 
 ```mermaid
 sequenceDiagram
@@ -122,7 +124,86 @@ sequenceDiagram
     end
 ```
 
-## 4. Admin tạo tài khoản Sinh viên (UC#05)
+## 3. UC#03 — Đổi mật khẩu
+
+```mermaid
+sequenceDiagram
+    actor U as Người dùng
+    participant C as ProfilePage.jsx
+    participant Ctrl as UsersController
+    participant Svc as UsersService
+    participant DB as PostgreSQL (users, api_keys)
+
+    U->>C: Nhập mật khẩu hiện tại + mật khẩu mới + xác nhận
+    C->>C: Kiểm tra mật khẩu mới theo PW_RULES (client)
+    C->>Ctrl: PUT /api/users/change-password
+    Ctrl->>Svc: changePassword(userId, current, new)
+    Svc->>DB: Lấy user, bcrypt.compare(current, user.password)
+    alt mật khẩu hiện tại sai
+        Svc-->>Ctrl: 400 Bad Request
+        Ctrl-->>C: "Mật khẩu hiện tại không đúng"
+    else mật khẩu mới không đạt PW_RULES
+        Svc-->>Ctrl: 400 Bad Request
+        Ctrl-->>C: Danh sách điều kiện chưa đạt
+    else hợp lệ
+        Svc->>DB: UPDATE users.password (bcrypt hash mới)
+        Svc->>DB: DELETE FROM api_keys WHERE userId=... (kick mọi phiên)
+        Svc-->>Ctrl: 200 OK
+        Ctrl-->>C: "Đổi mật khẩu thành công! Hệ thống sẽ tự động đăng xuất..."
+        C->>C: Reset AuthContext ngay (không chờ), hẹn giờ 2.5s
+        C->>Ctrl: POST /api/users/logout (best-effort)
+        Note over C,Ctrl: Token đã bị thu hồi ở bước trên nên request này<br/>có thể 401 — không ảnh hưởng vì client đã tự đăng xuất
+        C-->>U: Chuyển về màn hình đăng nhập
+    end
+```
+
+## 4. UC#04 — Đăng xuất
+
+```mermaid
+sequenceDiagram
+    actor U as Người dùng
+    participant C as React App
+    participant Ctrl as AuthController
+    participant Svc as AuthService
+    participant DB as PostgreSQL (api_keys)
+
+    U->>C: Chọn "Đăng xuất" trên menu tài khoản
+    C->>C: Reset AuthContext ngay (user = null) → về màn hình đăng nhập
+    C->>Ctrl: POST /api/users/logout
+    Ctrl->>Svc: logout(userId)
+    Svc->>DB: DELETE FROM api_keys WHERE userId=...
+    Svc-->>Ctrl: OK
+    Ctrl-->>C: Xóa cookie token/refreshToken/logged
+    Note over C,Ctrl: Nếu request lỗi (token đã bị thu hồi từ trước)<br/>client vẫn giữ trạng thái đã đăng xuất, không chặn UI
+```
+
+## 5. UC#05 — Cập nhật hồ sơ cá nhân
+
+```mermaid
+sequenceDiagram
+    actor U as Người dùng
+    participant C as ProfilePage.jsx
+    participant Ctrl as UsersController
+    participant Svc as UsersService
+    participant DB as PostgreSQL (users)
+
+    U->>C: Sửa họ tên / số điện thoại / địa chỉ / ngày sinh
+    C->>Ctrl: PUT /api/users/:id
+    Ctrl->>Ctrl: JwtAuthGuard
+    Ctrl->>Svc: update(id, data)
+    alt id khác request.user.id và role không phải admin
+        Svc-->>Ctrl: 403 Forbidden
+        Ctrl-->>C: "Không có quyền sửa hồ sơ người khác"
+    else hợp lệ
+        Svc->>Svc: Loại bỏ password/email/role khỏi dữ liệu gửi lên
+        Svc->>DB: UPDATE users SET fullName=..., phone=..., address=..., birthDay=...
+        Svc-->>Ctrl: user đã cập nhật (ẩn password)
+        Ctrl-->>C: 200 OK
+        C-->>U: Hiển thị hồ sơ đã cập nhật
+    end
+```
+
+## 6. UC#06 — Admin tạo tài khoản Sinh viên / Giảng viên
 
 ```mermaid
 sequenceDiagram
@@ -160,7 +241,7 @@ sequenceDiagram
     end
 ```
 
-## 5. Nhập danh sách hàng loạt — Bulk Import (UC#06)
+## 7. UC#07 — Nhập danh sách hàng loạt (Bulk Import)
 
 ```mermaid
 sequenceDiagram
@@ -195,45 +276,242 @@ sequenceDiagram
     end
 ```
 
-## 6. Sinh viên đăng ký học phần (UC#08)
+## 8. UC#08 — Xem chi tiết & cập nhật thông tin người dùng
 
 ```mermaid
 sequenceDiagram
-    actor S as Sinh viên
-    participant C as student.jsx (RegistrationScreen)
-    participant Ctrl as EnrollmentsController
-    participant Svc as EnrollmentsService
-    participant DB as PostgreSQL (subject_classes, enrollments)
+    actor A as Admin
+    participant C as StudentProfile (details.jsx)
+    participant Ctrl as UsersController
+    participant Svc as UsersService
+    participant DB as PostgreSQL (users)
 
-    S->>C: Xem danh sách lớp học phần khả dụng
-    C->>Ctrl: GET /api/subject-classes
-    Ctrl-->>C: Danh sách lớp (status=active, học kỳ hiện hành)
-    S->>C: Chọn "Đăng ký" 1 lớp học phần
-    C->>Ctrl: POST /api/enrollments {subjectClassId}
-    Ctrl->>Ctrl: JwtAuthGuard + RolesGuard(student)
-    Ctrl->>Svc: register(studentId, subjectClassId)
-    Svc->>DB: Tìm SubjectClass theo id
-    alt không tồn tại hoặc status != active
-        Svc-->>Ctrl: 400 — "Lớp học phần không mở đăng ký"
-    else
-        Svc->>DB: COUNT Enrollment theo subjectClassId
-        alt enrolledCount >= maxStudents
-            Svc-->>Ctrl: 400 — "Lớp học phần đã đầy"
-        else
-            Svc->>DB: Kiểm tra Enrollment (studentId, subjectClassId) đã tồn tại?
-            alt đã tồn tại
-                Svc-->>Ctrl: 409 — "Đã đăng ký lớp này"
-            else
-                Svc->>DB: INSERT Enrollment (status='registered')
-                Svc-->>Ctrl: enrollment mới
-                Ctrl-->>C: 201 Created
-                C-->>S: "Đăng ký thành công"
-            end
-        end
+    A->>C: Bấm vào một sinh viên trong danh sách
+    C->>Ctrl: GET /api/users/:id
+    Ctrl-->>C: Thông tin chi tiết (hồ sơ, trạng thái)
+    C-->>A: Hiển thị trang Hồ sơ chi tiết
+    A->>C: Bấm "Sửa", cập nhật thông tin trong drawer form
+    C->>Ctrl: PUT /api/users/:id
+    Ctrl->>Ctrl: JwtAuthGuard (Admin được sửa bất kỳ user nào)
+    Ctrl->>Svc: update(id, data)
+    Svc->>Svc: Loại bỏ password/email/role khỏi dữ liệu gửi lên
+    Svc->>DB: UPDATE users SET ...
+    Svc-->>Ctrl: user đã cập nhật
+    Ctrl-->>C: 200 OK
+    C-->>A: Hồ sơ cập nhật ngay trên màn hình
+```
+
+## 9. UC#09 — Khóa / mở khóa tài khoản
+
+```mermaid
+sequenceDiagram
+    actor A as Admin
+    actor U as Người dùng bị khóa
+    participant C as admin.jsx / admin2.jsx
+    participant Ctrl as UsersController
+    participant Svc as UsersService
+    participant Guard as JwtAuthGuard
+    participant DB as PostgreSQL (users)
+
+    A->>C: Bấm nút khóa/mở khóa trên dòng người dùng
+    C->>Ctrl: PATCH /api/users/:id/status {status: 'active'|'inactive'}
+    Ctrl->>Ctrl: RolesGuard(admin)
+    Ctrl->>Svc: toggleStatus(id, status)
+    Svc->>DB: UPDATE users SET status=...
+    Svc-->>Ctrl: user đã cập nhật
+    Ctrl-->>C: 200 OK
+    C-->>A: Trạng thái cập nhật trên danh sách
+
+    Note over U,Guard: Hệ quả nếu tài khoản vừa bị khóa (status='inactive')
+    U->>Guard: Gọi API bất kỳ (phiên đang mở) hoặc thử đăng nhập mới
+    Guard->>DB: verifyToken → kiểm tra user.status
+    alt đăng nhập mới
+        Guard-->>U: 403 ACCOUNT_LOCKED ngay tại bước đăng nhập
+    else phiên đang mở, request kế tiếp
+        Guard-->>U: 403 ACCOUNT_LOCKED
+        U->>U: Client bắt sự kiện "auth:account-locked"
+        U->>U: Hiển thị modal "Tài khoản đã bị khóa" → về màn hình đăng nhập
     end
 ```
 
-## 7. Giảng viên nhập điểm & khóa điểm (UC#10)
+## 10. UC#10 — Xóa tài khoản
+
+```mermaid
+sequenceDiagram
+    actor A as Admin
+    participant C as admin.jsx / admin2.jsx
+    participant Ctrl as UsersController
+    participant Svc as UsersService
+    participant DB as PostgreSQL
+
+    A->>C: Bấm "Xóa" trên dòng người dùng, xác nhận hộp thoại
+    C->>Ctrl: DELETE /api/users/:id
+    Ctrl->>Ctrl: RolesGuard(admin)
+    Ctrl->>Svc: remove(id)
+    Svc->>DB: DELETE FROM users WHERE id=...
+    alt còn ràng buộc khóa ngoại (đang là GVCN/GV phụ trách, có enrollment/attendance)
+        DB-->>Svc: Lỗi vi phạm khóa ngoại
+        Svc-->>Ctrl: 400/500 lỗi
+        Ctrl-->>C: "Không thể xóa — còn dữ liệu liên quan"
+        C-->>A: Yêu cầu xử lý dữ liệu liên quan trước khi xóa
+    else không có ràng buộc
+        DB-->>Svc: Đã xóa (cascade ApiKey, Otp)
+        Svc-->>Ctrl: {deleted: true}
+        Ctrl-->>C: 200 OK
+        C-->>A: Xóa khỏi danh sách ngay trên giao diện
+    end
+```
+
+## 11. UC#11 — Quản lý danh mục (Khoa / Ngành / Lớp / Môn học)
+
+```mermaid
+sequenceDiagram
+    actor A as Admin
+    participant C as admin2.jsx
+    participant Ctrl as Departments/Branches/Classes/SubjectsController
+    participant Svc as *.Service
+    participant DB as PostgreSQL
+
+    A->>C: Mở màn hình danh mục (Khoa/Ngành/Lớp/Môn học)
+    C->>Ctrl: GET /api/departments | /branches | /classes?branchId | /subjects?branchId
+    Ctrl-->>C: Danh sách hiện có
+    A->>C: Thêm/sửa — nhập mã + tên, chọn cha (Khoa cho Ngành; Ngành cho Lớp/Môn học)
+    C->>Ctrl: POST hoặc PUT tương ứng
+    Ctrl->>Ctrl: RolesGuard(admin)
+    Ctrl->>Svc: create(...) / update(...)
+    alt trùng mã (code unique)
+        Svc-->>Ctrl: 409 Conflict
+        Ctrl-->>C: "Mã đã tồn tại"
+    else hợp lệ
+        Svc->>DB: INSERT/UPDATE
+        Svc-->>Ctrl: bản ghi mới/đã cập nhật
+        Ctrl-->>C: 200/201
+        C-->>A: Danh sách cập nhật ngay
+    end
+
+    A->>C: Xóa một mục
+    C->>Ctrl: DELETE .../:id
+    Ctrl->>Svc: remove(id)
+    alt còn dữ liệu con tham chiếu (Khoa còn Ngành; Ngành còn Lớp/Môn học)
+        Svc->>DB: DELETE bị PostgreSQL từ chối (khóa ngoại)
+        Svc-->>Ctrl: lỗi
+        Ctrl-->>C: "Không thể xóa — còn dữ liệu phụ thuộc"
+    else không còn ràng buộc
+        Svc->>DB: DELETE thành công
+        Ctrl-->>C: 200 OK
+    end
+```
+
+## 12. UC#12 — Quản lý Lớp học phần & Học kỳ
+
+```mermaid
+sequenceDiagram
+    actor A as Admin
+    participant C as admin2.jsx (SemestersScreen / SubjectClassManager)
+    participant SCtrl as SemestersController
+    participant CCtrl as SubjectClassesController
+    participant Svc as *.Service
+    participant DB as PostgreSQL
+
+    A->>C: Vào màn hình "Học kỳ", tạo học kỳ mới
+    C->>SCtrl: POST /api/semesters {name}
+    SCtrl->>Svc: create(name)
+    Svc->>DB: INSERT semesters
+    Svc-->>SCtrl: học kỳ mới
+    SCtrl-->>C: 201 Created
+
+    A->>C: Bật/tắt học kỳ đang hoạt động
+    C->>SCtrl: PATCH /api/semesters/:id/toggle-active
+    SCtrl->>DB: UPDATE semesters SET isActive=...
+    SCtrl-->>C: 200 OK
+
+    A->>C: Vào màn hình "Lớp học phần", tạo mới
+    C->>C: Chọn Môn học, Giảng viên, nhập tên học kỳ (chuỗi), sĩ số, trạng thái
+    C->>CCtrl: POST /api/subject-classes {...}
+    CCtrl->>Svc: create(...)
+    Svc->>DB: INSERT subject_classes
+    Svc-->>CCtrl: lớp học phần mới
+    CCtrl-->>C: 201 Created
+    Note over Svc,DB: "semester" là chuỗi tự do, KHÔNG FK tới bảng Semester —<br/>các module khác (đăng ký, dashboard) lọc bằng so khớp tên<br/>với Semester đang isActive=true
+```
+
+## 13. UC#13 — Xuất danh sách (CSV / Excel)
+
+```mermaid
+sequenceDiagram
+    actor A as Admin
+    participant C as admin.jsx / admin2.jsx
+    participant Lib as downloadCSV() / write-excel-file
+
+    A->>C: Bấm nút "Xuất" trên màn hình danh sách (Sinh viên/Giảng viên/Môn học)
+    C->>C: Lấy dữ liệu đang hiển thị trong state (đã tải sẵn qua GET trước đó)
+    alt Xuất CSV
+        C->>Lib: downloadCSV(filename, headers, rows)
+        Lib->>Lib: Tạo blob UTF-8 (BOM) từ dữ liệu
+    else Xuất Excel
+        C->>Lib: import('write-excel-file') (lazy-load)
+        Lib->>Lib: writeXlsxFile(data, {columns, sheet}).toFile(fileName)
+    end
+    Lib-->>C: File sẵn sàng
+    C-->>A: Trình duyệt tự động tải file xuống
+```
+
+## 14. UC#14 — Xem lớp phụ trách & danh sách sinh viên
+
+```mermaid
+sequenceDiagram
+    actor T as Giảng viên
+    participant C as teacher.jsx (MySectionsScreen)
+    participant Ctrl as SubjectClassesController
+    participant Svc as SubjectClassesService
+    participant DB as PostgreSQL
+
+    T->>C: Vào "Lớp của tôi"
+    C->>Ctrl: GET /api/subject-classes/my-sections
+    Ctrl->>Ctrl: RolesGuard(teacher)
+    Ctrl->>Svc: findMySections(teacherId)
+    Svc->>DB: Lọc subject_classes theo teacherId + học kỳ hiện hành
+    Svc-->>Ctrl: danh sách lớp phụ trách
+    Ctrl-->>C: 200 OK
+    C-->>T: Hiển thị danh sách lớp học phần
+
+    T->>C: Chọn 1 lớp để xem danh sách sinh viên
+    C->>Ctrl: GET /api/subject-classes/:id/roster
+    Ctrl->>Svc: getRoster(id)
+    Svc->>DB: Lấy enrollments + thông tin sinh viên của lớp
+    Svc-->>Ctrl: danh sách sinh viên đã đăng ký
+    Ctrl-->>C: 200 OK
+    C-->>T: Hiển thị roster — có thể chuyển sang Điểm danh (UC#15) hoặc Nhập điểm (UC#16)
+```
+
+## 15. UC#15 — Điểm danh sinh viên
+
+```mermaid
+sequenceDiagram
+    actor T as Giảng viên
+    participant C as teacher.jsx (AttendanceScreen)
+    participant Ctrl as AttendanceController
+    participant Svc as AttendanceService
+    participant DB as PostgreSQL (attendances)
+
+    T->>C: Chọn lớp học phần + ngày điểm danh
+    C->>Ctrl: POST /api/attendance/bulk {subjectClassId, date, records:[{studentId,status,note}]}
+    Ctrl->>Svc: bulkMark({subjectClassId, date, records, markedById})
+    Svc->>DB: Lấy SubjectClass, kiểm tra teacherId == markedById
+    alt không phải giáo viên phụ trách
+        Svc-->>Ctrl: 403 Forbidden — không điểm danh dòng nào
+    else hợp lệ
+        loop Với mỗi sinh viên trong records (song song, allSettled)
+            Svc->>DB: UPSERT attendance theo khóa (subjectClassId, studentId, date)
+            DB-->>Svc: created hoặc updated
+        end
+        Svc-->>Ctrl: {saved: n, failed: m}
+        Ctrl-->>C: 200 OK
+        C-->>T: "Đã lưu điểm danh (n thành công / m lỗi)"
+    end
+```
+
+## 16. UC#16 — Nhập điểm & Khóa điểm
 
 ```mermaid
 sequenceDiagram
@@ -274,34 +552,127 @@ sequenceDiagram
     Ctrl-->>C: 200 OK — điểm bị khóa, không thể sửa/hủy đăng ký
 ```
 
-## 8. Giảng viên điểm danh hàng loạt (UC#11)
+## 17. UC#17 — Đăng ký học phần
 
 ```mermaid
 sequenceDiagram
-    actor T as Giảng viên
-    participant C as teacher.jsx (AttendanceScreen)
-    participant Ctrl as AttendanceController
-    participant Svc as AttendanceService
-    participant DB as PostgreSQL (attendances)
+    actor S as Sinh viên
+    participant C as student.jsx (RegistrationScreen)
+    participant Ctrl as EnrollmentsController
+    participant Svc as EnrollmentsService
+    participant DB as PostgreSQL (subject_classes, enrollments)
 
-    T->>C: Chọn lớp học phần + ngày điểm danh
-    C->>Ctrl: POST /api/attendance/bulk {subjectClassId, date, records:[{studentId,status,note}]}
-    Ctrl->>Svc: bulkMark({subjectClassId, date, records, markedById})
-    Svc->>DB: Lấy SubjectClass, kiểm tra teacherId == markedById
-    alt không phải giáo viên phụ trách
-        Svc-->>Ctrl: 403 Forbidden — không điểm danh dòng nào
-    else hợp lệ
-        loop Với mỗi sinh viên trong records (song song, allSettled)
-            Svc->>DB: UPSERT attendance theo khóa (subjectClassId, studentId, date)
-            DB-->>Svc: created hoặc updated
+    S->>C: Xem danh sách lớp học phần khả dụng
+    C->>Ctrl: GET /api/subject-classes
+    Ctrl-->>C: Danh sách lớp (status=active, học kỳ hiện hành)
+    S->>C: Chọn "Đăng ký" 1 lớp học phần
+    C->>Ctrl: POST /api/enrollments {subjectClassId}
+    Ctrl->>Ctrl: JwtAuthGuard + RolesGuard(student)
+    Ctrl->>Svc: register(studentId, subjectClassId)
+    Svc->>DB: Tìm SubjectClass theo id
+    alt không tồn tại hoặc status != active
+        Svc-->>Ctrl: 400 — "Lớp học phần không mở đăng ký"
+    else
+        Svc->>DB: COUNT Enrollment theo subjectClassId
+        alt enrolledCount >= maxStudents
+            Svc-->>Ctrl: 400 — "Lớp học phần đã đầy"
+        else
+            Svc->>DB: Kiểm tra Enrollment (studentId, subjectClassId) đã tồn tại?
+            alt đã tồn tại
+                Svc-->>Ctrl: 409 — "Đã đăng ký lớp này"
+            else
+                Svc->>DB: INSERT Enrollment (status='registered')
+                Svc-->>Ctrl: enrollment mới
+                Ctrl-->>C: 201 Created
+                C-->>S: "Đăng ký thành công"
+            end
         end
-        Svc-->>Ctrl: {saved: n, failed: m}
-        Ctrl-->>C: 200 OK
-        C-->>T: "Đã lưu điểm danh (n thành công / m lỗi)"
     end
 ```
 
-## 9. Xem Dashboard theo vai trò (UC#12)
+## 18. UC#18 — Hủy đăng ký học phần
+
+```mermaid
+sequenceDiagram
+    actor S as Sinh viên
+    participant C as student.jsx (MyEnrollmentsScreen)
+    participant Ctrl as EnrollmentsController
+    participant Svc as EnrollmentsService
+    participant DB as PostgreSQL (enrollments)
+
+    S->>C: Chọn "Hủy đăng ký" trên môn đã đăng ký
+    C->>Ctrl: DELETE /api/enrollments/:id
+    Ctrl->>Ctrl: JwtAuthGuard + RolesGuard(student)
+    Ctrl->>Svc: drop(enrollmentId, studentId)
+    Svc->>DB: Lấy enrollment theo id
+    alt enrollment.studentId != studentId
+        Svc-->>Ctrl: 403 Forbidden
+        Ctrl-->>C: "Không có quyền hủy đăng ký này"
+    else gradeLocked == true
+        Svc-->>Ctrl: 400 — "Điểm đã khóa, không thể hủy"
+        Ctrl-->>C: Hiển thị lỗi
+    else hợp lệ
+        Svc->>DB: DELETE enrollment
+        Svc-->>Ctrl: OK
+        Ctrl-->>C: 200 OK
+        C-->>S: Cập nhật danh sách đăng ký, bỏ môn vừa hủy
+    end
+```
+
+## 19. UC#19 — Xem môn đã đăng ký & lịch học / lịch dạy
+
+```mermaid
+sequenceDiagram
+    actor U as Sinh viên / Giảng viên
+    participant C as ScheduleScreen (details.jsx)
+    participant SCtrl as EnrollmentsController
+    participant TCtrl as SubjectClassesController
+
+    U->>C: Vào "Lịch học" (Sinh viên) / "Lịch dạy" (Giảng viên)
+    alt vai trò = Sinh viên
+        C->>SCtrl: GET /api/enrollments/my
+        SCtrl-->>C: Danh sách đăng ký đang "registered" (học kỳ hiện hành)
+    else vai trò = Giảng viên
+        C->>TCtrl: GET /api/subject-classes/my-sections
+        TCtrl-->>C: Danh sách lớp được phân công
+    end
+    C->>C: Nhóm dữ liệu theo tên học kỳ (semester)
+    alt chưa có dữ liệu
+        C-->>U: Hiển thị trạng thái trống thân thiện
+    else có dữ liệu
+        C-->>U: Hiển thị lịch học/lịch dạy theo từng học kỳ
+    end
+```
+
+## 20. UC#20 — Xem bảng điểm & GPA
+
+```mermaid
+sequenceDiagram
+    actor S as Sinh viên
+    participant C as student.jsx (TranscriptScreen)
+    participant Ctrl as EnrollmentsController
+    participant Svc as EnrollmentsService
+    participant DB as PostgreSQL (enrollments)
+
+    S->>C: Vào "Bảng điểm"
+    C->>Ctrl: GET /api/enrollments/transcript
+    Ctrl->>Svc: getTranscript(studentId)
+    Svc->>DB: Lấy enrollments status='completed' kèm subject.credits
+    Svc->>Svc: gpa = round(Σ(totalScore×credits) / Σ(credits), 2)
+    Svc-->>Ctrl: {enrollments, gpa, totalCredits}
+    Ctrl-->>C: 200 OK
+    C-->>S: Hiển thị bảng điểm từng môn + GPA tổng
+
+    C->>Ctrl: GET /api/enrollments/gpa-trend
+    Ctrl->>Svc: getGpaTrend(studentId)
+    Svc->>DB: Nhóm enrollments completed theo subjectClass.semester
+    Svc->>Svc: Tính GPA riêng từng học kỳ, sắp xếp theo tên học kỳ
+    Svc-->>Ctrl: [{term, gpa}, ...]
+    Ctrl-->>C: 200 OK
+    C-->>S: Hiển thị biểu đồ xu hướng GPA theo học kỳ
+```
+
+## 21. UC#21 — Xem thống kê Dashboard
 
 ```mermaid
 sequenceDiagram
@@ -333,8 +704,9 @@ sequenceDiagram
     C-->>U: Render StatCard + biểu đồ (recharts/chart.js)
 ```
 
-## 10. Ghi chú tổng hợp áp dụng cho mọi sơ đồ trên
+## 22. Ghi chú tổng hợp áp dụng cho mọi sơ đồ trên
 
-- Mọi request "đã xác thực" đều đi qua `apiClient` (`axiosClient.js`) → tự động gắn cookie (`withCredentials: true`) và tự làm mới token khi gặp 401 (xem sơ đồ mục 2) trước khi tới được sơ đồ nghiệp vụ tương ứng — các sơ đồ 4–9 lược bỏ bước này để tập trung vào nghiệp vụ chính.
+- Mọi request "đã xác thực" đều đi qua `apiClient` (`axiosClient.js`) → tự động gắn cookie (`withCredentials: true`) và tự làm mới token khi gặp 401 (xem sơ đồ phụ ở mục 1) trước khi tới được sơ đồ nghiệp vụ tương ứng — các sơ đồ từ mục 3 trở đi lược bỏ bước này để tập trung vào nghiệp vụ chính.
 - Guard áp dụng theo thứ tự: `JwtAuthGuard` (xác thực) → `RolesGuard` + `@Roles(...)` (phân quyền) — nếu request không qua guard, controller/service không được gọi tới.
 - Định dạng response thành công chuẩn của server: `{ success, message, metadata }`; lỗi được NestJS tự serialize từ các `HttpException` (`BadRequestException`, `ForbiddenException`, `ConflictException`, `UnauthorizedException`...).
+- UC#13 (Xuất CSV/Excel) là luồng thuần phía client — không có lời gọi API riêng để "xuất"; dữ liệu đã có sẵn trong state từ các lần `GET` trước đó.

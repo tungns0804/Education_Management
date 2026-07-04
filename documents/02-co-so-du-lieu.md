@@ -4,11 +4,13 @@
 
 ## 1. Mô hình quan hệ (ERD)
 
+Phân cấp danh mục hiện tại: **Khoa (Department) → Ngành (Branch) → Lớp hành chính (Class) & Môn học (Subject)**. Trước đây Lớp và Môn học gắn trực tiếp với Khoa; từ bản cập nhật mới nhất, cả hai đã chuyển sang gắn với **Ngành** (`branchId`).
+
 ```mermaid
 erDiagram
     DEPARTMENT ||--o{ BRANCH : "có nhiều"
-    DEPARTMENT ||--o{ CLASS : "có nhiều"
-    DEPARTMENT ||--o{ SUBJECT : "có nhiều"
+    BRANCH ||--o{ CLASS : "có nhiều"
+    BRANCH ||--o{ SUBJECT : "có nhiều"
 
     USER ||--o{ CLASS : "chủ nhiệm (teacherId)"
     USER ||--o{ SUBJECT_CLASS : "phụ trách (teacherId)"
@@ -62,14 +64,14 @@ erDiagram
         string code
         string nameClass
         string teacherId FK
-        string departmentId FK
+        string branchId FK
     }
     SUBJECT {
         string id PK
         string code
         string name
         int credits
-        string departmentId FK
+        string branchId FK
     }
     SUBJECT_CLASS {
         string id PK
@@ -155,6 +157,8 @@ erDiagram
 | 3 | `nameDepartment` | String | Tên khoa |
 | 4 | `createdAt` / `updatedAt` | DateTime | Tự động |
 
+> Khoa chỉ còn quan hệ trực tiếp với **Ngành** (`branches`). Lớp hành chính và Môn học không còn gắn trực tiếp với Khoa — muốn biết một Lớp/Môn học thuộc khoa nào phải đi qua Ngành của nó.
+
 ### 3.2 `branches` (Ngành) — model `Branch`
 
 | STT | Tên trường | Kiểu dữ liệu | Ghi chú |
@@ -163,6 +167,7 @@ erDiagram
 | 2 | `code` | String, unique | Mã ngành |
 | 3 | `nameBranch` | String | Tên ngành |
 | 4 | `departmentId` | String (FK → `Department`) | Ngành thuộc khoa nào |
+| — | Quan hệ | `classes[]`, `subjects[]` | Ngành là cha trực tiếp của Lớp hành chính và Môn học |
 
 ### 3.3 `users` (Người dùng) — model `User`
 
@@ -198,7 +203,7 @@ erDiagram
 | 2 | `code` | String, unique | VD: `CNTT2021A` |
 | 3 | `nameClass` | String | |
 | 4 | `teacherId` | String (FK → `User`) | Giáo viên chủ nhiệm |
-| 5 | `departmentId` | String (FK → `Department`) | |
+| 5 | `branchId` | String (FK → `Branch`) | Lớp thuộc **Ngành** nào (trước đây là `departmentId` — đã đổi) |
 
 > Model `Class` **không có** danh sách sinh viên dạng quan hệ mảng — sinh viên "thuộc lớp" chỉ qua trường chuỗi `User.class`.
 
@@ -210,7 +215,7 @@ erDiagram
 | 2 | `code` | String, unique | VD: `INT1001` |
 | 3 | `name` | String | |
 | 4 | `credits` | Int, mặc định 0 | Số tín chỉ |
-| 5 | `departmentId` | String (FK → `Department`) | |
+| 5 | `branchId` | String (FK → `Branch`) | Môn học thuộc **Ngành** nào (trước đây là `departmentId` — đã đổi) |
 
 ### 3.6 `subject_classes` (Lớp học phần) — model `SubjectClass`
 
