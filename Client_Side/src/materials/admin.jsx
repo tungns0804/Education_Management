@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { I } from './icons';
 import { Avatar, Drawer, FormField, Modal, StatCard, StatusBadge, fieldCls, useApp, useForm, useToast, validate } from './ui';
 import { BarChart, DonutChart } from './charts';
@@ -59,12 +59,23 @@ function FilterSelect({ value, onChange, options, allLabel }) {
 function RowAction({ onEdit, onToggle, active, onDelete }) {
   const { t } = useApp();
   const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState({ top: 0, right: 0 });
+  const btnRef = useRef(null);
+
+  const handleOpen = () => {
+    if (btnRef.current) {
+      const r = btnRef.current.getBoundingClientRect();
+      setPos({ top: r.bottom + 4, right: window.innerWidth - r.right });
+    }
+    setOpen(o => !o);
+  };
+
   return (
-    <div style={{ position: 'relative', display: 'inline-block' }}>
-      <button className="btn btn-icon btn-sm btn-ghost" onClick={() => setOpen(o => !o)}><I.more size={17}/></button>
+    <div style={{ display: 'inline-block' }}>
+      <button ref={btnRef} className="btn btn-icon btn-sm btn-ghost" onClick={handleOpen}><I.more size={17}/></button>
       {open && <>
         <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 30 }}/>
-        <div className="card" style={{ position: 'absolute', right: 0, top: 'calc(100% + 4px)', width: 156, padding: 6, zIndex: 31, boxShadow: 'var(--shadow-lg)', animation: 'scaleIn .14s ease' }}>
+        <div className="card" style={{ position: 'fixed', right: pos.right, top: pos.top, width: 156, padding: 6, zIndex: 31, boxShadow: 'var(--shadow-lg)', animation: 'scaleIn .14s ease' }}>
           <MenuRow icon={<I.edit size={15}/>} label={t('edit')} onClick={() => { setOpen(false); onEdit && onEdit(); }}/>
           {onToggle && <MenuRow icon={active ? <I.lock size={15}/> : <I.unlock size={15}/>} label={active ? t('lock') : t('unlock')} onClick={() => { setOpen(false); onToggle(); }}/>}
           <div style={{ height: 1, background: 'var(--border)', margin: '4px 0' }}/>
