@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { I } from './icons';
 import { Avatar, Drawer, FormField, Modal, StatusBadge, fieldCls, useApp, useForm, useToast, validate } from './ui';
 import { downloadCSV } from './tools';
@@ -632,14 +632,14 @@ function TeachersScreen() {
 }
 
 // ── Catalog Form Drawer (Faculty / Major / Class / Subject) ───────────────────
-function CatalogFormDrawer({ open, onClose, onSave, kind, row, depts, teachers, lang, t }) {
+function CatalogFormDrawer({ open, onClose, onSave, kind, row, depts, branches, teachers, lang, t }) {
   const isEdit = !!row;
 
   const getInitial = () => {
     if (kind === 'faculty') return { code: '', nameDepartment: '' };
     if (kind === 'major')   return { code: '', nameBranch: '', departmentId: '' };
-    if (kind === 'class')   return { code: '', nameClass: '', departmentId: '', teacherId: '' };
-    if (kind === 'subject') return { code: '', name: '', credits: '3', departmentId: '' };
+    if (kind === 'class')   return { code: '', nameClass: '', branchId: '', teacherId: '' };
+    if (kind === 'subject') return { code: '', name: '', credits: '3', branchId: '' };
     return {};
   };
 
@@ -648,8 +648,8 @@ function CatalogFormDrawer({ open, onClose, onSave, kind, row, depts, teachers, 
     const base = { code: req };
     if (kind === 'faculty') return { ...base, nameDepartment: req };
     if (kind === 'major')   return { ...base, nameBranch: req, departmentId: req };
-    if (kind === 'class')   return { ...base, nameClass: req, departmentId: req, teacherId: req };
-    if (kind === 'subject') return { ...base, name: req, departmentId: req,
+    if (kind === 'class')   return { ...base, nameClass: req, branchId: req, teacherId: req };
+    if (kind === 'subject') return { ...base, name: req, branchId: req,
       credits: (v) => (!v || isNaN(+v) || +v < 1 || +v > 10) ? (lang === 'vi' ? 'Số TC từ 1–10' : 'Credits 1–10') : null };
     return base;
   }, [kind, t, lang]);
@@ -662,8 +662,8 @@ function CatalogFormDrawer({ open, onClose, onSave, kind, row, depts, teachers, 
     if (row) {
       if (kind === 'faculty') setForm({ code: row.code || '', nameDepartment: row.nameDepartment || '' });
       if (kind === 'major')   setForm({ code: row.code || '', nameBranch: row.nameBranch || '', departmentId: row.departmentId || '' });
-      if (kind === 'class')   setForm({ code: row.code || '', nameClass: row.nameClass || '', departmentId: row.departmentId || '', teacherId: row.teacherId || '' });
-      if (kind === 'subject') setForm({ code: row.code || '', name: row.name || '', credits: String(row.credits ?? 3), departmentId: row.departmentId || '' });
+      if (kind === 'class')   setForm({ code: row.code || '', nameClass: row.nameClass || '', branchId: row.branchId || '', teacherId: row.teacherId || '' });
+      if (kind === 'subject') setForm({ code: row.code || '', name: row.name || '', credits: String(row.credits ?? 3), branchId: row.branchId || '' });
     } else {
       reset(getInitial());
     }
@@ -710,10 +710,10 @@ function CatalogFormDrawer({ open, onClose, onSave, kind, row, depts, teachers, 
           <FormField label={lang === 'vi' ? 'Tên lớp' : 'Class name'} error={showError('nameClass')}>
             <input className={fieldCls(showError('nameClass'))} value={form.nameClass || ''} onChange={e => set('nameClass', e.target.value)} onBlur={() => touch('nameClass')} placeholder={lang === 'vi' ? 'Kỹ thuật phần mềm 2024A' : 'Software Engineering 2024A'}/>
           </FormField>
-          <FormField label={t('faculty')} error={showError('departmentId')}>
-            <select className={fieldCls(showError('departmentId'))} value={form.departmentId || ''} onChange={e => set('departmentId', e.target.value)} onBlur={() => touch('departmentId')}>
-              <option value="">— {lang === 'vi' ? 'Chọn khoa' : 'Select faculty'}</option>
-              {depts.map(d => <option key={d.id} value={d.id}>{d.nameDepartment}</option>)}
+          <FormField label={t('major')} error={showError('branchId')}>
+            <select className={fieldCls(showError('branchId'))} value={form.branchId || ''} onChange={e => set('branchId', e.target.value)} onBlur={() => touch('branchId')}>
+              <option value="">— {lang === 'vi' ? 'Chọn ngành' : 'Select major'}</option>
+              {branches.map(b => <option key={b.id} value={b.id}>{b.nameBranch}</option>)}
             </select>
           </FormField>
           <FormField label={lang === 'vi' ? 'CVHT (Cố vấn học tập)' : 'Academic advisor'} error={showError('teacherId')}>
@@ -732,10 +732,10 @@ function CatalogFormDrawer({ open, onClose, onSave, kind, row, depts, teachers, 
             <FormField label={t('credits')} error={showError('credits')}>
               <input className={fieldCls(showError('credits'))} value={form.credits || ''} onChange={e => set('credits', e.target.value.replace(/\D/g, ''))} onBlur={() => touch('credits')} placeholder="3" inputMode="numeric"/>
             </FormField>
-            <FormField label={t('faculty')} error={showError('departmentId')}>
-              <select className={fieldCls(showError('departmentId'))} value={form.departmentId || ''} onChange={e => set('departmentId', e.target.value)} onBlur={() => touch('departmentId')}>
-                <option value="">— {lang === 'vi' ? 'Chọn khoa' : 'Select'}</option>
-                {depts.map(d => <option key={d.id} value={d.id}>{d.nameDepartment}</option>)}
+            <FormField label={t('major')} error={showError('branchId')}>
+              <select className={fieldCls(showError('branchId'))} value={form.branchId || ''} onChange={e => set('branchId', e.target.value)} onBlur={() => touch('branchId')}>
+                <option value="">— {lang === 'vi' ? 'Chọn ngành' : 'Select'}</option>
+                {branches.map(b => <option key={b.id} value={b.id}>{b.nameBranch}</option>)}
               </select>
             </FormField>
           </div>
@@ -753,11 +753,13 @@ function CatalogScreen({ kind }) {
   const [loading,    setLoading]    = useState(true);
   const [q,          setQ]          = useState('');
   const [depts,      setDepts]      = useState([]);
+  const [branches,   setBranches]   = useState([]);
   const [teachers,   setTeachers]   = useState([]);
   const [drawer,     setDrawer]     = useState(null);
   const [confirmDel, setConfirmDel] = useState(null);
 
-  const needsDepts    = ['major', 'class', 'subject'].includes(kind);
+  const needsDepts    = kind === 'major';
+  const needsBranches = ['class', 'subject'].includes(kind);
   const needsTeachers = kind === 'class';
 
   const conf = {
@@ -771,7 +773,6 @@ function CatalogScreen({ kind }) {
         { header: t('code'), cell: r => <span className="badge badge-muted" style={{ fontFamily: 'var(--mono)' }}>{r.code}</span> },
         { header: lang === 'vi' ? 'Tên Khoa' : 'Faculty Name', cell: r => <b>{r.nameDepartment}</b> },
         { header: lang === 'vi' ? 'Ngành' : 'Majors',   align: 'center', cell: r => <span style={{ fontFamily: 'var(--mono)', fontWeight: 700 }}>{r._count?.branches ?? 0}</span> },
-        { header: lang === 'vi' ? 'Môn học' : 'Subjects', align: 'center', cell: r => <span style={{ fontFamily: 'var(--mono)', fontWeight: 700 }}>{r._count?.subjects ?? 0}</span> },
       ],
       search: (r) => (r.nameDepartment || '') + ' ' + (r.code || ''),
       add:    lang === 'vi' ? 'Thêm khoa' : 'Add faculty',
@@ -793,13 +794,13 @@ function CatalogScreen({ kind }) {
     class: {
       title:  t('classes'),
       fetch:  requestClasses,
-      create: (d) => requestCreateClass({ code: d.code, nameClass: d.nameClass, departmentId: d.departmentId, teacherId: d.teacherId }),
-      update: (id, d) => requestUpdateClass(id, { nameClass: d.nameClass, departmentId: d.departmentId, teacherId: d.teacherId }),
+      create: (d) => requestCreateClass({ code: d.code, nameClass: d.nameClass, branchId: d.branchId, teacherId: d.teacherId }),
+      update: (id, d) => requestUpdateClass(id, { nameClass: d.nameClass, branchId: d.branchId, teacherId: d.teacherId }),
       del:    (r) => requestDeleteClass(r.id),
       cols: [
         { header: t('code'),    cell: r => <span className="badge badge-muted" style={{ fontFamily: 'var(--mono)' }}>{r.code}</span> },
         { header: lang === 'vi' ? 'Tên Lớp' : 'Class Name',    cell: r => <b>{r.nameClass}</b> },
-        { header: t('faculty'), cell: r => <span style={{ fontSize: 13, color: 'var(--text-2)' }}>{r.department?.nameDepartment || '—'}</span> },
+        { header: t('major'), cell: r => <span style={{ fontSize: 13, color: 'var(--text-2)' }}>{r.branch?.nameBranch || '—'}</span> },
         { header: lang === 'vi' ? 'CVHT' : 'Advisor', cell: r => <span style={{ fontSize: 13, color: 'var(--text-2)' }}>{r.teacher?.fullName || '—'}</span> },
       ],
       search: (r) => (r.nameClass || '') + ' ' + (r.code || ''),
@@ -808,13 +809,13 @@ function CatalogScreen({ kind }) {
     subject: {
       title:  t('subjects'),
       fetch:  requestSubjects,
-      create: (d) => requestCreateSubject({ code: d.code, name: d.name, credits: +d.credits, departmentId: d.departmentId }),
-      update: (id, d) => requestUpdateSubject(id, { name: d.name, credits: +d.credits, departmentId: d.departmentId }),
+      create: (d) => requestCreateSubject({ code: d.code, name: d.name, credits: +d.credits, branchId: d.branchId }),
+      update: (id, d) => requestUpdateSubject(id, { name: d.name, credits: +d.credits, branchId: d.branchId }),
       del:    (r) => requestDeleteSubject(r.id),
       cols: [
         { header: t('code'),    cell: r => <span className="badge badge-muted" style={{ fontFamily: 'var(--mono)' }}>{r.code}</span> },
         { header: lang === 'vi' ? 'Tên Môn Học' : 'Subject Name',    cell: r => <b>{r.name}</b> },
-        { header: t('faculty'), cell: r => <span style={{ fontSize: 13, color: 'var(--text-2)' }}>{r.department?.nameDepartment || '—'}</span> },
+        { header: t('major'), cell: r => <span style={{ fontSize: 13, color: 'var(--text-2)' }}>{r.branch?.nameBranch || '—'}</span> },
         { header: t('credits'), align: 'center', cell: r => <span style={{ fontWeight: 700, fontFamily: 'var(--mono)' }}>{r.credits}</span> },
       ],
       search: (r) => (r.name || '') + ' ' + (r.code || ''),
@@ -826,6 +827,7 @@ function CatalogScreen({ kind }) {
     setLoading(true);
     const promises = [conf.fetch().then(res => setRows(res.metadata ?? []))];
     if (needsDepts)    promises.push(requestDepartments().then(r => setDepts(r.metadata ?? [])));
+    if (needsBranches) promises.push(requestBranches().then(r => setBranches(r.metadata ?? [])));
     if (needsTeachers) promises.push(requestTeachers().then(r => setTeachers(r.metadata ?? [])));
     Promise.all(promises)
       .catch(() => toast(lang === 'vi' ? 'Lỗi tải dữ liệu' : 'Failed to load data', 'danger'))
@@ -855,6 +857,7 @@ function CatalogScreen({ kind }) {
         kind={kind}
         row={drawer?.row ?? null}
         depts={depts}
+        branches={branches}
         teachers={teachers}
         lang={lang}
         t={t}
@@ -896,7 +899,7 @@ function CatalogScreen({ kind }) {
 }
 
 // ── Subject Drawer (add / edit môn học) ───────────────────────────────────────
-function SubjectDrawer({ open, row, depts, onClose, onSave }) {
+function SubjectDrawer({ open, row, branches, onClose, onSave }) {
   const { t, lang } = useApp();
   const isEdit = !!row;
   const toast = useToast();
@@ -905,20 +908,20 @@ function SubjectDrawer({ open, row, depts, onClose, onSave }) {
     code:         validate.required(t),
     name:         validate.required(t),
     credits:      (v) => (!v || isNaN(+v) || +v < 1 || +v > 10) ? (lang === 'vi' ? 'Số TC từ 1–10' : 'Credits 1–10') : null,
-    departmentId: validate.required(t),
+    branchId: validate.required(t),
   }), [t, lang]);
 
   const { form, set, touch, showError, submit, reset, setForm } = useForm(
-    { code: '', name: '', credits: '3', departmentId: '' },
+    { code: '', name: '', credits: '3', branchId: '' },
     validators,
   );
 
   useEffect(() => {
     if (!open) return;
     if (row) {
-      setForm({ code: row.code || '', name: row.name || '', credits: String(row.credits ?? 3), departmentId: row.departmentId || '' });
+      setForm({ code: row.code || '', name: row.name || '', credits: String(row.credits ?? 3), branchId: row.branchId || '' });
     } else {
-      reset({ code: '', name: '', credits: '3', departmentId: '' });
+      reset({ code: '', name: '', credits: '3', branchId: '' });
     }
   }, [open, row]);
 
@@ -943,10 +946,10 @@ function SubjectDrawer({ open, row, depts, onClose, onSave }) {
           <FormField label={t('credits')} error={showError('credits')}>
             <input className={fieldCls(showError('credits'))} value={form.credits} onChange={e => set('credits', e.target.value.replace(/\D/g, ''))} onBlur={() => touch('credits')} placeholder="3" inputMode="numeric"/>
           </FormField>
-          <FormField label={t('faculty')} error={showError('departmentId')}>
-            <select className={fieldCls(showError('departmentId'))} value={form.departmentId} onChange={e => set('departmentId', e.target.value)} onBlur={() => touch('departmentId')}>
-              <option value="">— {lang === 'vi' ? 'Chọn khoa' : 'Select'}</option>
-              {depts.map(d => <option key={d.id} value={d.id}>{d.nameDepartment}</option>)}
+          <FormField label={t('major')} error={showError('branchId')}>
+            <select className={fieldCls(showError('branchId'))} value={form.branchId} onChange={e => set('branchId', e.target.value)} onBlur={() => touch('branchId')}>
+              <option value="">— {lang === 'vi' ? 'Chọn ngành' : 'Select'}</option>
+              {branches.map(b => <option key={b.id} value={b.id}>{b.nameBranch}</option>)}
             </select>
           </FormField>
         </div>
@@ -960,19 +963,19 @@ function SubjectsScreen() {
   const { t, lang } = useApp();
   const toast = useToast();
   const [subjects,   setSubjects]   = useState([]);
-  const [depts,      setDepts]      = useState([]);
+  const [branches,   setBranches]   = useState([]);
   const [loading,    setLoading]    = useState(true);
   const [q,          setQ]          = useState('');
-  const [deptFilter, setDeptFilter] = useState('');
+  const [branchFilter, setBranchFilter] = useState('');
   const [drawer,     setDrawer]     = useState(null);
   const [confirmDel, setConfirmDel] = useState(null);
 
   const loadData = () => {
     setLoading(true);
-    Promise.all([requestSubjects(), requestDepartments()])
-      .then(([sRes, dRes]) => {
+    Promise.all([requestSubjects(), requestBranches()])
+      .then(([sRes, bRes]) => {
         setSubjects(sRes.metadata ?? []);
-        setDepts(dRes.metadata ?? []);
+        setBranches(bRes.metadata ?? []);
       })
       .catch(() => toast(lang === 'vi' ? 'Lỗi tải dữ liệu' : 'Failed to load data', 'danger'))
       .finally(() => setLoading(false));
@@ -982,14 +985,14 @@ function SubjectsScreen() {
 
   const filtered = subjects.filter(s => {
     if (q && !(s.name?.toLowerCase().includes(q.toLowerCase()) || s.code?.toLowerCase().includes(q.toLowerCase()))) return false;
-    if (deptFilter && s.departmentId !== deptFilter) return false;
+    if (branchFilter && s.branchId !== branchFilter) return false;
     return true;
   });
 
   const columns = [
     { header: t('code'), cell: s => <span className="badge badge-muted" style={{ fontFamily: 'var(--mono)' }}>{s.code}</span> },
     { header: lang === 'vi' ? 'Tên Môn Học' : 'Subject Name', cell: s => <b>{s.name}</b> },
-    { header: t('faculty'), cell: s => <span style={{ fontSize: 13, color: 'var(--text-2)' }}>{s.department?.nameDepartment || '—'}</span> },
+    { header: t('major'), cell: s => <span style={{ fontSize: 13, color: 'var(--text-2)' }}>{s.branch?.nameBranch || '—'}</span> },
     { header: t('credits'), align: 'center', cell: s => <span style={{ fontWeight: 700, fontFamily: 'var(--mono)' }}>{s.credits}</span> },
     { header: lang === 'vi' ? 'Lớp HP' : 'Sections', align: 'center', cell: s => <span style={{ fontFamily: 'var(--mono)', fontWeight: 700 }}>{s._count?.subjectClasses ?? 0}</span> },
   ];
@@ -1000,8 +1003,8 @@ function SubjectsScreen() {
         desc={lang === 'vi' ? `Quản lý ${subjects.length} môn học` : `Manage ${subjects.length} subjects`}
         right={<button className="btn btn-outline btn-sm" style={{ height: 40 }} onClick={() => {
           downloadCSV('mon-hoc.csv',
-            [t('code'), lang === 'vi' ? 'Tên Môn Học' : 'Subject Name', t('faculty'), t('credits'), lang === 'vi' ? 'Lớp HP' : 'Sections'],
-            filtered.map(s => [s.code, s.name, s.department?.nameDepartment || '', s.credits, s._count?.subjectClasses ?? 0]));
+            [t('code'), lang === 'vi' ? 'Tên Môn Học' : 'Subject Name', t('major'), t('credits'), lang === 'vi' ? 'Lớp HP' : 'Sections'],
+            filtered.map(s => [s.code, s.name, s.branch?.nameBranch || '', s.credits, s._count?.subjectClasses ?? 0]));
           toast(`${t('exported')} · ${filtered.length} ${lang === 'vi' ? 'dòng' : 'rows'}`);
         }}><I.download size={16}/>{t('export')}</button>}/>
 
@@ -1012,22 +1015,22 @@ function SubjectsScreen() {
         toolbar={<TableToolbar q={q} setQ={setQ}
           onAdd={() => setDrawer({ row: null })}
           addLabel={lang === 'vi' ? 'Thêm môn học' : 'Add subject'}
-          filters={<FilterSelect value={deptFilter} onChange={setDeptFilter}
-            allLabel={lang === 'vi' ? 'Mọi khoa' : 'All faculties'}
-            options={depts.map(d => ({ value: d.id, label: d.nameDepartment }))}/>}/>}/>
+          filters={<FilterSelect value={branchFilter} onChange={setBranchFilter}
+            allLabel={lang === 'vi' ? 'Mọi ngành' : 'All majors'}
+            options={branches.map(b => ({ value: b.id, label: b.nameBranch }))}/>}/>}/>
 
       <SubjectDrawer
         open={!!drawer}
         row={drawer?.row ?? null}
-        depts={depts}
+        branches={branches}
         onClose={() => setDrawer(null)}
         onSave={async (data) => {
           try {
             if (drawer.row) {
-              await requestUpdateSubject(drawer.row.id, { name: data.name, credits: +data.credits, departmentId: data.departmentId });
+              await requestUpdateSubject(drawer.row.id, { name: data.name, credits: +data.credits, branchId: data.branchId });
               toast(lang === 'vi' ? 'Đã cập nhật' : 'Updated');
             } else {
-              await requestCreateSubject({ code: data.code, name: data.name, credits: +data.credits, departmentId: data.departmentId });
+              await requestCreateSubject({ code: data.code, name: data.name, credits: +data.credits, branchId: data.branchId });
               toast(lang === 'vi' ? 'Đã tạo môn học' : 'Subject created');
             }
             loadData();
@@ -1150,7 +1153,7 @@ function SectionDrawer({ open, row, subjects, teachers, onClose, onSave }) {
 }
 
 // ── Sections screen ────────────────────────────────────────────────────────────
-const CARDS_PER_PAGE = 6;
+const ROWS_PER_PAGE = 2;
 
 function SectionsScreen() {
   const { t, lang } = useApp();
@@ -1165,6 +1168,26 @@ function SectionsScreen() {
   const [page,         setPage]         = useState(1);
   const [drawer,       setDrawer]       = useState(null);
   const [confirmDel,   setConfirmDel]   = useState(null);
+  const gridRef = useRef(null);
+  const [cols, setCols] = useState(1);
+
+  // grid-cards uses `repeat(auto-fill, minmax(252px, 1fr))`, so the number of
+  // columns changes with viewport width. Measure it so pagination always breaks
+  // on a full row instead of leaving a half-filled row on the current page.
+  useLayoutEffect(() => {
+    const el = gridRef.current;
+    if (!el) return;
+    const measure = () => {
+      const n = getComputedStyle(el).gridTemplateColumns.split(' ').filter(Boolean).length;
+      setCols(n || 1);
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const CARDS_PER_PAGE = cols * ROWS_PER_PAGE;
 
   const loadData = () => {
     setLoading(true);
@@ -1225,7 +1248,7 @@ function SectionsScreen() {
           ]}/>
       </div>
 
-      <div className="grid-cards">
+      <div className="grid-cards" ref={gridRef}>
         {pageItems.map(s => {
           const enrolled = s._count?.enrollments ?? 0;
           const max      = s.maxStudents ?? 50;
@@ -1275,9 +1298,9 @@ function SectionsScreen() {
 
       {totalPages > 1 && (
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, paddingTop: 8 }}>
-          <button className="btn btn-sm btn-ghost" disabled={safePage <= 1} onClick={() => setPage(p => p - 1)}>‹ {lang === 'vi' ? 'Trước' : 'Prev'}</button>
+          <button className="btn btn-sm btn-ghost" disabled={safePage <= 1} onClick={() => setPage(safePage - 1)}>‹ {lang === 'vi' ? 'Trước' : 'Prev'}</button>
           <span style={{ fontSize: 13, color: 'var(--muted)' }}>{safePage} / {totalPages}</span>
-          <button className="btn btn-sm btn-ghost" disabled={safePage >= totalPages} onClick={() => setPage(p => p + 1)}>{lang === 'vi' ? 'Sau' : 'Next'} ›</button>
+          <button className="btn btn-sm btn-ghost" disabled={safePage >= totalPages} onClick={() => setPage(safePage + 1)}>{lang === 'vi' ? 'Sau' : 'Next'} ›</button>
         </div>
       )}
 

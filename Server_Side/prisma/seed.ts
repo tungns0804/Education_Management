@@ -40,25 +40,25 @@ const BRANCHES = [
   { code: 'TN',   nameBranch: 'Tiếng Nhật',                   departmentCode: 'NN'   },
 ];
 
-// Classes (lớp sinh viên — cohort): cần teacherEmail & departmentCode → resolve lúc runtime
+// Classes (lớp sinh viên — cohort): cần teacherEmail & branchCode → resolve lúc runtime
 const CLASSES_RAW = [
-  { code: 'KTPM2021A', nameClass: 'Kỹ thuật Phần mềm K2021 A',  teacherEmail: 'gv1001@school.edu.vn', departmentCode: 'CNTT' },
-  { code: 'HTTT2021A', nameClass: 'Hệ thống Thông tin K2021 A', teacherEmail: 'gv1001@school.edu.vn', departmentCode: 'CNTT' },
-  { code: 'KT2021A',   nameClass: 'Kế toán K2021 A',            teacherEmail: 'gv1002@school.edu.vn', departmentCode: 'KTKT' },
-  { code: 'TA2021A',   nameClass: 'Tiếng Anh K2021 A',          teacherEmail: 'gv1004@school.edu.vn', departmentCode: 'NN'   },
+  { code: 'KTPM2021A', nameClass: 'Kỹ thuật Phần mềm K2021 A',  teacherEmail: 'gv1001@school.edu.vn', branchCode: 'KTPM' },
+  { code: 'HTTT2021A', nameClass: 'Hệ thống Thông tin K2021 A', teacherEmail: 'gv1001@school.edu.vn', branchCode: 'HTTT' },
+  { code: 'KT2021A',   nameClass: 'Kế toán K2021 A',            teacherEmail: 'gv1002@school.edu.vn', branchCode: 'KT'   },
+  { code: 'TA2021A',   nameClass: 'Tiếng Anh K2021 A',          teacherEmail: 'gv1004@school.edu.vn', branchCode: 'TA'   },
 ];
 
 const SUBJECTS_RAW = [
-  { code: 'LTCB',   name: 'Lập trình Cơ bản',               credits: 3, departmentCode: 'CNTT' },
-  { code: 'CTDLGT', name: 'Cấu trúc Dữ liệu & Giải thuật',  credits: 3, departmentCode: 'CNTT' },
-  { code: 'CSDL',   name: 'Cơ sở Dữ liệu',                  credits: 3, departmentCode: 'CNTT' },
-  { code: 'LTWEB',  name: 'Lập trình Web',                   credits: 3, departmentCode: 'CNTT' },
-  { code: 'TOARR',  name: 'Toán Rời rạc',                    credits: 2, departmentCode: 'CNTT' },
-  { code: 'NLKT',   name: 'Nguyên lý Kế toán',               credits: 3, departmentCode: 'KTKT' },
-  { code: 'KTVM',   name: 'Kinh tế Vi mô',                   credits: 2, departmentCode: 'KTKT' },
-  { code: 'TA1',    name: 'Tiếng Anh 1',                     credits: 3, departmentCode: 'NN'   },
-  { code: 'TA2',    name: 'Tiếng Anh 2',                     credits: 3, departmentCode: 'NN'   },
-  { code: 'VLXD',   name: 'Vật liệu Xây dựng',               credits: 3, departmentCode: 'KTXD' },
+  { code: 'LTCB',   name: 'Lập trình Cơ bản',               credits: 3, branchCode: 'KTPM' },
+  { code: 'CTDLGT', name: 'Cấu trúc Dữ liệu & Giải thuật',  credits: 3, branchCode: 'KTPM' },
+  { code: 'CSDL',   name: 'Cơ sở Dữ liệu',                  credits: 3, branchCode: 'HTTT' },
+  { code: 'LTWEB',  name: 'Lập trình Web',                   credits: 3, branchCode: 'KTPM' },
+  { code: 'TOARR',  name: 'Toán Rời rạc',                    credits: 2, branchCode: 'KTPM' },
+  { code: 'NLKT',   name: 'Nguyên lý Kế toán',               credits: 3, branchCode: 'KT'   },
+  { code: 'KTVM',   name: 'Kinh tế Vi mô',                   credits: 2, branchCode: 'KT'   },
+  { code: 'TA1',    name: 'Tiếng Anh 1',                     credits: 3, branchCode: 'TA'   },
+  { code: 'TA2',    name: 'Tiếng Anh 2',                     credits: 3, branchCode: 'TA'   },
+  { code: 'VLXD',   name: 'Vật liệu Xây dựng',               credits: 3, branchCode: 'KTCD' },
 ];
 
 // Semesters (học kỳ)
@@ -179,25 +179,27 @@ async function main() {
 
   // ── 3.3 Branches ───────────────────────────────────────────
   console.log('\n▶ Branches...');
+  const branchMap = new Map<string, string>(); // code → id
   for (const b of BRANCHES) {
     const departmentId = deptMap.get(b.departmentCode)!;
-    await prisma.branch.upsert({
+    const record = await prisma.branch.upsert({
       where:  { code: b.code },
       update: { nameBranch: b.nameBranch, departmentId },
       create: { code: b.code, nameBranch: b.nameBranch, departmentId },
     });
+    branchMap.set(b.code, record.id);
     ok(`${b.code} — ${b.nameBranch}`);
   }
 
   // ── 3.4 Classes (lớp sinh viên) ────────────────────────────
   console.log('\n▶ Classes...');
   for (const c of CLASSES_RAW) {
-    const teacherId    = userMap.get(c.teacherEmail)!;
-    const departmentId = deptMap.get(c.departmentCode)!;
+    const teacherId = userMap.get(c.teacherEmail)!;
+    const branchId  = branchMap.get(c.branchCode)!;
     await prisma.class.upsert({
       where:  { code: c.code },
-      update: { nameClass: c.nameClass, teacherId, departmentId },
-      create: { code: c.code, nameClass: c.nameClass, teacherId, departmentId },
+      update: { nameClass: c.nameClass, teacherId, branchId },
+      create: { code: c.code, nameClass: c.nameClass, teacherId, branchId },
     });
     ok(`${c.code} — ${c.nameClass}`);
   }
@@ -207,11 +209,11 @@ async function main() {
   const subjectMap = new Map<string, string>(); // code → id
 
   for (const s of SUBJECTS_RAW) {
-    const departmentId = deptMap.get(s.departmentCode)!;
+    const branchId = branchMap.get(s.branchCode)!;
     const record = await prisma.subject.upsert({
       where:  { code: s.code },
-      update: { name: s.name, credits: s.credits, departmentId },
-      create: { code: s.code, name: s.name, credits: s.credits, departmentId },
+      update: { name: s.name, credits: s.credits, branchId },
+      create: { code: s.code, name: s.name, credits: s.credits, branchId },
     });
     subjectMap.set(s.code, record.id);
     ok(`${s.code} — ${s.name} (${s.credits} TC)`);

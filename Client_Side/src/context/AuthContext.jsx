@@ -44,8 +44,12 @@ export function AuthProvider({ children }) {
   }, []);
 
   const logout = useCallback(async () => {
-    try { await requestLogout(); } catch { /* ignore network errors on logout */ }
+    // Reset client state first so the UI returns to the login screen immediately.
+    // The server round-trip must not gate this: after a password change the access
+    // token is already revoked, so requestLogout() 401s and its interceptor cannot
+    // reliably redirect an SPA that is already at '/'.
     setUser(null);
+    try { await requestLogout(); } catch { /* token may already be revoked */ }
   }, []);
 
   const clearLockedMessage = useCallback(() => setLockedMessage(null), []);

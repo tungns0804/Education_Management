@@ -10,8 +10,8 @@ export class ClassesController {
   constructor(private readonly classesService: ClassesService) {}
 
   @Get()
-  async findAll(@Query('departmentId') departmentId?: string) {
-    const data = await this.classesService.findAll(departmentId);
+  async findAll(@Query('branchId') branchId?: string) {
+    const data = await this.classesService.findAll(branchId);
     return { success: true, message: 'success', metadata: data };
   }
 
@@ -24,7 +24,7 @@ export class ClassesController {
   @Post()
   @UseGuards(RolesGuard)
   @Roles('admin')
-  async create(@Body() body: { code: string; nameClass: string; teacherId: string; departmentId: string }) {
+  async create(@Body() body: { code: string; nameClass: string; teacherId: string; branchId: string }) {
     const data = await this.classesService.create(body);
     return { success: true, message: 'Tạo lớp thành công', metadata: data };
   }

@@ -10,8 +10,8 @@ export class SubjectsController {
   constructor(private readonly subjectsService: SubjectsService) {}
 
   @Get()
-  async findAll(@Query('departmentId') departmentId?: string) {
-    const data = await this.subjectsService.findAll(departmentId);
+  async findAll(@Query('branchId') branchId?: string) {
+    const data = await this.subjectsService.findAll(branchId);
     return { success: true, message: 'success', metadata: data };
   }
 
@@ -24,7 +24,7 @@ export class SubjectsController {
   @Post()
   @UseGuards(RolesGuard)
   @Roles('admin')
-  async create(@Body() body: { code: string; name: string; credits: number; departmentId: string }) {
+  async create(@Body() body: { code: string; name: string; credits: number; branchId: string }) {
     const data = await this.subjectsService.create(body);
     return { success: true, message: 'Tạo môn học thành công', metadata: data };
   }

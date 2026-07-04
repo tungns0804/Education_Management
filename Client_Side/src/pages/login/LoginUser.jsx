@@ -9,6 +9,7 @@ import {
   ROLE_ADMIN,
   ROLE_TEACHER,
   ROLE_STUDENT,
+  ROLE_ID_PATTERNS,
   OTP_LENGTH,
   OTP_EXPIRY_SECONDS,
   OTP_TIMER_INTERVAL_MS,
@@ -165,9 +166,13 @@ export default function LoginUser({ renderApp }) {
 
   if (user) return renderApp(user, logout);
 
+  const roleRule = ROLE_ID_PATTERNS[role];
+  const idPatternError = view === 'login' && idTouched && identifier.trim() && roleRule && !roleRule.test(identifier)
+    ? (lang === 'vi' ? roleRule.label_vi : roleRule.label_en)
+    : '';
   const idError = idTouched && !identifier.trim()
     ? (lang === 'vi' ? 'Vui lòng nhập mã tài khoản' : 'Please enter your account ID')
-    : '';
+    : idPatternError;
 
   const quick = (r) => {
     setRole(r);
@@ -181,6 +186,8 @@ export default function LoginUser({ renderApp }) {
     e && e.preventDefault();
     setIdTouched(true);
     if (!identifier.trim()) return;
+    const rule = ROLE_ID_PATTERNS[role];
+    if (rule && !rule.test(identifier)) return;
     if (!pw) {
       setApiError(lang === 'vi' ? 'Vui lòng nhập mật khẩu' : 'Please enter password');
       return;

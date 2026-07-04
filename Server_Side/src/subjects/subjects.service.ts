@@ -5,11 +5,11 @@ import { PrismaService } from '../prisma/prisma.service';
 export class SubjectsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(departmentId?: string) {
+  async findAll(branchId?: string) {
     return this.prisma.subject.findMany({
-      where: { ...(departmentId && { departmentId }) },
+      where: { ...(branchId && { branchId }) },
       include: {
-        department: { select: { id: true, code: true, nameDepartment: true } },
+        branch: { select: { id: true, code: true, nameBranch: true } },
         _count: { select: { subjectClasses: true } },
       },
       orderBy: { code: 'asc' },
@@ -19,22 +19,22 @@ export class SubjectsService {
   async findOne(id: string) {
     const subject = await this.prisma.subject.findUnique({
       where: { id },
-      include: { department: true },
+      include: { branch: true },
     });
     if (!subject) throw new NotFoundException('Môn học không tồn tại');
     return subject;
   }
 
-  async create(data: { code: string; name: string; credits: number; departmentId: string }) {
+  async create(data: { code: string; name: string; credits: number; branchId: string }) {
     const existing = await this.prisma.subject.findUnique({ where: { code: data.code } });
     if (existing) throw new ConflictException(`Mã môn ${data.code} đã tồn tại`);
     return this.prisma.subject.create({
       data,
-      include: { department: { select: { id: true, nameDepartment: true } } },
+      include: { branch: { select: { id: true, nameBranch: true } } },
     });
   }
 
-  async update(id: string, data: { code?: string; name?: string; credits?: number; departmentId?: string }) {
+  async update(id: string, data: { code?: string; name?: string; credits?: number; branchId?: string }) {
     await this.findOne(id);
     return this.prisma.subject.update({ where: { id }, data });
   }

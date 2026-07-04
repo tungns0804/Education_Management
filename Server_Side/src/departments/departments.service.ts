@@ -8,7 +8,7 @@ export class DepartmentsService {
   async findAll() {
     return this.prisma.department.findMany({
       include: {
-        _count: { select: { branches: true, classes: true, subjects: true } },
+        _count: { select: { branches: true } },
       },
       orderBy: { code: 'asc' },
     });
@@ -19,7 +19,7 @@ export class DepartmentsService {
       where: { id },
       include: {
         branches: true,
-        _count: { select: { classes: true, subjects: true } },
+        _count: { select: { branches: true } },
       },
     });
     if (!dep) throw new NotFoundException('Khoa không tồn tại');

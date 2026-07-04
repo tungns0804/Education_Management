@@ -107,8 +107,6 @@ model Department {
   nameDepartment String
 
   branches       Branch[]
-  classes        Class[]
-  subjects       Subject[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -126,6 +124,9 @@ model Branch {
 
   departmentId String
   department   Department @relation(fields: [departmentId], references: [id])
+
+  classes    Class[]
+  subjects   Subject[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -188,8 +189,8 @@ model Class {
 
   teacherId    String
   teacher      User       @relation("TeacherClasses", fields: [teacherId], references: [id])
-  departmentId String
-  department   Department @relation(fields: [departmentId], references: [id])
+  branchId     String
+  branch       Branch     @relation(fields: [branchId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -206,8 +207,8 @@ model Subject {
   name    String
   credits Int    @default(0)
 
-  departmentId   String
-  department     Department     @relation(fields: [departmentId], references: [id])
+  branchId       String
+  branch         Branch         @relation(fields: [branchId], references: [id])
   subjectClasses SubjectClass[]
 
   createdAt DateTime @default(now())

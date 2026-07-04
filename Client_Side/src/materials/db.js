@@ -63,7 +63,7 @@ const DB = (function () {
       // profile
       myProfile: 'Hồ sơ của tôi', phone: 'Số điện thoại', address: 'Địa chỉ',
       changePassword: 'Đổi mật khẩu', profileSaved: 'Đã lưu hồ sơ',
-      pwChanged: 'Mật khẩu đã thay đổi, vui lòng đăng nhập lại',
+      pwChanged: 'Đổi mật khẩu thành công! Hệ thống sẽ tự động đăng xuất, vui lòng đăng nhập lại.',
       currentPwWrong: 'Mật khẩu hiện tại không đúng', pwMismatch: 'Mật khẩu không khớp',
       studentId: 'Mã sinh viên', teacherId: 'Mã giảng viên', chooseAvatar: 'Chọn ảnh đại diện',
     },
@@ -122,7 +122,7 @@ const DB = (function () {
       // profile
       myProfile: 'My Profile', phone: 'Phone number', address: 'Address',
       changePassword: 'Change password', profileSaved: 'Profile saved',
-      pwChanged: 'Password changed, please sign in again',
+      pwChanged: 'Password changed successfully! You will be signed out automatically, please sign in again.',
       currentPwWrong: 'Current password is incorrect', pwMismatch: 'Passwords do not match',
       studentId: 'Student ID', teacherId: 'Teacher ID', chooseAvatar: 'Choose avatar',
     }

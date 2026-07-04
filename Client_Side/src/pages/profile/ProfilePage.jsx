@@ -140,7 +140,7 @@ export default function ProfilePage() {
     try {
       await requestChangePassword({ currentPassword: pwForm.currentPw, newPassword: pwForm.newPw });
       toast(t('pwChanged'));
-      setTimeout(() => logout(), 1400);
+      setTimeout(() => logout(), 2500);
     } catch (err) {
       toast(err?.response?.data?.message || t('currentPwWrong'), 'danger');
     } finally {
