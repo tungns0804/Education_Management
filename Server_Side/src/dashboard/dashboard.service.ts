@@ -53,9 +53,16 @@ export class DashboardService {
     };
   }
 
+  private async getActiveSemesterFilter(): Promise<{ semester?: { in: string[] } }> {
+    const active = await this.prisma.semester.findMany({ where: { isActive: true }, select: { name: true } });
+    if (active.length === 0) return {};
+    return { semester: { in: active.map(s => s.name) } };
+  }
+
   async getTeacherStats(teacherId: string) {
+    const semFilter = await this.getActiveSemesterFilter();
     const sections = await this.prisma.subjectClass.findMany({
-      where: { teacherId },
+      where: { teacherId, ...semFilter },
       include: {
         subject: { select: { id: true, name: true, credits: true, code: true } },
         _count: { select: { enrollments: true } },
@@ -113,9 +120,14 @@ export class DashboardService {
   }
 
   async getStudentStats(studentId: string) {
+    const semFilter = await this.getActiveSemesterFilter();
     const [currentEnrollments, completedEnrollments] = await Promise.all([
       this.prisma.enrollment.findMany({
-        where: { studentId, status: EnrollmentStatus.registered },
+        where: {
+          studentId,
+          status: EnrollmentStatus.registered,
+          ...(semFilter.semester ? { subjectClass: { semester: { in: semFilter.semester.in } } } : {}),
+        },
         include: {
           subjectClass: {
             include: {

@@ -5,7 +5,7 @@ import { useApp, AppProvider, ToastHost, Modal } from './materials/ui';
 import { Sidebar, Topbar } from './materials/shell';
 import LoginUser from './pages/login/LoginUser';
 import { AdminDashboard, StudentsScreen } from './materials/admin';
-import { TeachersScreen, CatalogScreen, SubjectsScreen, SectionsScreen } from './materials/admin2';
+import { TeachersScreen, CatalogScreen, SubjectsScreen, SectionsScreen, SemestersScreen } from './materials/admin2';
 import { TeacherDashboard, MySectionsScreen, AttendanceScreen, GradeEntryScreen } from './materials/teacher';
 import { StudentDashboard, RegistrationScreen, TranscriptScreen } from './materials/student';
 import { StudentProfile, ScheduleScreen } from './materials/details';
@@ -13,7 +13,7 @@ import ProfilePage from './pages/profile/ProfilePage';
 import { NAV as ADMIN_NAV } from './layouts/AdminLayout';
 import { NAV as TEACHER_NAV } from './layouts/TeacherLayout';
 import { NAV as STUDENT_NAV } from './layouts/StudentLayout';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import {
   ROLE_ADMIN,
   ROLE_TEACHER,
@@ -46,6 +46,7 @@ function titleFor(route, t) {
     'a-class':         [t('classes'),   t('academic')],
     'a-subject':       [t('subjects'),  t('academic')],
     'a-sections':      [t('sections'),  t('academic')],
+    'a-semesters':     [t('semesters'), t('academic')],
     'a-student-detail':[t('students'),  t('management')],
     'profile':         [t('myProfile'), ''],
     't-dash':          [t('dashboard'), t('teaching')],
@@ -93,6 +94,7 @@ function Shell({ apiUser, onSignOut }) {
     case 'a-class':         screen = <CatalogScreen kind="class" />;                                                                       break;
     case 'a-subject':       screen = <SubjectsScreen />;                                                                     break;
     case 'a-sections':      screen = <SectionsScreen />;                                                                                   break;
+    case 'a-semesters':     screen = <SemestersScreen />;                                                                                  break;
     case 't-dash':          screen = <TeacherDashboard />;                                                                                 break;
     case 't-sections':      screen = <MySectionsScreen onOpenAttendance={(id) => nav('t-attendance', { sectionId: id })} onOpenGrades={(id) => nav('t-grades', { sectionId: id })} />; break;
     case 't-attendance':    screen = <AttendanceScreen sectionId={params.sectionId} />;                                                    break;
@@ -132,8 +134,32 @@ function Shell({ apiUser, onSignOut }) {
 }
 
 function Root() {
+  const { lang } = useApp();
+  const { lockedMessage, clearLockedMessage, logout } = useAuth();
+
+  function handleLockedOk() {
+    clearLockedMessage();
+    logout();
+  }
+
   return (
-    <LoginUser renderApp={(user, logout) => <Shell key={user.id} apiUser={user} onSignOut={logout} />} />
+    <>
+      <LoginUser renderApp={(user, onSignOut) => <Shell key={user.id} apiUser={user} onSignOut={onSignOut} />} />
+      <Modal
+        open={!!lockedMessage}
+        onClose={handleLockedOk}
+        icon={<I.lock size={22} />}
+        title={lang === 'vi' ? 'Tài khoản đã bị khóa' : 'Account Locked'}
+        tone="danger"
+        footer={
+          <button className="btn btn-primary" onClick={handleLockedOk}>
+            {lang === 'vi' ? 'Đã hiểu' : 'OK'}
+          </button>
+        }
+      >
+        {lockedMessage}
+      </Modal>
+    </>
   );
 }
 

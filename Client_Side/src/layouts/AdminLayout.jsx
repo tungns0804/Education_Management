@@ -5,27 +5,29 @@ import { useApp } from '../materials/ui';
 import { I } from '../materials/icons';
 
 export const NAV = [
-  { route: 'a-dash',     key: 'dashboard', icon: <I.grid size={19}/> },
+  { route: 'a-dash',      key: 'dashboard',  icon: <I.grid size={19}/> },
   { group: 'management' },
-  { route: 'a-students', key: 'students',  icon: <I.users size={19}/> },
-  { route: 'a-teachers', key: 'teachers',  icon: <I.teacher size={19}/> },
+  { route: 'a-students',  key: 'students',   icon: <I.users size={19}/> },
+  { route: 'a-teachers',  key: 'teachers',   icon: <I.teacher size={19}/> },
   { group: 'academic' },
-  { route: 'a-faculty',  key: 'faculties', icon: <I.faculty size={19}/> },
-  { route: 'a-major',    key: 'majors',    icon: <I.major size={19}/> },
-  { route: 'a-class',    key: 'classes',   icon: <I.class size={19}/> },
-  { route: 'a-subject',  key: 'subjects',  icon: <I.book size={19}/> },
-  { route: 'a-sections', key: 'sections',  icon: <I.layers size={19}/> },
+  { route: 'a-faculty',   key: 'faculties',  icon: <I.faculty size={19}/> },
+  { route: 'a-major',     key: 'majors',     icon: <I.major size={19}/> },
+  { route: 'a-class',     key: 'classes',    icon: <I.class size={19}/> },
+  { route: 'a-subject',   key: 'subjects',   icon: <I.book size={19}/> },
+  { route: 'a-sections',  key: 'sections',   icon: <I.layers size={19}/> },
+  { route: 'a-semesters', key: 'semesters',  icon: <I.calendar size={19}/> },
 ];
 
 const TITLE_MAP = {
-  'a-dash':     ['dashboard', 'management'],
-  'a-students': ['students',  'management'],
-  'a-teachers': ['teachers',  'management'],
-  'a-faculty':  ['faculties', 'academic'],
-  'a-major':    ['majors',    'academic'],
-  'a-class':    ['classes',   'academic'],
-  'a-subject':  ['subjects',  'academic'],
-  'a-sections': ['sections',  'academic'],
+  'a-dash':      ['dashboard', 'management'],
+  'a-students':  ['students',  'management'],
+  'a-teachers':  ['teachers',  'management'],
+  'a-faculty':   ['faculties', 'academic'],
+  'a-major':     ['majors',    'academic'],
+  'a-class':     ['classes',   'academic'],
+  'a-subject':   ['subjects',  'academic'],
+  'a-sections':  ['sections',  'academic'],
+  'a-semesters': ['semesters', 'academic'],
 };
 
 export default function AdminLayout() {

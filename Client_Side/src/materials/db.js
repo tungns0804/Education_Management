@@ -25,7 +25,7 @@ const DB = (function () {
       // nav
       dashboard: 'Tổng quan', students: 'Sinh viên', teachers: 'Giảng viên',
       faculties: 'Khoa', majors: 'Ngành', classes: 'Lớp', subjects: 'Môn học',
-      sections: 'Lớp học phần', grades: 'Điểm số', attendance: 'Điểm danh',
+      sections: 'Lớp học phần', semesters: 'Học kỳ', grades: 'Điểm số', attendance: 'Điểm danh',
       mySections: 'Lớp phụ trách', gradeEntry: 'Nhập điểm', registration: 'Đăng ký môn',
       transcript: 'Bảng điểm', schedule: 'Thời khóa biểu', accounts: 'Tài khoản',
       settings: 'Cài đặt', academic: 'Đào tạo', management: 'Quản lý', teaching: 'Giảng dạy', learning: 'Học tập',
@@ -88,7 +88,7 @@ const DB = (function () {
       backToLogin: 'Back to sign in',
       dashboard: 'Dashboard', students: 'Students', teachers: 'Teachers',
       faculties: 'Faculties', majors: 'Majors', classes: 'Classes', subjects: 'Subjects',
-      sections: 'Course Sections', grades: 'Grades', attendance: 'Attendance',
+      sections: 'Course Sections', semesters: 'Semesters', grades: 'Grades', attendance: 'Attendance',
       mySections: 'My Sections', gradeEntry: 'Grade Entry', registration: 'Registration',
       transcript: 'Transcript', schedule: 'Schedule', accounts: 'Accounts',
       settings: 'Settings', academic: 'Academic', management: 'Management', teaching: 'Teaching', learning: 'Learning',

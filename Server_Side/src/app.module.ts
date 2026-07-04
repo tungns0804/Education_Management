@@ -13,6 +13,7 @@ import { EnrollmentsModule } from './enrollments/enrollments.module';
 import { AttendanceModule } from './attendance/attendance.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { SemestersModule } from './semesters/semesters.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
     AttendanceModule,
     NotificationsModule,
     DashboardModule,
+    SemestersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -71,4 +71,10 @@ export const API_ENDPOINTS = {
   GRADE_LOCK:        (enrollmentId)   => `/api/enrollments/${enrollmentId}/lock`,
   ENROLLMENT:        '/api/enrollments',
   DROP_ENROLLMENT:   (id) => `/api/enrollments/${id}`,
+
+  // ---- Semesters (Học kỳ) ----
+  SEMESTERS:              '/api/semesters',
+  SEMESTERS_ACTIVE:       '/api/semesters/active',
+  SEMESTER:               (id) => `/api/semesters/${id}`,
+  SEMESTER_TOGGLE_ACTIVE: (id) => `/api/semesters/${id}/toggle-active`,
 };

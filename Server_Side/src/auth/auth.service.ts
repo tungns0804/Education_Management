@@ -2,6 +2,7 @@ import {
   Injectable,
   UnauthorizedException,
   BadRequestException,
+  ForbiddenException,
   InternalServerErrorException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
@@ -60,8 +61,13 @@ export class AuthService {
       throw new UnauthorizedException('Token không hợp lệ');
     }
 
-    const apiKey = await this.prisma.apiKey.findUnique({ where: { userId } });
+    const apiKey = await this.prisma.apiKey.findUnique({
+      where: { userId },
+      include: { user: { select: { status: true } } },
+    });
     if (!apiKey) throw new UnauthorizedException('Vui lòng đăng nhập lại');
+    if (apiKey.user.status === 'inactive')
+      throw new ForbiddenException({ errorCode: 'ACCOUNT_LOCKED', message: 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.' });
 
     try {
       return jwt.verify(token, apiKey.publicKey, {
@@ -95,6 +101,9 @@ export class AuthService {
     const valid = await bcrypt.compare(password, user.password);
     if (!valid)
       throw new UnauthorizedException('Tài khoản hoặc mật khẩu không chính xác');
+
+    if (user.status === 'inactive')
+      throw new ForbiddenException({ errorCode: 'ACCOUNT_LOCKED', message: 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.' });
 
     // Xóa cặp khóa cũ khi đăng nhập → vô hiệu hóa token cũ còn tồn tại
     await this.prisma.apiKey.deleteMany({ where: { userId: user.id } });

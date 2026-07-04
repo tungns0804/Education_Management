@@ -87,3 +87,11 @@ export const requestTranscript     = ()                 => apiClient.get(API_END
 export const requestGpaTrend       = ()                 => apiClient.get(API_ENDPOINTS.GPA_TREND)                          .then((r) => r.data);
 export const requestRegister       = (subjectClassId)   => apiClient.post(API_ENDPOINTS.ENROLLMENT, { subjectClassId })    .then((r) => r.data);
 export const requestDropEnrollment = (id)               => apiClient.delete(API_ENDPOINTS.DROP_ENROLLMENT(id))             .then((r) => r.data);
+
+// ── Semesters (Học kỳ) ───────────────────────────────────────────────────────
+export const requestSemesters            = ()         => apiClient.get(API_ENDPOINTS.SEMESTERS)                            .then((r) => r.data);
+export const requestActiveSemesters      = ()         => apiClient.get(API_ENDPOINTS.SEMESTERS_ACTIVE)                     .then((r) => r.data);
+export const requestCreateSemester       = (name)     => apiClient.post(API_ENDPOINTS.SEMESTERS, { name })                 .then((r) => r.data);
+export const requestUpdateSemester       = (id, data) => apiClient.put(API_ENDPOINTS.SEMESTER(id), data)                   .then((r) => r.data);
+export const requestToggleSemesterActive = (id)       => apiClient.patch(API_ENDPOINTS.SEMESTER_TOGGLE_ACTIVE(id))         .then((r) => r.data);
+export const requestDeleteSemester       = (id)       => apiClient.delete(API_ENDPOINTS.SEMESTER(id))                      .then((r) => r.data);

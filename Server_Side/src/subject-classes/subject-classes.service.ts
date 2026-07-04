@@ -12,12 +12,20 @@ export class SubjectClassesService {
     _count: { select: { enrollments: true } },
   };
 
+  private async getActiveSemesterFilter(): Promise<{ semester?: { in: string[] } }> {
+    const active = await this.prisma.semester.findMany({ where: { isActive: true }, select: { name: true } });
+    if (active.length === 0) return {};
+    return { semester: { in: active.map(s => s.name) } };
+  }
+
   async findAll(role: string, userId: string) {
+    const semFilter = (role === 'teacher' || role === 'student') ? await this.getActiveSemesterFilter() : {};
+
     const where =
       role === 'teacher'
-        ? { teacherId: userId }
+        ? { teacherId: userId, ...semFilter }
         : role === 'student'
-        ? { status: SubjectClassStatus.active }
+        ? { status: SubjectClassStatus.active, ...semFilter }
         : {};
 
     return this.prisma.subjectClass.findMany({
@@ -28,8 +36,9 @@ export class SubjectClassesService {
   }
 
   async findMySections(teacherId: string) {
+    const semFilter = await this.getActiveSemesterFilter();
     return this.prisma.subjectClass.findMany({
-      where: { teacherId },
+      where: { teacherId, ...semFilter },
       include: this.sectionInclude,
       orderBy: { code: 'asc' },
     });

@@ -359,6 +359,20 @@ model ApiKey {
 }
 
 // ------------------------------------------------------------------
+// Semester — Học kỳ (quản lý bởi admin)
+// ------------------------------------------------------------------
+model Semester {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  isActive  Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("semesters")
+}
+
+// ------------------------------------------------------------------
 // Otp — Mã OTP dùng cho quên mật khẩu (bcrypt hashed)
 // ------------------------------------------------------------------
 model Otp {

@@ -33,11 +33,35 @@ class ApiClient {
     window.location.href = '/';
   }
 
+  _isAccountLocked(error) {
+    return (
+      error?.response?.status === 403 &&
+      error?.response?.data?.errorCode === 'ACCOUNT_LOCKED'
+    );
+  }
+
+  _handleAccountLocked(message) {
+    if (this._lockedOut) return;
+    this._lockedOut = true;
+    Cookies.remove(COOKIE_LOGGED);
+    window.dispatchEvent(
+      new CustomEvent('auth:account-locked', {
+        detail: { message: message || 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.' },
+      }),
+    );
+  }
+
   _setupInterceptors() {
     this.axiosInstance.interceptors.response.use(
       (res) => res,
       async (error) => {
         const original = error.config;
+
+        // Tài khoản bị khóa — hiện modal rồi đăng xuất
+        if (this._isAccountLocked(error)) {
+          this._handleAccountLocked(error.response.data.message);
+          return Promise.reject(error);
+        }
 
         if (error.response?.status === 401 && !original._retry) {
           if (!this._isLoggedIn()) {
@@ -63,7 +87,12 @@ class ApiClient {
             return this.axiosInstance(original);
           } catch (err) {
             this._processQueue(err);
-            this._handleAuthFailure();
+            // Refresh token cũng bị từ chối vì tài khoản bị khóa
+            if (this._isAccountLocked(err)) {
+              this._handleAccountLocked(err.response?.data?.message);
+            } else {
+              this._handleAuthFailure();
+            }
             return Promise.reject(err);
           } finally {
             this.isRefreshing = false;
