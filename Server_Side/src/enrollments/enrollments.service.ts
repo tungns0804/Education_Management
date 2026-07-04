@@ -29,8 +29,13 @@ export class EnrollmentsService {
   // ----------------------------------------------------------------
 
   async findMy(studentId: string) {
+    const active = await this.prisma.semester.findMany({ where: { isActive: true }, select: { name: true } });
+    const semWhere = active.length > 0
+      ? { subjectClass: { semester: { in: active.map(s => s.name) } } }
+      : {};
+
     return this.prisma.enrollment.findMany({
-      where: { studentId, status: EnrollmentStatus.registered },
+      where: { studentId, status: EnrollmentStatus.registered, ...semWhere },
       include: {
         subjectClass: {
           include: {

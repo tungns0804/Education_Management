@@ -1254,7 +1254,7 @@ function SemestersScreen() {
   const toast = useToast();
   const [semesters,  setSemesters]  = useState([]);
   const [loading,    setLoading]    = useState(true);
-  const [drawer,     setDrawer]     = useState(null);  // null | { row }
+  const [drawer,     setDrawer]     = useState(null);
   const [confirmDel, setConfirmDel] = useState(null);
   const [toggling,   setToggling]   = useState({});
 
@@ -1282,10 +1282,10 @@ function SemestersScreen() {
 
   const activeCount = semesters.filter(s => s.isActive).length;
 
-  const cols = [
+  const columns = [
     {
-      key: 'name', label: lang === 'vi' ? 'Tên học kỳ' : 'Semester',
-      render: (s) => (
+      header: lang === 'vi' ? 'Tên học kỳ' : 'Semester',
+      cell: (s) => (
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{
             width: 36, height: 36, borderRadius: 10, display: 'grid', placeItems: 'center',
@@ -1299,21 +1299,21 @@ function SemestersScreen() {
       ),
     },
     {
-      key: 'status', label: lang === 'vi' ? 'Trạng thái' : 'Status', width: 130,
-      render: (s) => (
+      header: lang === 'vi' ? 'Trạng thái' : 'Status', width: 140,
+      cell: (s) => (
         <span className={`badge badge-${s.isActive ? 'success' : 'muted'}`}>
           {s.isActive ? (lang === 'vi' ? 'Đang hiển thị' : 'Active') : (lang === 'vi' ? 'Ẩn' : 'Inactive')}
         </span>
       ),
     },
     {
-      key: 'toggle', label: '', width: 160,
-      render: (s) => (
+      header: '', width: 170,
+      cell: (s) => (
         <button
           className={`btn btn-sm ${s.isActive ? 'btn-ghost' : 'btn-primary'}`}
-          style={{ minWidth: 130, fontSize: 12.5 }}
+          style={{ minWidth: 140, fontSize: 12.5 }}
           disabled={!!toggling[s.id]}
-          onClick={() => handleToggle(s)}
+          onClick={(e) => { e.stopPropagation(); handleToggle(s); }}
         >
           {toggling[s.id]
             ? '…'
@@ -1321,15 +1321,6 @@ function SemestersScreen() {
               ? (lang === 'vi' ? 'Tắt hiển thị' : 'Deactivate')
               : (lang === 'vi' ? 'Bật hiển thị' : 'Activate')}
         </button>
-      ),
-    },
-    {
-      key: 'actions', label: '', width: 90,
-      render: (s) => (
-        <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
-          <RowAction icon={<I.edit size={15}/>} label={t('edit')} onClick={() => setDrawer({ row: s })}/>
-          <RowAction icon={<I.trash size={15}/>} label={t('del')} tone="danger" onClick={() => setConfirmDel(s)}/>
-        </div>
       ),
     },
   ];
@@ -1348,7 +1339,7 @@ function SemestersScreen() {
           </button>
         }/>
 
-      <div style={{ background: 'var(--surface-2)', borderRadius: 12, padding: '12px 16px', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div style={{ background: 'var(--surface-2)', borderRadius: 12, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
         <I.alert size={16} style={{ color: 'var(--accent)', flexShrink: 0 }}/>
         <span style={{ fontSize: 13, color: 'var(--text-2)' }}>
           {lang === 'vi'
@@ -1357,8 +1348,13 @@ function SemestersScreen() {
         </span>
       </div>
 
-      <DataTable cols={cols} rows={semesters} loading={loading}
-        empty={lang === 'vi' ? 'Chưa có học kỳ nào. Thêm học kỳ để bắt đầu.' : 'No semesters yet. Add one to get started.'}/>
+      {loading
+        ? <div className="card" style={{ padding: 40, textAlign: 'center', color: 'var(--muted)' }}>
+            {lang === 'vi' ? 'Đang tải…' : 'Loading…'}
+          </div>
+        : <DataTable columns={columns} rows={semesters} perPage={10}
+            emptyLabel={lang === 'vi' ? 'Chưa có học kỳ nào. Nhấn "Thêm học kỳ" để bắt đầu.' : 'No semesters yet. Click "New semester" to get started.'}
+            renderActions={s => <RowAction onEdit={() => setDrawer({ row: s })} onDelete={() => setConfirmDel(s)}/>}/>}
 
       <SemesterDrawer
         open={!!drawer}

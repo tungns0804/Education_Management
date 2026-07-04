@@ -61,6 +61,15 @@ const SUBJECTS_RAW = [
   { code: 'VLXD',   name: 'Vật liệu Xây dựng',               credits: 3, departmentCode: 'KTXD' },
 ];
 
+// Semesters (học kỳ)
+const SEMESTERS_RAW = [
+  { name: 'HK1 2023-2024', isActive: false },
+  { name: 'HK1 2024-2025', isActive: false },
+  { name: 'HK2 2024-2025', isActive: false },
+  { name: 'HK1 2025-2026', isActive: false },
+  { name: 'HK2 2025-2026', isActive: false },
+];
+
 // SubjectClasses (lớp học phần): cần subjectCode & teacherEmail → resolve lúc runtime
 const SUBJECT_CLASSES_RAW = [
   { code: 'LTCB-HK1-2425',   semester: 'HK1 2024-2025', maxStudents: 45, status: 'active'    as const, subjectCode: 'LTCB',   teacherEmail: 'gv1001@school.edu.vn' },
@@ -143,7 +152,18 @@ async function main() {
     ok(u.email);
   }
 
-  // ── 3.2 Departments ────────────────────────────────────────
+  // ── 3.2 Semesters ─────────────────────────────────────────
+  console.log('\n▶ Semesters...');
+  for (const sem of SEMESTERS_RAW) {
+    await prisma.semester.upsert({
+      where:  { name: sem.name },
+      update: {},
+      create: { name: sem.name, isActive: sem.isActive },
+    });
+    ok(sem.name);
+  }
+
+  // ── 3.3 Departments ────────────────────────────────────────
   console.log('\n▶ Departments...');
   const deptMap = new Map<string, string>(); // code → id
 
