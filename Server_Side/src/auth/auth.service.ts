@@ -76,11 +76,17 @@ export class AuthService {
   // Luồng xác thực
   // ----------------------------------------------------------------
 
-  async login(email: string, password: string) {
-    if (!email || !password)
-      throw new BadRequestException('Vui lòng nhập email và mật khẩu');
+  private async findUserByIdentifier(identifier: string) {
+    return this.prisma.user.findFirst({
+      where: { email: { startsWith: identifier.toLowerCase() + '@' } },
+    });
+  }
 
-    const user = await this.prisma.user.findUnique({ where: { email } });
+  async login(identifier: string, password: string) {
+    if (!identifier || !password)
+      throw new BadRequestException('Vui lòng nhập mã tài khoản và mật khẩu');
+
+    const user = await this.findUserByIdentifier(identifier);
     if (!user)
       throw new UnauthorizedException('Tài khoản hoặc mật khẩu không chính xác');
     if (user.typeLogin === LOGIN_TYPE_GOOGLE)
@@ -146,10 +152,10 @@ export class AuthService {
       throw new BadRequestException('Mật khẩu phải có ít nhất 1 ký tự đặc biệt (!@#$%...)');
   }
 
-  async forgotPassword(email: string) {
-    if (!email) throw new BadRequestException('Vui lòng nhập email');
-    const user = await this.prisma.user.findUnique({ where: { email } });
-    if (!user) throw new BadRequestException('Email không tồn tại trong hệ thống');
+  async forgotPassword(identifier: string) {
+    if (!identifier) throw new BadRequestException('Vui lòng nhập mã tài khoản');
+    const user = await this.findUserByIdentifier(identifier);
+    if (!user) throw new BadRequestException('Mã tài khoản không tồn tại trong hệ thống');
     if (!user.personalEmail)
       throw new BadRequestException(
         'Tài khoản chưa có email cá nhân để nhận OTP. Vui lòng liên hệ quản trị viên.',
@@ -165,7 +171,7 @@ export class AuthService {
     try {
       await this.emailService.sendOtp({
         personalEmail: user.personalEmail,
-        schoolEmail:   email,
+        schoolEmail:   user.email,
         otp:           plainOtp,
         fullName:      user.fullName,
       });
@@ -177,11 +183,11 @@ export class AuthService {
     return true;
   }
 
-  async verifyOtp(email: string, otp: string) {
-    if (!email || !otp) throw new BadRequestException('Thiếu thông tin xác thực');
+  async verifyOtp(identifier: string, otp: string) {
+    if (!identifier || !otp) throw new BadRequestException('Thiếu thông tin xác thực');
 
-    const user = await this.prisma.user.findUnique({ where: { email } });
-    if (!user) throw new BadRequestException('Email không tồn tại');
+    const user = await this.findUserByIdentifier(identifier);
+    if (!user) throw new BadRequestException('Mã tài khoản không tồn tại');
 
     const record = await this.prisma.otp.findFirst({
       where: { userId: user.id, expireAt: { gt: new Date() } },
@@ -195,14 +201,14 @@ export class AuthService {
     return true;
   }
 
-  async resetPassword(email: string, otp: string, newPassword: string) {
-    if (!email || !otp || !newPassword)
+  async resetPassword(identifier: string, otp: string, newPassword: string) {
+    if (!identifier || !otp || !newPassword)
       throw new BadRequestException('Thiếu thông tin đặt lại mật khẩu');
 
     this.validatePasswordStrength(newPassword);
 
-    const user = await this.prisma.user.findUnique({ where: { email } });
-    if (!user) throw new BadRequestException('Email không tồn tại');
+    const user = await this.findUserByIdentifier(identifier);
+    if (!user) throw new BadRequestException('Mã tài khoản không tồn tại');
 
     const record = await this.prisma.otp.findFirst({
       where: { userId: user.id, expireAt: { gt: new Date() } },

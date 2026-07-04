@@ -3,7 +3,6 @@ import { apiClient } from './axiosClient';
 import { API_ENDPOINTS } from '../constants/api.constants';
 
 // ── Unauthenticated calls ────────────────────────────────────────────────────
-// Use bare `request` instance (no auth interceptor — login/refresh don't need a token)
 export const requestLogin          = (data) => request.post(API_ENDPOINTS.LOGIN,           data).then((r) => r.data);
 export const requestRefreshToken   = ()     => request.get(API_ENDPOINTS.REFRESH_TOKEN)        .then((r) => r.data);
 export const requestForgotPassword = (data) => request.post(API_ENDPOINTS.FORGOT_PASSWORD, data).then((r) => r.data);
@@ -11,24 +10,27 @@ export const requestVerifyOtp      = (data) => request.post(API_ENDPOINTS.VERIFY
 export const requestResetPassword  = (data) => request.post(API_ENDPOINTS.RESET_PASSWORD,  data).then((r) => r.data);
 
 // ── Authenticated calls ──────────────────────────────────────────────────────
-// Use `apiClient` which has the 401 → auto-refresh interceptor
 export const requestAuth           = ()     => request.get(API_ENDPOINTS.AUTH)                        .then((r) => r.data);
 export const requestLogout         = ()     => apiClient.post(API_ENDPOINTS.LOGOUT)                   .then((r) => r.data);
 export const requestChangePassword = (data) => apiClient.put(API_ENDPOINTS.CHANGE_PASSWORD, data)     .then((r) => r.data);
 
 // ── Dashboard ────────────────────────────────────────────────────────────────
-export const requestDashboard = () => apiClient.get(API_ENDPOINTS.DASHBOARD).then((r) => r.data);
+export const requestDashboard        = ()  => apiClient.get(API_ENDPOINTS.DASHBOARD).then((r) => r.data);
+export const requestTeacherDashboard = ()  => apiClient.get(API_ENDPOINTS.TEACHER_DASHBOARD).then((r) => r.data);
+export const requestStudentDashboard = ()  => apiClient.get(API_ENDPOINTS.STUDENT_DASHBOARD).then((r) => r.data);
 
 // ── Students ─────────────────────────────────────────────────────────────────
 export const requestStudents      = (params) => apiClient.get(API_ENDPOINTS.STUDENTS, { params }).then((r) => r.data);
 export const requestCreateStudent = (data)   => apiClient.post(API_ENDPOINTS.STUDENTS, data)    .then((r) => r.data);
-export const requestBulkImport    = (data)   => apiClient.post(API_ENDPOINTS.BULK_IMPORT, data) .then((r) => r.data);
+export const requestBulkImport         = (data) => apiClient.post(API_ENDPOINTS.BULK_IMPORT,          data).then((r) => r.data);
+export const requestBulkImportTeachers = (data) => apiClient.post(API_ENDPOINTS.BULK_IMPORT_TEACHERS, data).then((r) => r.data);
 
 // ── Teachers ─────────────────────────────────────────────────────────────────
 export const requestTeachers      = (params) => apiClient.get(API_ENDPOINTS.TEACHERS, { params }).then((r) => r.data);
 export const requestCreateTeacher = (data)   => apiClient.post(API_ENDPOINTS.TEACHERS, data)    .then((r) => r.data);
 
 // ── User CRUD (shared for students & teachers) ───────────────────────────────
+export const requestUser             = (id)         => apiClient.get(API_ENDPOINTS.USER(id))                 .then((r) => r.data);
 export const requestUpdateUser       = (id, data)   => apiClient.put(API_ENDPOINTS.USER(id), data)           .then((r) => r.data);
 export const requestToggleUserStatus = (id, status) => apiClient.patch(API_ENDPOINTS.USER_STATUS(id), { status }).then((r) => r.data);
 export const requestDeleteUser       = (id)         => apiClient.delete(API_ENDPOINTS.USER(id))              .then((r) => r.data);
@@ -62,3 +64,25 @@ export const requestSubjectClasses      = ()         => apiClient.get(API_ENDPOI
 export const requestCreateSubjectClass  = (data)     => apiClient.post(API_ENDPOINTS.SUBJECT_CLASSES, data)        .then((r) => r.data);
 export const requestUpdateSubjectClass  = (id, data) => apiClient.put(API_ENDPOINTS.SUBJECT_CLASS(id), data)       .then((r) => r.data);
 export const requestDeleteSubjectClass  = (id)       => apiClient.delete(API_ENDPOINTS.SUBJECT_CLASS(id))          .then((r) => r.data);
+
+// ── My Sections (teacher) ─────────────────────────────────────────────────────
+export const requestMySections    = ()   => apiClient.get(API_ENDPOINTS.MY_SECTIONS)               .then((r) => r.data);
+export const requestSectionRoster = (id) => apiClient.get(API_ENDPOINTS.SECTION_ROSTER(id))        .then((r) => r.data);
+
+// ── Attendance ────────────────────────────────────────────────────────────────
+export const requestAttendance       = (subjectClassId) => apiClient.get(API_ENDPOINTS.ATTENDANCE(subjectClassId))  .then((r) => r.data);
+export const requestMyAttendance     = (subjectClassId) => apiClient.get(API_ENDPOINTS.MY_ATTENDANCE(subjectClassId)).then((r) => r.data);
+export const requestBulkAttendance   = (data)           => apiClient.post(API_ENDPOINTS.ATTENDANCE_BULK, data)       .then((r) => r.data);
+export const requestUpdateAttendance = (id, data)       => apiClient.put(API_ENDPOINTS.ATTENDANCE_ONE(id), data)     .then((r) => r.data);
+
+// ── Grades ────────────────────────────────────────────────────────────────────
+export const requestGradeSheet      = (subjectClassId) => apiClient.get(API_ENDPOINTS.GRADE_SHEET(subjectClassId))    .then((r) => r.data);
+export const requestUpdateGrade     = (enrollmentId, data) => apiClient.put(API_ENDPOINTS.GRADE_UPDATE(enrollmentId), data).then((r) => r.data);
+export const requestToggleGradeLock = (enrollmentId, locked) => apiClient.patch(API_ENDPOINTS.GRADE_LOCK(enrollmentId), { locked }).then((r) => r.data);
+
+// ── Student Enrollments ───────────────────────────────────────────────────────
+export const requestMyEnrollments  = ()                 => apiClient.get(API_ENDPOINTS.MY_ENROLLMENTS)                    .then((r) => r.data);
+export const requestTranscript     = ()                 => apiClient.get(API_ENDPOINTS.TRANSCRIPT)                         .then((r) => r.data);
+export const requestGpaTrend       = ()                 => apiClient.get(API_ENDPOINTS.GPA_TREND)                          .then((r) => r.data);
+export const requestRegister       = (subjectClassId)   => apiClient.post(API_ENDPOINTS.ENROLLMENT, { subjectClassId })    .then((r) => r.data);
+export const requestDropEnrollment = (id)               => apiClient.delete(API_ENDPOINTS.DROP_ENROLLMENT(id))             .then((r) => r.data);

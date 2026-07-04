@@ -130,6 +130,7 @@ async function main() {
       where:  { email: u.email },
       update: {
         fullName:      u.fullName,
+        password:      hashed,
         personalEmail: (u as any).personalEmail ?? undefined,
         department:    (u as any).department    ?? undefined,
         class:         (u as any).class         ?? undefined,

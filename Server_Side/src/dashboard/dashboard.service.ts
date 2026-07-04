@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Role, UserStatus, SubjectClassStatus, LetterGrade } from '@prisma/client';
+import { Role, SubjectClassStatus, AttendanceStatus, EnrollmentStatus } from '@prisma/client';
 
 @Injectable()
 export class DashboardService {
@@ -50,6 +50,127 @@ export class DashboardService {
       recentEnrollments,
       gender: { male: maleCount, female: femaleCount, other: totalStudents - maleCount - femaleCount },
       gradeDist,
+    };
+  }
+
+  async getTeacherStats(teacherId: string) {
+    const sections = await this.prisma.subjectClass.findMany({
+      where: { teacherId },
+      include: {
+        subject: { select: { id: true, name: true, credits: true, code: true } },
+        _count: { select: { enrollments: true } },
+      },
+    });
+
+    const sectionIds = sections.map(s => s.id);
+    const totalSections = sections.length;
+    const totalStudents = sections.reduce((s, sc) => s + sc._count.enrollments, 0);
+
+    if (sectionIds.length === 0) {
+      return { totalSections: 0, totalStudents: 0, attendanceRate: 0, pendingGrades: 0, sections: [], attendanceTrend: [] };
+    }
+
+    const [totalAtt, presentAtt, pendingGrades] = await Promise.all([
+      this.prisma.attendance.count({ where: { subjectClassId: { in: sectionIds } } }),
+      this.prisma.attendance.count({ where: { subjectClassId: { in: sectionIds }, status: AttendanceStatus.present } }),
+      this.prisma.enrollment.count({ where: { subjectClassId: { in: sectionIds }, totalScore: null } }),
+    ]);
+
+    const attendanceRate = totalAtt > 0 ? Math.round((presentAtt / totalAtt) * 100) : 0;
+
+    const attByDate = await this.prisma.attendance.groupBy({
+      by: ['date'],
+      where: { subjectClassId: { in: sectionIds } },
+      _count: { id: true },
+      orderBy: { date: 'asc' },
+    });
+
+    const presentByDate = await this.prisma.attendance.groupBy({
+      by: ['date'],
+      where: { subjectClassId: { in: sectionIds }, status: AttendanceStatus.present },
+      _count: { id: true },
+    });
+
+    const pMap: Record<string, number> = {};
+    for (const x of presentByDate) pMap[x.date.toISOString()] = x._count.id;
+
+    const trend = attByDate.slice(-8).map((x, i) => ({
+      term: `B${i + 1}`,
+      value: x._count.id > 0 ? Math.round(((pMap[x.date.toISOString()] ?? 0) / x._count.id) * 100) : 0,
+    }));
+
+    return {
+      totalSections,
+      totalStudents,
+      attendanceRate,
+      pendingGrades,
+      sections: sections.map(s => ({
+        id: s.id, code: s.code, semester: s.semester,
+        subjectName: s.subject.name, enrolled: s._count.enrollments, status: s.status,
+      })),
+      attendanceTrend: trend,
+    };
+  }
+
+  async getStudentStats(studentId: string) {
+    const [currentEnrollments, completedEnrollments] = await Promise.all([
+      this.prisma.enrollment.findMany({
+        where: { studentId, status: EnrollmentStatus.registered },
+        include: {
+          subjectClass: {
+            include: {
+              subject: { select: { id: true, name: true, credits: true, code: true } },
+              teacher: { select: { id: true, fullName: true } },
+            },
+          },
+        },
+        orderBy: { registeredAt: 'desc' },
+      }),
+      this.prisma.enrollment.findMany({
+        where: { studentId, status: EnrollmentStatus.completed },
+        include: {
+          subjectClass: {
+            include: { subject: { select: { credits: true } } },
+          },
+        },
+      }),
+    ]);
+
+    const currentCredits = currentEnrollments.reduce((s, e) => s + e.subjectClass.subject.credits, 0);
+    const totalCreditsEarned = completedEnrollments.reduce((s, e) => s + e.subjectClass.subject.credits, 0);
+    const weightedSum = completedEnrollments.reduce((s, e) => s + (e.totalScore ?? 0) * e.subjectClass.subject.credits, 0);
+    const gpa = totalCreditsEarned > 0 ? Math.round((weightedSum / totalCreditsEarned) * 100) / 100 : 0;
+
+    const sectionIds = currentEnrollments.map(e => e.subjectClassId);
+    let attendanceRate = 100;
+    if (sectionIds.length > 0) {
+      const [totalAtt, presentAtt] = await Promise.all([
+        this.prisma.attendance.count({ where: { studentId, subjectClassId: { in: sectionIds } } }),
+        this.prisma.attendance.count({ where: { studentId, subjectClassId: { in: sectionIds }, status: AttendanceStatus.present } }),
+      ]);
+      attendanceRate = totalAtt > 0 ? Math.round((presentAtt / totalAtt) * 100) : 100;
+    }
+
+    const semMap: Record<string, { credits: number; weighted: number }> = {};
+    for (const e of completedEnrollments) {
+      const sem = e.subjectClass.semester ?? 'N/A';
+      const cr  = e.subjectClass.subject.credits;
+      if (!semMap[sem]) semMap[sem] = { credits: 0, weighted: 0 };
+      semMap[sem].credits  += cr;
+      semMap[sem].weighted += (e.totalScore ?? 0) * cr;
+    }
+    const gpaTrend = Object.entries(semMap)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([term, v]) => ({ term, gpa: v.credits > 0 ? Math.round((v.weighted / v.credits) * 100) / 100 : 0 }));
+
+    return {
+      currentCourses: currentEnrollments.length,
+      currentCredits,
+      totalCreditsEarned,
+      gpa,
+      attendanceRate,
+      currentEnrollments,
+      gpaTrend,
     };
   }
 }

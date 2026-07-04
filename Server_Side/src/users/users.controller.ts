@@ -79,6 +79,14 @@ export class UsersController {
     return { success: true, message: `Đã tạo ${data.created} sinh viên`, metadata: data };
   }
 
+  @Post('bulk-import-teachers')
+  @UseGuards(RolesGuard)
+  @Roles('admin')
+  async bulkImportTeachers(@Body() body: { rows: any[] }) {
+    const data = await this.usersService.bulkImportTeachers(body.rows);
+    return { success: true, message: `Đã tạo ${data.created} giảng viên`, metadata: data };
+  }
+
   @Put(':id')
   async update(
     @Param('id') id: string,

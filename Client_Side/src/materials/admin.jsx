@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { I } from './icons';
 import { Avatar, Drawer, FormField, Modal, StatCard, StatusBadge, fieldCls, useApp, useForm, useToast, validate } from './ui';
-import { BarChart, DonutChart, HBars } from './charts';
+import { BarChart, DonutChart } from './charts';
 import { BulkImportDrawer, downloadCSV } from './tools';
 import { DataTable, MenuRow, Page, SectionHead } from './shell';
 import {
   requestDashboard,
   requestStudents, requestCreateStudent, requestBulkImport,
-  requestClasses, requestSubjectClasses,
+  requestClasses,
   requestUpdateUser, requestToggleUserStatus, requestDeleteUser,
   requestDepartments,
 } from '../config/userRequest';
@@ -81,41 +81,21 @@ function RowAction({ onEdit, onToggle, active, onDelete }) {
 // ── Admin Dashboard ────────────────────────────────────────────────────────
 function AdminDashboard() {
   const { t, lang } = useApp();
-  const [stats,    setStats]    = useState(null);
-  const [depts,    setDepts]    = useState([]);
-  const [sections, setSections] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [depts, setDepts] = useState([]);
 
   useEffect(() => {
-    requestDashboard()      .then(r => setStats(r.metadata))    .catch(() => {});
-    requestDepartments()    .then(r => setDepts(r.metadata ?? [])).catch(() => {});
-    requestSubjectClasses() .then(r => setSections(r.metadata ?? [])).catch(() => {});
+    requestDashboard()   .then(r => setStats(r.metadata))    .catch(() => {});
+    requestDepartments() .then(r => setDepts(r.metadata ?? [])).catch(() => {});
   }, []);
 
-  const s = stats ?? { students: 0, teachers: 0, sections: 0, subjects: 0, gender: { male: 0, female: 0 }, gradeDist: { A: 0, B: 0, C: 0, D: 0, F: 0 } };
+  const s = stats ?? { students: 0, teachers: 0, sections: 0, subjects: 0, gender: { male: 0, female: 0 } };
 
   const deptChart = depts.slice(0, 4).map((d, i) => ({
     label: d.nameDepartment,
     value: 0,
     color: ['#2F6FED', '#1F8A5B', '#C9821A', '#8B5CF6'][i],
   }));
-
-  const gradeDist = [
-    { label: 'A', value: s.gradeDist?.A ?? 0, color: '#1F8A5B' },
-    { label: 'B', value: s.gradeDist?.B ?? 0, color: '#2F6FED' },
-    { label: 'C', value: s.gradeDist?.C ?? 0, color: '#C9821A' },
-    { label: 'D', value: s.gradeDist?.D ?? 0, color: '#E0822F' },
-    { label: 'F', value: s.gradeDist?.F ?? 0, color: '#D8543F' },
-  ];
-
-  const topSections = [...sections]
-    .sort((a, b) => (b._count?.enrollments ?? 0) - (a._count?.enrollments ?? 0))
-    .slice(0, 5)
-    .map((sc, i) => ({
-      label: (sc.subject?.name ?? sc.code) + ' · ' + sc.code,
-      value: sc._count?.enrollments ?? 0,
-      suffix: ' SV',
-      color: ['#2F6FED', '#1F8A5B', '#8B5CF6', '#C9821A', '#EC6A9C'][i],
-    }));
 
   return (
     <Page>
@@ -142,18 +122,6 @@ function AdminDashboard() {
         </div>
       </div>
 
-      <div className="grid-1-2">
-        <div className="card" style={{ padding: 22 }}>
-          <SectionHead title={lang==='vi'?'Phổ điểm chữ':'Grade distribution'} desc={lang==='vi'?'Học kỳ 1':'Semester 1'}/>
-          <div style={{ marginTop: 18 }}><BarChart data={gradeDist} height={200}/></div>
-        </div>
-        <div className="card" style={{ padding: 22 }}>
-          <SectionHead title={lang==='vi'?'Lớp học phần đông nhất':'Largest course sections'} right={<button className="btn btn-sm btn-ghost">{t('viewAll')}</button>}/>
-          <div style={{ marginTop: 18 }}>
-            <HBars data={topSections}/>
-          </div>
-        </div>
-      </div>
     </Page>
   );
 }
@@ -248,10 +216,14 @@ function StudentsScreen({ onOpenProfile }) {
               options={[{ value: 'active', label: t('active') }, { value: 'locked', label: t('locked') }]}/>
           </>}/>}/>
 
-      <BulkImportDrawer open={importOpen} onClose={() => setImportOpen(false)} onProvision={async (rows) => {
+      <BulkImportDrawer open={importOpen} onClose={() => setImportOpen(false)} classes={classes} onProvision={async (rows) => {
         try {
-          await requestBulkImport({ rows: rows.map(r => ({ fullName: r.name, idStudent: r.code, gender: r.gender === 'M' ? 'male' : 'female', birthDay: r.dob || undefined, class: r.classId, personalEmail: r.personalEmail })) });
-          toast(lang === 'vi' ? `Đã cấp tài khoản cho ${rows.length} sinh viên` : `Provisioned ${rows.length} students`, 'success');
+          const res = await requestBulkImport({ rows: rows.map(r => ({ fullName: r.name, idStudent: r.code, gender: r.gender === 'M' ? 'male' : 'female', birthDay: r.dob || undefined, class: r.classCode, personalEmail: r.personalEmail })) });
+          const meta = res.metadata;
+          toast(lang === 'vi'
+            ? `Đã cấp tài khoản ${meta?.created ?? rows.length} sinh viên${meta?.failed ? ` · ${meta.failed} lỗi` : ''}`
+            : `Provisioned ${meta?.created ?? rows.length} students${meta?.failed ? ` · ${meta.failed} failed` : ''}`,
+            meta?.failed ? 'warn' : 'success');
           loadData();
         } catch (err) {
           const msg = err?.response?.data?.message || (lang === 'vi' ? 'Nhập hàng loạt thất bại' : 'Bulk import failed');

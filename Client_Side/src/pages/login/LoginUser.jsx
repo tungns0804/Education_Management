@@ -109,17 +109,17 @@ export default function LoginUser({ renderApp }) {
   const { t, lang, theme, toggleTheme, toggleLang } = useApp();
   const toast = useToast();
 
-  const [view, setView]         = useState('login'); // login | forgot | otp | reset | first
-  const [role, setRole]         = useState(ROLE_ADMIN);
-  const [email, setEmail]       = useState('');
-  const [pw, setPw]             = useState('');
-  const [npw, setNpw]           = useState('');
-  const [cpw, setCpw]           = useState('');
-  const [otp, setOtp]           = useState(Array(OTP_LENGTH).fill(''));
-  const [secs, setSecs]         = useState(OTP_EXPIRY_SECONDS);
-  const [emailTouched, setEmailTouched] = useState(false);
-  const [loading, setLoading]   = useState(false);
-  const [apiError, setApiError] = useState('');
+  const [view, setView]             = useState('login'); // login | forgot | otp | reset | first
+  const [role, setRole]             = useState(ROLE_ADMIN);
+  const [identifier, setIdentifier] = useState('');
+  const [pw, setPw]                 = useState('');
+  const [npw, setNpw]               = useState('');
+  const [cpw, setCpw]               = useState('');
+  const [otp, setOtp]               = useState(Array(OTP_LENGTH).fill(''));
+  const [secs, setSecs]             = useState(OTP_EXPIRY_SECONDS);
+  const [idTouched, setIdTouched]   = useState(false);
+  const [loading, setLoading]       = useState(false);
+  const [apiError, setApiError]     = useState('');
   const otpRefs = useRef([]);
 
   const navigate = (v) => { setApiError(''); setView(v); };
@@ -148,23 +148,22 @@ export default function LoginUser({ renderApp }) {
 
   if (user) return renderApp(user, logout);
 
-  const isEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test((v || '').trim());
-  const emailError = emailTouched && !isEmail(email)
-    ? (lang === 'vi' ? 'Email không hợp lệ' : 'Invalid email address')
+  const idError = idTouched && !identifier.trim()
+    ? (lang === 'vi' ? 'Vui lòng nhập mã tài khoản' : 'Please enter your account ID')
     : '';
 
   // Fill demo credentials into the form for quick testing
   const quick = (r) => {
     setRole(r);
-    setEmail(DEMO_USERS[r].email);
+    setIdentifier(DEMO_USERS[r].identifier);
     setPw(DEMO_PASSWORDS[r]);
     setApiError('');
   };
 
   const submitLogin = async (e) => {
     e && e.preventDefault();
-    setEmailTouched(true);
-    if (!isEmail(email)) return;
+    setIdTouched(true);
+    if (!identifier.trim()) return;
     if (!pw) {
       setApiError(lang === 'vi' ? 'Vui lòng nhập mật khẩu' : 'Please enter password');
       return;
@@ -173,7 +172,7 @@ export default function LoginUser({ renderApp }) {
     setLoading(true);
     setApiError('');
     try {
-      const res  = await requestLogin({ email: email.trim(), password: pw });
+      const res  = await requestLogin({ identifier: identifier.trim(), password: pw });
       const user = res.metadata?.user;
       login(user);
     } catch (err) {
@@ -226,13 +225,14 @@ export default function LoginUser({ renderApp }) {
                 <p style={{ margin: '7px 0 0', fontSize: 14.5, color: 'var(--muted)' }}>{t('signInSub')}</p>
               </div>
               <div className="field">
-                <label>{t('email')}</label>
-                <div className="input-group"><I.mail />
-                  <input className={emailError ? 'input input-error' : 'input'} type="email" value={email}
-                    onChange={(e) => { setEmail(e.target.value); setApiError(''); }}
-                    onBlur={() => setEmailTouched(true)} placeholder="name@school.edu.vn" />
+                <label>{t('accountId')}</label>
+                <div className="input-group"><I.user size={16} />
+                  <input className={idError ? 'input input-error' : 'input'} type="text" value={identifier}
+                    onChange={(e) => { setIdentifier(e.target.value); setApiError(''); }}
+                    onBlur={() => setIdTouched(true)}
+                    placeholder={lang === 'vi' ? 'VD: 20216001 hoặc gv1001' : 'e.g. 20216001 or gv1001'} />
                 </div>
-                {emailError && <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12.5, color: 'var(--danger)', fontWeight: 500 }}><I.alert size={13} />{emailError}</span>}
+                {idError && <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12.5, color: 'var(--danger)', fontWeight: 500 }}><I.alert size={13} />{idError}</span>}
               </div>
               <PwField label={t('password')} value={pw} onChange={(v) => { setPw(v); setApiError(''); }} placeholder="••••••••" />
               {apiError && (
@@ -292,18 +292,17 @@ export default function LoginUser({ renderApp }) {
               <button className="link-btn" onClick={() => navigate('login')} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13.5, color: 'var(--muted)', fontWeight: 600, alignSelf: 'flex-start' }}><I.chevL size={15} />{t('backToLogin')}</button>
               <div>
                 <h2 style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: '-0.02em' }}>{t('forgotTitle')}</h2>
-                <p style={{ margin: '7px 0 0', fontSize: 14, color: 'var(--muted)', lineHeight: 1.5 }}>
-                  {lang === 'vi'
-                    ? 'Nhập email trường của bạn. Mã OTP sẽ được gửi tới email cá nhân đã đăng ký.'
-                    : 'Enter your school email. An OTP will be sent to your registered personal email.'}
-                </p>
+                <p style={{ margin: '7px 0 0', fontSize: 14, color: 'var(--muted)', lineHeight: 1.5 }}>{t('forgotSub')}</p>
               </div>
               <div className="field">
-                <label>{lang === 'vi' ? 'Email trường' : 'School email'}</label>
-                <div className="input-group"><I.mail />
-                  <input className={emailError ? 'input input-error' : 'input'} type="email" value={email} onChange={(e) => { setEmail(e.target.value); setApiError(''); }} onBlur={() => setEmailTouched(true)} placeholder="name@school.edu.vn" />
+                <label>{t('accountId')}</label>
+                <div className="input-group"><I.user size={16} />
+                  <input className={idError ? 'input input-error' : 'input'} type="text" value={identifier}
+                    onChange={(e) => { setIdentifier(e.target.value); setApiError(''); }}
+                    onBlur={() => setIdTouched(true)}
+                    placeholder={lang === 'vi' ? 'VD: 20216001 hoặc gv1001' : 'e.g. 20216001 or gv1001'} />
                 </div>
-                {emailError && <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12.5, color: 'var(--danger)', fontWeight: 500 }}><I.alert size={13} />{emailError}</span>}
+                {idError && <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12.5, color: 'var(--danger)', fontWeight: 500 }}><I.alert size={13} />{idError}</span>}
               </div>
               {apiError && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 14px', borderRadius: 10, background: 'var(--danger-soft, rgba(220,38,38,.08))', color: 'var(--danger)', fontSize: 13.5 }}>
@@ -312,12 +311,12 @@ export default function LoginUser({ renderApp }) {
               )}
               <button className="btn btn-primary" style={{ height: 46 }} disabled={loading}
                 onClick={async () => {
-                  setEmailTouched(true);
-                  if (!isEmail(email)) return;
+                  setIdTouched(true);
+                  if (!identifier.trim()) return;
                   setLoading(true);
                   setApiError('');
                   try {
-                    await requestForgotPassword({ email: email.trim() });
+                    await requestForgotPassword({ identifier: identifier.trim() });
                     setView('otp');
                     setSecs(OTP_EXPIRY_SECONDS);
                     setOtp(Array(OTP_LENGTH).fill(''));
@@ -366,7 +365,7 @@ export default function LoginUser({ renderApp }) {
                     setLoading(true);
                     setApiError('');
                     try {
-                      await requestForgotPassword({ email: email.trim() });
+                      await requestForgotPassword({ identifier: identifier.trim() });
                       setSecs(OTP_EXPIRY_SECONDS);
                       setOtp(Array(OTP_LENGTH).fill(''));
                       toast(lang === 'vi' ? 'Đã gửi lại mã OTP' : 'OTP resent', 'success');
@@ -389,7 +388,7 @@ export default function LoginUser({ renderApp }) {
                   setLoading(true);
                   setApiError('');
                   try {
-                    await requestVerifyOtp({ email: email.trim(), otp: otp.join('') });
+                    await requestVerifyOtp({ identifier: identifier.trim(), otp: otp.join('') });
                     setNpw('');
                     setCpw('');
                     setView('reset');
@@ -427,7 +426,7 @@ export default function LoginUser({ renderApp }) {
                   setLoading(true);
                   setApiError('');
                   try {
-                    await requestResetPassword({ email: email.trim(), otp: otp.join(''), newPassword: npw });
+                    await requestResetPassword({ identifier: identifier.trim(), otp: otp.join(''), newPassword: npw });
                     toast(lang === 'vi' ? 'Đặt lại mật khẩu thành công! Vui lòng đăng nhập lại.' : 'Password reset! Please sign in again.', 'success');
                     navigate('login');
                     setPw('');

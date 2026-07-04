@@ -47,11 +47,11 @@ export class AuthController {
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async login(
-    @Body() body: { email: string; password: string },
+    @Body() body: { identifier: string; password: string },
     @Res({ passthrough: true }) res: express.Response,
   ) {
     const { token, refreshToken, user } = await this.authService.login(
-      body.email,
+      body.identifier,
       body.password,
     );
     setCookies(res, token, refreshToken);
@@ -97,24 +97,24 @@ export class AuthController {
 
   @Post('forgot-password')
   @HttpCode(HttpStatus.OK)
-  async forgotPassword(@Body() body: { email: string }) {
-    await this.authService.forgotPassword(body.email);
+  async forgotPassword(@Body() body: { identifier: string }) {
+    await this.authService.forgotPassword(body.identifier);
     return { success: true, message: 'OTP đã được gửi tới email của bạn' };
   }
 
   @Post('verify-otp')
   @HttpCode(HttpStatus.OK)
-  async verifyOtp(@Body() body: { email: string; otp: string }) {
-    await this.authService.verifyOtp(body.email, body.otp);
+  async verifyOtp(@Body() body: { identifier: string; otp: string }) {
+    await this.authService.verifyOtp(body.identifier, body.otp);
     return { success: true, message: 'OTP hợp lệ' };
   }
 
   @Post('reset-password')
   @HttpCode(HttpStatus.OK)
   async resetPassword(
-    @Body() body: { email: string; otp: string; newPassword: string },
+    @Body() body: { identifier: string; otp: string; newPassword: string },
   ) {
-    await this.authService.resetPassword(body.email, body.otp, body.newPassword);
+    await this.authService.resetPassword(body.identifier, body.otp, body.newPassword);
     return { success: true, message: 'Mật khẩu đã được đặt lại thành công' };
   }
 

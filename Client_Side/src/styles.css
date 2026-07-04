@@ -218,6 +218,9 @@ textarea.input { height: auto; padding: 11px 13px; resize: vertical; line-height
   .auth-card { grid-template-columns: 1fr !important; }
 }
 
+/* Spinner animation */
+@keyframes spin { to { transform: rotate(360deg); } }
+
 /* Print (transcript export) */
 @media print {
   .sidebar-desktop, header, .btn { display: none !important; }

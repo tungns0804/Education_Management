@@ -81,15 +81,7 @@ function Topbar({ title, subtitle, onToggleSidebar, onToggleMobile, onLogout, on
         {subtitle && <p style={{ margin: 0, fontSize: 12.5, color: 'var(--muted)' }} className="topbar-sub">{subtitle}</p>}
       </div>
       <div style={{ flex: 1 }}/>
-      <div className="topbar-search" style={{ position: 'relative', width: 280 }}>
-        <button onClick={onOpenSearch} style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', height: 40, padding: '0 12px', borderRadius: 'var(--r-sm)', background: 'var(--surface-3)', boxShadow: 'inset 0 0 0 1px var(--border)', color: 'var(--muted)', transition: 'background .14s' }}
-          onMouseEnter={e => e.currentTarget.style.background = 'var(--border)'} onMouseLeave={e => e.currentTarget.style.background = 'var(--surface-3)'}>
-          <I.search size={16}/>
-          <span style={{ fontSize: 13.5, fontWeight: 500 }}>{t('search')}</span>
-          <span style={{ marginLeft: 'auto', display: 'flex', gap: 3 }}><kbd className="kbd">⌘</kbd><kbd className="kbd">K</kbd></span>
-        </button>
-      </div>
-      <button className="btn btn-icon btn-sm btn-ghost menu-mobile" onClick={onOpenSearch} title={t('search')}><I.search size={18}/></button>
+
       <button className="btn btn-icon btn-sm btn-ghost" onClick={toggleLang} title="Language"><span style={{ fontSize: 12, fontWeight: 800 }}>{lang.toUpperCase()}</span></button>
       <button className="btn btn-icon btn-sm btn-ghost" onClick={toggleTheme}>{theme === 'light' ? <I.moon size={18}/> : <I.sun size={18}/>}</button>
       <NotificationBell role={role} onGoto={onGoto}/>
@@ -115,21 +107,6 @@ function Topbar({ title, subtitle, onToggleSidebar, onToggleMobile, onLogout, on
                 </div>
               </div>
               <MenuRow icon={<I.user size={16}/>} label={t('profile')}/>
-              <MenuRow icon={<I.settings size={16}/>} label={t('settings')}/>
-              <div style={{ height: 1, background: 'var(--border)', margin: '6px 0' }}/>
-              <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--muted)', padding: '6px 12px 4px' }}>
-                {lang === 'vi' ? 'Đổi vai trò (demo)' : 'Switch role (demo)'}
-              </div>
-              {roles.map(([r, lbl]) => (
-                <button key={r} onClick={() => { onSwitchRole(r); setMenu(false); }} style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '8px 12px', borderRadius: 8,
-                  fontSize: 13.5, fontWeight: 600, color: role === r ? 'var(--accent)' : 'var(--text-2)',
-                  background: role === r ? 'color-mix(in srgb, var(--accent) 9%, transparent)' : 'transparent' }}
-                  onMouseEnter={e => { if (role !== r) e.currentTarget.style.background = 'var(--surface-3)'; }}
-                  onMouseLeave={e => { if (role !== r) e.currentTarget.style.background = 'transparent'; }}>
-                  {lbl}{role === r && <I.check size={15}/>}
-                </button>
-              ))}
               <div style={{ height: 1, background: 'var(--border)', margin: '6px 0' }}/>
               <button onClick={onLogout} style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '9px 12px', borderRadius: 8, fontSize: 13.5, fontWeight: 600, color: 'var(--danger)' }}
                 onMouseEnter={e => e.currentTarget.style.background = 'var(--danger-soft)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>

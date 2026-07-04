@@ -3,10 +3,9 @@ import React, { useState, useEffect } from 'react';
 import { I } from './materials/icons';
 import { useApp, AppProvider, ToastHost, Modal } from './materials/ui';
 import { Sidebar, Topbar } from './materials/shell';
-import { GlobalSearch } from './materials/tools';
 import LoginUser from './pages/login/LoginUser';
 import { AdminDashboard, StudentsScreen } from './materials/admin';
-import { TeachersScreen, CatalogScreen, SectionsScreen } from './materials/admin2';
+import { TeachersScreen, CatalogScreen, SubjectsScreen, SectionsScreen } from './materials/admin2';
 import { TeacherDashboard, MySectionsScreen, AttendanceScreen, GradeEntryScreen } from './materials/teacher';
 import { StudentDashboard, RegistrationScreen, TranscriptScreen } from './materials/student';
 import { StudentProfile, ScheduleScreen } from './materials/details';
@@ -68,8 +67,6 @@ function Shell({ apiUser, onSignOut }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [logoutAsk,  setLogoutAsk]  = useState(false);
   const [params,     setParams]     = useState({});
-  const [searchOpen, setSearchOpen] = useState(false);
-
   // Build sidebar user shape from real API user
   const user = {
     email: apiUser?.email                                 || DEMO_USERS[role]?.email,
@@ -80,17 +77,6 @@ function Shell({ apiUser, onSignOut }) {
 
   const nav  = (r, p = {}) => { setRoute(r); setParams(p); };
   const goto = (_r, rt, p = {}) => { setRoute(rt); setParams(p); };
-
-  useEffect(() => {
-    const h = (e) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
-        e.preventDefault();
-        setSearchOpen((o) => !o);
-      }
-    };
-    window.addEventListener('keydown', h);
-    return () => window.removeEventListener('keydown', h);
-  }, []);
 
   const [title, subtitle] = titleFor(route, t);
 
@@ -103,7 +89,7 @@ function Shell({ apiUser, onSignOut }) {
     case 'a-faculty':       screen = <CatalogScreen kind="faculty" />;                                                                     break;
     case 'a-major':         screen = <CatalogScreen kind="major" />;                                                                       break;
     case 'a-class':         screen = <CatalogScreen kind="class" />;                                                                       break;
-    case 'a-subject':       screen = <CatalogScreen kind="subject" />;                                                                     break;
+    case 'a-subject':       screen = <SubjectsScreen />;                                                                     break;
     case 'a-sections':      screen = <SectionsScreen />;                                                                                   break;
     case 't-dash':          screen = <TeacherDashboard />;                                                                                 break;
     case 't-sections':      screen = <MySectionsScreen onOpenAttendance={(id) => nav('t-attendance', { sectionId: id })} onOpenGrades={(id) => nav('t-grades', { sectionId: id })} />; break;
@@ -124,11 +110,10 @@ function Shell({ apiUser, onSignOut }) {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
         <Topbar title={title} subtitle={subtitle} user={user} role={role}
           onToggleSidebar={() => setCollapsed((c) => !c)} onToggleMobile={() => setMobileOpen(true)}
-          onLogout={() => setLogoutAsk(true)} onSwitchRole={() => {}} onOpenSearch={() => setSearchOpen(true)} onGoto={goto} />
+          onLogout={() => setLogoutAsk(true)} onSwitchRole={() => {}} onGoto={goto} />
         <main className="hide-scroll" key={route} style={{ flex: 1, overflowY: 'auto', background: 'var(--bg)' }}>{screen}</main>
       </div>
-      <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} onGoto={goto} />
-      <Modal open={logoutAsk} onClose={() => setLogoutAsk(false)} icon={<I.logout size={22} />}
+<Modal open={logoutAsk} onClose={() => setLogoutAsk(false)} icon={<I.logout size={22} />}
         title={t('logout') + '?'}
         footer={
           <>

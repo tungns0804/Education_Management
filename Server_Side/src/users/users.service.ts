@@ -66,7 +66,7 @@ export class UsersService {
       select: {
         id: true, fullName: true, email: true, idTeacher: true, degree: true,
         phone: true, gender: true, birthDay: true, status: true, avatar: true,
-        department: true, address: true, createdAt: true, updatedAt: true,
+        department: true, personalEmail: true, address: true, createdAt: true, updatedAt: true,
         _count: { select: { taughtSections: true } },
       },
       orderBy: { createdAt: 'desc' },
@@ -197,6 +197,36 @@ export class UsersService {
     const created = results.filter(r => r.status === 'fulfilled').length;
     const failed  = results.filter(r => r.status === 'rejected').length;
     return { created, failed };
+  }
+
+  async bulkImportTeachers(rows: Array<{
+    fullName: string;
+    idTeacher: string;
+    personalEmail?: string;
+    degree?: string;
+    phone?: string;
+    gender?: string;
+    birthDay?: string;
+    department?: string;
+  }>) {
+    const results = await Promise.allSettled(
+      rows.map(r =>
+        this.createTeacher({
+          ...r,
+          email: `${r.idTeacher.toLowerCase()}@teacher.school.edu.vn`,
+        }),
+      ),
+    );
+    const created = results.filter(r => r.status === 'fulfilled').length;
+    const failed  = results.filter(r => r.status === 'rejected').length;
+    const errors  = results
+      .map((r, i) =>
+        r.status === 'rejected'
+          ? { row: i + 1, reason: (r as PromiseRejectedResult).reason?.message }
+          : null,
+      )
+      .filter(Boolean);
+    return { created, failed, errors };
   }
 
   // ----------------------------------------------------------------
