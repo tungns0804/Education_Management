@@ -9,7 +9,7 @@ export const I18N = {
     // auth
     signIn: 'Đăng nhập', signInSub: 'Đăng nhập bằng mã tài khoản của bạn',
     email: 'Email trường', accountId: 'Mã tài khoản', password: 'Mật khẩu', rememberMe: 'Ghi nhớ đăng nhập',
-    forgotPw: 'Quên mật khẩu?', loginBtn: 'Đăng nhập', loginAs: 'Đăng nhập nhanh với vai trò',
+    forgotPw: 'Quên mật khẩu?', loginBtn: 'Đăng nhập',
     pwHidden: 'Hiện', pwShown: 'Ẩn',
     firstLoginTitle: 'Đổi mật khẩu lần đầu',
     firstLoginSub: 'Vì lý do bảo mật, bạn cần đặt mật khẩu mới trước khi tiếp tục.',
@@ -70,7 +70,7 @@ export const I18N = {
     appSub: 'Student Management System',
     signIn: 'Sign in', signInSub: 'Log in with your account ID',
     email: 'School email', accountId: 'Account ID', password: 'Password', rememberMe: 'Remember me',
-    forgotPw: 'Forgot password?', loginBtn: 'Sign in', loginAs: 'Quick sign-in as',
+    forgotPw: 'Forgot password?', loginBtn: 'Sign in',
     pwHidden: 'Show', pwShown: 'Hide',
     firstLoginTitle: 'Change password on first login',
     firstLoginSub: 'For security reasons, please set a new password before continuing.',

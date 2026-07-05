@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { I } from '../../components/icons';
-import { Drawer, FormField, Modal, fieldCls, useToast } from '../../components/ui';
+import { BtnSpinner, Drawer, FormField, Modal, fieldCls, useToast } from '../../components/ui';
 import { DataTable, Page, SectionHead } from '../../components/shell';
 import { RowAction } from '../../components/table';
 import { useApp } from '../../context/AppContext';
@@ -17,16 +17,19 @@ function SemesterDrawer({ open, row, onClose, onSave }) {
   const toast = useToast();
   const [name, setName] = useState('');
   const [nameErr, setNameErr] = useState('');
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!open) return;
     setName(row?.name ?? '');
     setNameErr('');
+    setSaving(false);
   }, [open, row]);
 
   const handleSave = async () => {
     const trimmed = name.trim();
     if (!trimmed) { setNameErr(lang === 'vi' ? 'Bắt buộc nhập tên học kỳ' : 'Semester name is required'); return; }
+    setSaving(true);
     try {
       if (isEdit) {
         await requestUpdateSemester(row.id, { name: trimmed });
@@ -37,6 +40,8 @@ function SemesterDrawer({ open, row, onClose, onSave }) {
       onClose();
     } catch (err) {
       toast(err?.response?.data?.message || (lang === 'vi' ? 'Lưu thất bại' : 'Save failed'), 'danger');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -44,9 +49,11 @@ function SemesterDrawer({ open, row, onClose, onSave }) {
     <Drawer open={open} onClose={onClose} width={420}
       title={isEdit ? (lang === 'vi' ? 'Sửa học kỳ' : 'Edit semester') : (lang === 'vi' ? 'Thêm học kỳ' : 'New semester')}
       footer={<>
-        <button className="btn btn-ghost" onClick={onClose}>{t('cancel')}</button>
-        <button className="btn btn-primary" onClick={handleSave}>
-          {isEdit ? t('save') : (lang === 'vi' ? 'Thêm học kỳ' : 'Add semester')}
+        <button className="btn btn-ghost" onClick={onClose} disabled={saving}>{t('cancel')}</button>
+        <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
+          {saving
+            ? <><BtnSpinner/>{lang === 'vi' ? 'Đang lưu…' : 'Saving…'}</>
+            : (isEdit ? t('save') : (lang === 'vi' ? 'Thêm học kỳ' : 'Add semester'))}
         </button>
       </>}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -76,6 +83,7 @@ export default function SemestersScreen() {
   const [loading,    setLoading]    = useState(true);
   const [drawer,     setDrawer]     = useState(null);
   const [confirmDel, setConfirmDel] = useState(null);
+  const [deleting,   setDeleting]   = useState(false);
   const [toggling,   setToggling]   = useState({});
 
   const load = () => {
@@ -136,7 +144,7 @@ export default function SemestersScreen() {
           onClick={(e) => { e.stopPropagation(); handleToggle(s); }}
         >
           {toggling[s.id]
-            ? '…'
+            ? <BtnSpinner size={14}/>
             : s.isActive
               ? (lang === 'vi' ? 'Tắt hiển thị' : 'Deactivate')
               : (lang === 'vi' ? 'Bật hiển thị' : 'Activate')}
@@ -189,8 +197,9 @@ export default function SemestersScreen() {
         title={lang === 'vi' ? 'Xóa học kỳ?' : 'Delete semester?'}
         tone="danger"
         footer={<>
-          <button className="btn btn-ghost" onClick={() => setConfirmDel(null)}>{t('cancel')}</button>
-          <button className="btn btn-danger" onClick={async () => {
+          <button className="btn btn-ghost" onClick={() => setConfirmDel(null)} disabled={deleting}>{t('cancel')}</button>
+          <button className="btn btn-danger" disabled={deleting} onClick={async () => {
+            setDeleting(true);
             try {
               await requestDeleteSemester(confirmDel.id);
               load();
@@ -198,8 +207,9 @@ export default function SemestersScreen() {
             } catch (err) {
               toast(err?.response?.data?.message || (lang === 'vi' ? 'Xóa thất bại' : 'Delete failed'), 'danger');
             }
+            setDeleting(false);
             setConfirmDel(null);
-          }}>{t('del')}</button>
+          }}>{deleting ? <><BtnSpinner/>{lang === 'vi' ? 'Đang xóa…' : 'Deleting…'}</> : t('del')}</button>
         </>}>
         {lang === 'vi'
           ? <>Xóa học kỳ <b>{confirmDel?.name}</b>? Hành động không thể hoàn tác.</>

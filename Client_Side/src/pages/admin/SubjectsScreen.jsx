@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { I } from '../../components/icons';
-import { Drawer, FormField, Modal, fieldCls, useForm, useToast, validate } from '../../components/ui';
+import { BtnSpinner, Drawer, FormField, Modal, fieldCls, useForm, useToast, validate } from '../../components/ui';
 import { DataTable, Page, SectionHead } from '../../components/shell';
 import { TableToolbar, FilterSelect, RowAction } from '../../components/table';
 import { useApp } from '../../context/AppContext';
@@ -17,6 +17,7 @@ function SubjectDrawer({ open, row, branches, onClose, onSave }) {
   const { t, lang } = useApp();
   const isEdit = !!row;
   const toast = useToast();
+  const [saving, setSaving] = useState(false);
 
   const validators = useMemo(() => ({
     code:         validate.required(t),
@@ -32,6 +33,7 @@ function SubjectDrawer({ open, row, branches, onClose, onSave }) {
 
   useEffect(() => {
     if (!open) return;
+    setSaving(false);
     if (row) {
       setForm({ code: row.code || '', name: row.name || '', credits: String(row.credits ?? 3), branchId: row.branchId || '' });
     } else {
@@ -44,9 +46,17 @@ function SubjectDrawer({ open, row, branches, onClose, onSave }) {
       title={isEdit ? (lang === 'vi' ? 'Sửa môn học' : 'Edit subject') : (lang === 'vi' ? 'Thêm môn học' : 'Add subject')}
       subtitle={isEdit ? row?.code : ''}
       footer={<>
-        <button className="btn btn-ghost" onClick={onClose}>{t('cancel')}</button>
-        <button className="btn btn-primary" onClick={() => { if (!submit((data) => onSave(data))) toast(t('errFixForm'), 'danger'); }}>
-          {isEdit ? t('save') : t('add')}
+        <button className="btn btn-ghost" onClick={onClose} disabled={saving}>{t('cancel')}</button>
+        <button className="btn btn-primary" disabled={saving} onClick={() => {
+          const ok = submit(async (data) => {
+            setSaving(true);
+            try { await onSave(data); } finally { setSaving(false); }
+          });
+          if (!ok) toast(t('errFixForm'), 'danger');
+        }}>
+          {saving
+            ? <><BtnSpinner/>{lang === 'vi' ? 'Đang lưu…' : 'Saving…'}</>
+            : (isEdit ? t('save') : t('add'))}
         </button>
       </>}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -83,6 +93,7 @@ export default function SubjectsScreen() {
   const [branchFilter, setBranchFilter] = useState('');
   const [drawer,     setDrawer]     = useState(null);
   const [confirmDel, setConfirmDel] = useState(null);
+  const [deleting,   setDeleting]   = useState(false);
 
   const loadData = () => {
     setLoading(true);
@@ -157,8 +168,9 @@ export default function SubjectsScreen() {
       <Modal open={!!confirmDel} onClose={() => setConfirmDel(null)} tone="danger" icon={<I.trash size={22}/>}
         title={lang === 'vi' ? 'Xóa môn học?' : 'Delete subject?'}
         footer={<>
-          <button className="btn btn-ghost" onClick={() => setConfirmDel(null)}>{t('cancel')}</button>
-          <button className="btn btn-danger" onClick={async () => {
+          <button className="btn btn-ghost" onClick={() => setConfirmDel(null)} disabled={deleting}>{t('cancel')}</button>
+          <button className="btn btn-danger" disabled={deleting} onClick={async () => {
+            setDeleting(true);
             try {
               await requestDeleteSubject(confirmDel.id);
               setSubjects(xs => xs.filter(x => x.id !== confirmDel.id));
@@ -166,8 +178,9 @@ export default function SubjectsScreen() {
             } catch (err) {
               toast(err?.response?.data?.message || (lang === 'vi' ? 'Xóa thất bại' : 'Delete failed'), 'danger');
             }
+            setDeleting(false);
             setConfirmDel(null);
-          }}>{t('del')}</button>
+          }}>{deleting ? <><BtnSpinner/>{lang === 'vi' ? 'Đang xóa…' : 'Deleting…'}</> : t('del')}</button>
         </>}>
         {lang === 'vi'
           ? <>Xóa môn học <b>{confirmDel?.name}</b> ({confirmDel?.code})? Hành động không thể hoàn tác.</>

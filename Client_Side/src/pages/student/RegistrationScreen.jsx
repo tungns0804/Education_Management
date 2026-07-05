@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { I } from '../../components/icons';
-import { useToast } from '../../components/ui';
+import { BtnSpinner, useToast } from '../../components/ui';
 import { Page, SectionHead } from '../../components/shell';
 import { Spinner, Empty } from '../../components/feedback';
 import { useApp } from '../../context/AppContext';
@@ -208,7 +208,7 @@ export default function RegistrationScreen() {
                         style={{ minWidth: 110 }}
                         disabled={(full && !isReg) || busy}
                         onClick={() => isReg ? drop(s) : register(s)}>
-                        {busy ? '…' : isReg
+                        {busy ? <><BtnSpinner size={14}/>{lang==='vi'?'Đang xử lý…':'Working…'}</> : isReg
                           ? <><I.check size={15}/>{lang==='vi'?'Đã ĐK':'Added'}</>
                           : <><I.plus size={15}/>{lang==='vi'?'Đăng ký':'Register'}</>
                         }

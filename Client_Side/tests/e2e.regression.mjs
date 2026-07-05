@@ -29,10 +29,9 @@ page.on('pageerror', (e) => errors.push('PAGEERROR: ' + e.message));
 
 function check(name, cond) { results.push(`${cond ? 'PASS' : 'FAIL'} — ${name}`); }
 
-async function login(roleTab, id, pw) {
+async function login(id, pw) {
   await page.goto(BASE, { waitUntil: 'networkidle' });
-  await page.getByText(roleTab, { exact: true }).click();
-  await page.getByPlaceholder(/20216001/).fill(id);
+  await page.getByPlaceholder('Nhập mã tài khoản').fill(id);
   await page.locator('input[type="password"]').fill(pw);
   await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
   await page.waitForTimeout(2500);
@@ -54,10 +53,12 @@ async function clickNav(label) {
 /* ═══ TC-00x — Trang đăng nhập (chưa xác thực) ═══ */
 await page.goto(BASE, { waitUntil: 'networkidle' });
 check('TC-001 Trang login hiển thị heading "Đăng nhập"', await page.getByRole('heading', { name: 'Đăng nhập' }).isVisible().catch(() => false));
-check('TC-002 Có 3 tab vai trò Quản lý / Giảng dạy / Học tập',
-  await page.getByText('Quản lý',  { exact: true }).isVisible().catch(() => false) &&
-  await page.getByText('Giảng dạy', { exact: true }).isVisible().catch(() => false) &&
-  await page.getByText('Học tập',  { exact: true }).isVisible().catch(() => false));
+check('TC-002 Form login chỉ gồm 2 trường (mã tài khoản + mật khẩu), không còn tab vai trò',
+  await page.getByPlaceholder('Nhập mã tài khoản').isVisible().catch(() => false) &&
+  await page.locator('input[type="password"]').first().isVisible().catch(() => false) &&
+  (await page.getByText('Đăng nhập với vai trò').count()) === 0 &&
+  (await page.getByText('Giảng dạy', { exact: true }).count()) === 0 &&
+  (await page.getByText('Học tập',  { exact: true }).count()) === 0);
 await page.getByTitle('Language').click();
 await page.waitForTimeout(300);
 check('TC-003 Đổi ngôn ngữ VI→EN (heading "Sign in")', await page.getByRole('heading', { name: 'Sign in' }).isVisible().catch(() => false));
@@ -74,15 +75,14 @@ check('TC-005 Luồng quên mật khẩu mở (màn Khôi phục mật khẩu + 
   await page.getByRole('heading', { name: 'Khôi phục mật khẩu' }).isVisible().catch(() => false) &&
   await page.getByRole('button', { name: 'Gửi mã OTP' }).isVisible().catch(() => false));
 await page.getByText('Quay lại đăng nhập').click();
-await page.getByText('Giảng dạy', { exact: true }).click();
-await page.getByPlaceholder(/20216001/).fill('abc123');
-await page.getByPlaceholder(/20216001/).blur();
+await page.getByPlaceholder('Nhập mã tài khoản').fill('');
+await page.getByPlaceholder('Nhập mã tài khoản').blur();
 await page.waitForTimeout(200);
-check('TC-006 Validate định dạng mã tài khoản theo vai trò (GV)', (await page.getByText(/Mã Giảng viên phải có dạng GV/).count()) > 0);
+check('TC-006 Validate bắt buộc nhập mã tài khoản (bỏ trống báo lỗi)', (await page.getByText(/Vui lòng nhập mã tài khoản/).count()) > 0);
 await page.screenshot({ path: shots + '/01-login.png' });
 
 /* ═══ TC-1xx — Phân hệ ADMIN ═══ */
-await login('Quản lý', 'admin', 'Admin@123');
+await login('admin', 'Admin@123');
 check('TC-101 Đăng nhập Admin thành công (sidebar hiện)', await page.locator('nav').first().isVisible().catch(() => false));
 check('TC-102 Dashboard: 4 thẻ thống kê', (await page.locator('.grid-stats .card').count()) === 4);
 check('TC-103 Dashboard: biểu đồ SV theo khoa + tỉ lệ giới tính',
@@ -116,7 +116,7 @@ await logout();
 check('TC-113 Đăng xuất Admin về trang login', await page.getByRole('heading', { name: 'Đăng nhập' }).isVisible().catch(() => false));
 
 /* ═══ TC-2xx — Phân hệ GIẢNG VIÊN ═══ */
-await login('Giảng dạy', 'gv1001', 'Teacher@123');
+await login('gv1001', 'Teacher@123');
 check('TC-201 Đăng nhập GV thành công', await page.locator('nav').first().isVisible().catch(() => false));
 await page.screenshot({ path: shots + '/20-teacher-dashboard.png' });
 await clickNav('Lớp phụ trách');
@@ -131,7 +131,7 @@ check('TC-205 Màn TKB giảng viên render', (await page.getByText('Lịch họ
 await logout();
 
 /* ═══ TC-3xx — Phân hệ SINH VIÊN ═══ */
-await login('Học tập', '20216001', 'Student@123');
+await login('20216001', 'Student@123');
 check('TC-301 Đăng nhập SV thành công', await page.locator('nav').first().isVisible().catch(() => false));
 check('TC-302 Dashboard SV: hero banner + GPA', (await page.getByText('Chào mừng trở lại,').count()) > 0);
 await page.screenshot({ path: shots + '/30-student-dashboard.png' });

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useApp } from '../../context/AppContext';
-import { useToast, FormField, fieldCls } from '../../components/ui';
+import { BtnSpinner, useToast, FormField, fieldCls } from '../../components/ui';
 import { I } from '../../components/icons';
 import { PwField, PwChecklist } from '../login/LoginUser';
 import { requestUpdateUser, requestChangePassword } from '../../config/userRequest';
@@ -224,7 +224,7 @@ export default function ProfilePage() {
             <>
               <button className="btn btn-ghost btn-sm" onClick={cancelEdit} disabled={saving}>{t('cancel')}</button>
               <button className="btn btn-primary btn-sm" onClick={handleSave} disabled={saving}>
-                {saving ? '…' : t('save')}
+                {saving ? <><BtnSpinner size={13}/>{lang === 'vi' ? 'Đang lưu…' : 'Saving…'}</> : t('save')}
               </button>
             </>
           )}
@@ -344,7 +344,7 @@ export default function ProfilePage() {
                 onClick={handleChangePassword}
                 disabled={pwSaving || !pwForm.currentPw || !pwAllPass || !pwMatch}
               >
-                {pwSaving ? '…' : t('updatePw')}
+                {pwSaving ? <><BtnSpinner size={13}/>{lang === 'vi' ? 'Đang cập nhật…' : 'Updating…'}</> : t('updatePw')}
               </button>
             </div>
           </div>

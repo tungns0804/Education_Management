@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { I } from '../../components/icons';
-import { Avatar, Segmented, useToast } from '../../components/ui';
+import { Avatar, BtnSpinner, Segmented, useToast } from '../../components/ui';
 import { Page, SectionHead } from '../../components/shell';
 import { Spinner, Empty } from '../../components/feedback';
 import { useApp } from '../../context/AppContext';
@@ -230,7 +230,7 @@ export default function AttendanceScreen({ sectionId }) {
             ]}/>
             {tab === 'today' && (
               <button className="btn btn-primary btn-sm" style={{ height: 40 }} onClick={save} disabled={saving || roster.length === 0}>
-                {saving ? '…' : <><I.check size={16}/>{lang==='vi'?'Lưu':'Save'}</>}
+                {saving ? <><BtnSpinner size={14}/>{lang==='vi'?'Đang lưu…':'Saving…'}</> : <><I.check size={16}/>{lang==='vi'?'Lưu':'Save'}</>}
               </button>
             )}
           </div>

@@ -2,7 +2,7 @@
 
 > Vẽ bằng Mermaid `sequenceDiagram` (render trực tiếp trong Markdown/VS Code/GitHub) thay cho hình ảnh UML chèn tay như trong tài liệu mẫu (`00-phan-tich-tai-lieu-mau.md`, mục 3.4). **Mỗi use case trong `03-usecase-nghiep-vu.md` đều có một sơ đồ tuần tự tương ứng** — không có luồng nào chỉ mô tả bằng danh sách bước. Chi tiết kỹ thuật (tên hàm, bảng, guard) được lấy trực tiếp từ mã nguồn hiện tại của `server_side/` và `client_side/`.
 
-## 1. UC#01 — Đăng nhập (theo vai trò)
+## 1. UC#01 — Đăng nhập
 
 ```mermaid
 sequenceDiagram
@@ -13,9 +13,9 @@ sequenceDiagram
     participant Svc as AuthService
     participant DB as PostgreSQL
 
-    U->>C: Chọn tab vai trò (Admin/GV/SV), nhập tài khoản + mật khẩu
-    C->>C: Kiểm tra định dạng mã theo vai trò (ROLE_ID_PATTERNS)
-    Note over C: Sai định dạng → chặn ngay tại client,<br/>không gọi API
+    U->>C: Nhập mã tài khoản + mật khẩu (không cần chọn vai trò)
+    C->>C: Kiểm tra hai trường không để trống
+    Note over C: Bỏ trống → chặn ngay tại client,<br/>không gọi API
     C->>Http: requestLogin({identifier, password})
     Http->>Ctrl: POST /api/users/login
     Ctrl->>Svc: login(identifier, password)

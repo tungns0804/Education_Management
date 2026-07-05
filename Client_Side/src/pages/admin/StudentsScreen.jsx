@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { I } from '../../components/icons';
-import { Avatar, Modal, StatusBadge, useToast } from '../../components/ui';
+import { Avatar, BtnSpinner, Modal, StatusBadge, useToast } from '../../components/ui';
 import { DataTable, Page, SectionHead } from '../../components/shell';
 import { TableToolbar, FilterSelect, RowAction } from '../../components/table';
 import { BulkImportDrawer } from '../../components/BulkImportDrawer';
@@ -42,6 +42,7 @@ export default function StudentsScreen({ onOpenProfile }) {
   const [statusFilter, setStatusFilter] = useState('');
   const [drawer,       setDrawer]       = useState(null);
   const [confirmDel,   setConfirmDel]   = useState(null);
+  const [deleting,     setDeleting]     = useState(false);
   const [importOpen,   setImportOpen]   = useState(false);
 
   const loadData = () => {
@@ -163,8 +164,9 @@ export default function StudentsScreen({ onOpenProfile }) {
       <Modal open={!!confirmDel} onClose={() => setConfirmDel(null)} tone="danger" icon={<I.trash size={22}/>}
         title={lang === 'vi' ? 'Xóa hồ sơ sinh viên?' : 'Delete student profile?'}
         footer={<>
-          <button className="btn btn-ghost" onClick={() => setConfirmDel(null)}>{t('cancel')}</button>
-          <button className="btn btn-danger" onClick={async () => {
+          <button className="btn btn-ghost" onClick={() => setConfirmDel(null)} disabled={deleting}>{t('cancel')}</button>
+          <button className="btn btn-danger" disabled={deleting} onClick={async () => {
+            setDeleting(true);
             try {
               await requestDeleteUser(confirmDel.id);
               setStudents(xs => xs.filter(x => x.id !== confirmDel.id));
@@ -172,8 +174,9 @@ export default function StudentsScreen({ onOpenProfile }) {
             } catch {
               toast(lang === 'vi' ? 'Xóa thất bại' : 'Delete failed', 'danger');
             }
+            setDeleting(false);
             setConfirmDel(null);
-          }}>{t('del')}</button>
+          }}>{deleting ? <><BtnSpinner/>{lang === 'vi' ? 'Đang xóa…' : 'Deleting…'}</> : t('del')}</button>
         </>}>
         {lang === 'vi'
           ? <>Bạn sắp xóa hồ sơ của <b>{confirmDel?.name}</b> ({confirmDel?.code}). Hành động này không thể hoàn tác.</>

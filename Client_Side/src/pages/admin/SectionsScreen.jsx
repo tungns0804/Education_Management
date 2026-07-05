@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { I } from '../../components/icons';
-import { Avatar, Drawer, FormField, Modal, fieldCls, useForm, useToast, validate } from '../../components/ui';
+import { Avatar, BtnSpinner, Drawer, FormField, Modal, fieldCls, useForm, useToast, validate } from '../../components/ui';
 import { Page, SectionHead } from '../../components/shell';
 import { FilterSelect } from '../../components/table';
 import { useApp } from '../../context/AppContext';
@@ -20,6 +20,7 @@ function SectionDrawer({ open, row, subjects, teachers, onClose, onSave }) {
   const { t, lang } = useApp();
   const isEdit = !!row;
   const toast = useToast();
+  const [saving, setSaving] = useState(false);
 
   const validators = useMemo(() => ({
     code:        validate.required(t),
@@ -40,6 +41,7 @@ function SectionDrawer({ open, row, subjects, teachers, onClose, onSave }) {
 
   useEffect(() => {
     if (!open) return;
+    setSaving(false);
     if (row) {
       setForm({
         code:         row.code || '',
@@ -69,9 +71,17 @@ function SectionDrawer({ open, row, subjects, teachers, onClose, onSave }) {
       title={isEdit ? (lang === 'vi' ? 'Sửa lớp học phần' : 'Edit section') : (lang === 'vi' ? 'Tạo lớp học phần' : 'New section')}
       subtitle={isEdit ? row?.code : ''}
       footer={<>
-        <button className="btn btn-ghost" onClick={onClose}>{t('cancel')}</button>
-        <button className="btn btn-primary" onClick={() => { if (!submit((data) => onSave(data))) toast(t('errFixForm'), 'danger'); }}>
-          {isEdit ? t('save') : (lang === 'vi' ? 'Tạo lớp HP' : 'Create section')}
+        <button className="btn btn-ghost" onClick={onClose} disabled={saving}>{t('cancel')}</button>
+        <button className="btn btn-primary" disabled={saving} onClick={() => {
+          const ok = submit(async (data) => {
+            setSaving(true);
+            try { await onSave(data); } finally { setSaving(false); }
+          });
+          if (!ok) toast(t('errFixForm'), 'danger');
+        }}>
+          {saving
+            ? <><BtnSpinner/>{lang === 'vi' ? 'Đang lưu…' : 'Saving…'}</>
+            : (isEdit ? t('save') : (lang === 'vi' ? 'Tạo lớp HP' : 'Create section'))}
         </button>
       </>}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -156,6 +166,7 @@ export default function SectionsScreen() {
   const [page,         setPage]         = useState(1);
   const [drawer,       setDrawer]       = useState(null);
   const [confirmDel,   setConfirmDel]   = useState(null);
+  const [deleting,     setDeleting]     = useState(false);
   const gridRef = useRef(null);
   const [cols, setCols] = useState(1);
 
@@ -337,8 +348,9 @@ export default function SectionsScreen() {
       <Modal open={!!confirmDel} onClose={() => setConfirmDel(null)} tone="danger" icon={<I.trash size={22}/>}
         title={lang === 'vi' ? 'Xóa lớp học phần?' : 'Delete section?'}
         footer={<>
-          <button className="btn btn-ghost" onClick={() => setConfirmDel(null)}>{t('cancel')}</button>
-          <button className="btn btn-danger" onClick={async () => {
+          <button className="btn btn-ghost" onClick={() => setConfirmDel(null)} disabled={deleting}>{t('cancel')}</button>
+          <button className="btn btn-danger" disabled={deleting} onClick={async () => {
+            setDeleting(true);
             try {
               await requestDeleteSubjectClass(confirmDel.id);
               setSections(xs => xs.filter(x => x.id !== confirmDel.id));
@@ -346,8 +358,9 @@ export default function SectionsScreen() {
             } catch (err) {
               toast(err?.response?.data?.message || (lang === 'vi' ? 'Xóa thất bại' : 'Delete failed'), 'danger');
             }
+            setDeleting(false);
             setConfirmDel(null);
-          }}>{t('del')}</button>
+          }}>{deleting ? <><BtnSpinner/>{lang === 'vi' ? 'Đang xóa…' : 'Deleting…'}</> : t('del')}</button>
         </>}>
         {lang === 'vi'
           ? <>Xóa lớp học phần <b>{confirmDel?.code}</b> ({confirmDel?.subject?.name})?</>

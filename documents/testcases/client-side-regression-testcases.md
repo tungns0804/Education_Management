@@ -30,11 +30,11 @@ npm run test:e2e        # chạy tests/e2e.regression.mjs — in PASS/FAIL từn
 | Mã | Nội dung kiểm tra | Kết quả mong đợi |
 |---|---|---|
 | TC-001 | Mở http://localhost:5173 | Hiển thị heading "Đăng nhập" + brand panel EduManage |
-| TC-002 | Tab vai trò | Có đủ 3 tab: Quản lý / Giảng dạy / Học tập |
+| TC-002 | Form đăng nhập tối giản | Chỉ gồm 2 trường: mã tài khoản + mật khẩu; không còn tab chọn vai trò |
 | TC-003 | Nút đổi ngôn ngữ | VI → EN: heading đổi thành "Sign in" |
 | TC-004 | Nút đổi theme | `data-theme` trên `<html>` đổi light ↔ dark |
 | TC-005 | Link "Quên mật khẩu?" | Mở màn "Khôi phục mật khẩu" có nút "Gửi mã OTP" |
-| TC-006 | Nhập mã sai định dạng ở tab Giảng dạy | Báo lỗi "Mã Giảng viên phải có dạng GV kèm số" |
+| TC-006 | Bỏ trống mã tài khoản rồi rời khỏi ô nhập | Báo lỗi "Vui lòng nhập mã tài khoản" |
 
 ### Nhóm TC-1xx — Phân hệ Admin (admin / Admin@123)
 

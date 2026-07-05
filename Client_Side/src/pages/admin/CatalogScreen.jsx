@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { I } from '../../components/icons';
-import { Drawer, FormField, Modal, fieldCls, useForm, useToast, validate } from '../../components/ui';
+import { BtnSpinner, Drawer, FormField, Modal, fieldCls, useForm, useToast, validate } from '../../components/ui';
 import { DataTable, Page, SectionHead } from '../../components/shell';
 import { TableToolbar, RowAction } from '../../components/table';
 import { useApp } from '../../context/AppContext';
@@ -39,9 +39,11 @@ function CatalogFormDrawer({ open, onClose, onSave, kind, row, depts, branches, 
 
   const { form, set, setForm, touch, showError, submit, reset } = useForm(getInitial(), validators);
   const toast = useToast();
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!open) return;
+    setSaving(false);
     if (row) {
       if (kind === 'faculty') setForm({ code: row.code || '', nameDepartment: row.nameDepartment || '' });
       if (kind === 'major')   setForm({ code: row.code || '', nameBranch: row.nameBranch || '', departmentId: row.departmentId || '' });
@@ -55,7 +57,11 @@ function CatalogFormDrawer({ open, onClose, onSave, kind, row, depts, branches, 
   const kindLabel = { faculty: lang === 'vi' ? 'Khoa' : 'Faculty', major: lang === 'vi' ? 'Ngành' : 'Major', class: lang === 'vi' ? 'Lớp' : 'Class', subject: lang === 'vi' ? 'Môn học' : 'Subject' }[kind];
 
   const handleSave = () => {
-    if (!submit((data) => onSave(data))) toast(t('errFixForm'), 'danger');
+    const ok = submit(async (data) => {
+      setSaving(true);
+      try { await onSave(data); } finally { setSaving(false); }
+    });
+    if (!ok) toast(t('errFixForm'), 'danger');
   };
 
   return (
@@ -63,8 +69,12 @@ function CatalogFormDrawer({ open, onClose, onSave, kind, row, depts, branches, 
       title={isEdit ? `${lang === 'vi' ? 'Sửa' : 'Edit'} ${kindLabel}` : `${lang === 'vi' ? 'Thêm' : 'Add'} ${kindLabel}`}
       subtitle={isEdit ? (row?.code || '') : ''}
       footer={<>
-        <button className="btn btn-ghost" onClick={onClose}>{t('cancel')}</button>
-        <button className="btn btn-primary" onClick={handleSave}>{isEdit ? t('save') : t('add')}</button>
+        <button className="btn btn-ghost" onClick={onClose} disabled={saving}>{t('cancel')}</button>
+        <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
+          {saving
+            ? <><BtnSpinner/>{lang === 'vi' ? 'Đang lưu…' : 'Saving…'}</>
+            : (isEdit ? t('save') : t('add'))}
+        </button>
       </>}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
         <FormField label={t('code')} error={showError('code')}>
@@ -140,6 +150,7 @@ export default function CatalogScreen({ kind }) {
   const [teachers,   setTeachers]   = useState([]);
   const [drawer,     setDrawer]     = useState(null);
   const [confirmDel, setConfirmDel] = useState(null);
+  const [deleting,   setDeleting]   = useState(false);
 
   const needsDepts    = kind === 'major';
   const needsBranches = ['class', 'subject'].includes(kind);
@@ -263,8 +274,9 @@ export default function CatalogScreen({ kind }) {
       <Modal open={!!confirmDel} onClose={() => setConfirmDel(null)} tone="danger" icon={<I.trash size={22}/>}
         title={lang === 'vi' ? 'Xác nhận xóa?' : 'Confirm delete?'}
         footer={<>
-          <button className="btn btn-ghost" onClick={() => setConfirmDel(null)}>{t('cancel')}</button>
-          <button className="btn btn-danger" onClick={async () => {
+          <button className="btn btn-ghost" onClick={() => setConfirmDel(null)} disabled={deleting}>{t('cancel')}</button>
+          <button className="btn btn-danger" disabled={deleting} onClick={async () => {
+            setDeleting(true);
             try {
               await conf.del(confirmDel);
               setRows(xs => xs.filter(x => x.id !== confirmDel.id));
@@ -272,8 +284,9 @@ export default function CatalogScreen({ kind }) {
             } catch (err) {
               toast(err?.response?.data?.message || (lang === 'vi' ? 'Xóa thất bại' : 'Delete failed'), 'danger');
             }
+            setDeleting(false);
             setConfirmDel(null);
-          }}>{t('del')}</button>
+          }}>{deleting ? <><BtnSpinner/>{lang === 'vi' ? 'Đang xóa…' : 'Deleting…'}</> : t('del')}</button>
         </>}>
         {lang === 'vi' ? 'Hành động này không thể hoàn tác.' : 'This action cannot be undone.'}
       </Modal>

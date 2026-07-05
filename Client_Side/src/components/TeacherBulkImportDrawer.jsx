@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { I } from './icons';
-import { Drawer } from './ui';
+import { BtnSpinner, Drawer } from './ui';
 import { useApp } from '../context/AppContext';
 import { parseTeacherCSV, TEACHER_SAMPLE_CSV } from '../utils/csv';
 import { generateTeacherExcelTemplate } from '../utils/excel';
@@ -12,9 +12,10 @@ function TeacherBulkImportDrawer({ open, onClose, onProvision }) {
   const [text, setText] = useState('');
   const [parsed, setParsed] = useState(null);
   const [dragOver, setDragOver] = useState(false);
+  const [importing, setImporting] = useState(false);
   const fileRef = useRef(null);
 
-  useEffect(() => { if (open) { setText(''); setParsed(null); } }, [open]);
+  useEffect(() => { if (open) { setText(''); setParsed(null); setImporting(false); } }, [open]);
   useEffect(() => { setParsed(text.trim() ? parseTeacherCSV(text) : null); }, [text]);
 
   const readFile = (file) => {
@@ -51,9 +52,14 @@ function TeacherBulkImportDrawer({ open, onClose, onProvision }) {
       title={lang === 'vi' ? 'Nhập giảng viên hàng loạt' : 'Bulk import teachers'}
       subtitle={lang === 'vi' ? 'Tải file CSV — mỗi dòng 1 giảng viên' : 'Upload CSV — one teacher per row'}
       footer={<>
-        <button className="btn btn-ghost" onClick={onClose}>{t('cancel')}</button>
-        <button className="btn btn-primary" disabled={!canProvision} onClick={() => onProvision(validRows)}>
-          <I.shield size={16}/>{lang === 'vi' ? `Cấp tài khoản (${validRows.length})` : `Provision (${validRows.length})`}
+        <button className="btn btn-ghost" onClick={onClose} disabled={importing}>{t('cancel')}</button>
+        <button className="btn btn-primary" disabled={!canProvision || importing} onClick={async () => {
+          setImporting(true);
+          try { await onProvision(validRows); } finally { setImporting(false); }
+        }}>
+          {importing
+            ? <><BtnSpinner/>{lang === 'vi' ? 'Đang cấp tài khoản…' : 'Provisioning…'}</>
+            : <><I.shield size={16}/>{lang === 'vi' ? `Cấp tài khoản (${validRows.length})` : `Provision (${validRows.length})`}</>}
         </button>
       </>}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { I } from '../../components/icons';
-import { Avatar, Drawer, FormField, Modal, StatusBadge, fieldCls, useForm, useToast, validate } from '../../components/ui';
+import { Avatar, BtnSpinner, Drawer, FormField, Modal, StatusBadge, fieldCls, useForm, useToast, validate } from '../../components/ui';
 import { DataTable, Page, SectionHead } from '../../components/shell';
 import { TableToolbar, FilterSelect, RowAction } from '../../components/table';
 import { TeacherBulkImportDrawer } from '../../components/TeacherBulkImportDrawer';
@@ -42,6 +42,7 @@ function TeacherDrawer({ state, depts, onClose, onSave }) {
   const isEdit = state?.mode === 'edit';
 
   const [previewId, setPreviewId] = useState('...');
+  const [saving,    setSaving]    = useState(false);
 
   const validators = useMemo(() => ({
     name:          validate.fullName(t),
@@ -56,6 +57,7 @@ function TeacherDrawer({ state, depts, onClose, onSave }) {
 
   useEffect(() => {
     if (!state) return;
+    setSaving(false);
     if (!row) {
       setPreviewId('...');
       requestNextTeacherId()
@@ -73,7 +75,11 @@ function TeacherDrawer({ state, depts, onClose, onSave }) {
   }, [state]);
 
   const handleSave = () => {
-    if (!submit((data) => onSave(data))) toast(t('errFixForm'), 'danger');
+    const ok = submit(async (data) => {
+      setSaving(true);
+      try { await onSave(data); } finally { setSaving(false); }
+    });
+    if (!ok) toast(t('errFixForm'), 'danger');
   };
 
   return (
@@ -81,9 +87,11 @@ function TeacherDrawer({ state, depts, onClose, onSave }) {
       title={isEdit ? (lang === 'vi' ? 'Sửa giảng viên' : 'Edit teacher') : (lang === 'vi' ? 'Thêm giảng viên' : 'Add teacher')}
       subtitle={isEdit ? row?.code : (lang === 'vi' ? 'Mã giảng viên & email trường tự động sinh' : 'Teacher code & school email auto-generated')}
       footer={<>
-        <button className="btn btn-ghost" onClick={onClose}>{t('cancel')}</button>
-        <button className="btn btn-primary" onClick={handleSave}>
-          {isEdit ? t('save') : (lang === 'vi' ? 'Tạo & cấp tài khoản' : 'Create & provision')}
+        <button className="btn btn-ghost" onClick={onClose} disabled={saving}>{t('cancel')}</button>
+        <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
+          {saving
+            ? <><BtnSpinner/>{isEdit ? (lang === 'vi' ? 'Đang lưu…' : 'Saving…') : (lang === 'vi' ? 'Đang tạo tài khoản…' : 'Provisioning…')}</>
+            : (isEdit ? t('save') : (lang === 'vi' ? 'Tạo & cấp tài khoản' : 'Create & provision'))}
         </button>
       </>}>
       {isEdit && (
@@ -168,6 +176,7 @@ export default function TeachersScreen() {
   const [drawer,      setDrawer]      = useState(null);
   const [importOpen,  setImportOpen]  = useState(false);
   const [confirmDel,  setConfirmDel]  = useState(null);
+  const [deleting,    setDeleting]    = useState(false);
 
   const loadData = () => {
     setLoading(true);
@@ -306,8 +315,9 @@ export default function TeachersScreen() {
       <Modal open={!!confirmDel} onClose={() => setConfirmDel(null)} tone="danger" icon={<I.trash size={22}/>}
         title={lang === 'vi' ? 'Xóa giảng viên?' : 'Delete teacher?'}
         footer={<>
-          <button className="btn btn-ghost" onClick={() => setConfirmDel(null)}>{t('cancel')}</button>
-          <button className="btn btn-danger" onClick={async () => {
+          <button className="btn btn-ghost" onClick={() => setConfirmDel(null)} disabled={deleting}>{t('cancel')}</button>
+          <button className="btn btn-danger" disabled={deleting} onClick={async () => {
+            setDeleting(true);
             try {
               await requestDeleteUser(confirmDel.id);
               setTeachers(xs => xs.filter(x => x.id !== confirmDel.id));
@@ -315,8 +325,9 @@ export default function TeachersScreen() {
             } catch (err) {
               toast(err?.response?.data?.message || (lang === 'vi' ? 'Xóa thất bại' : 'Delete failed'), 'danger');
             }
+            setDeleting(false);
             setConfirmDel(null);
-          }}>{t('del')}</button>
+          }}>{deleting ? <><BtnSpinner/>{lang === 'vi' ? 'Đang xóa…' : 'Deleting…'}</> : t('del')}</button>
         </>}>
         {lang === 'vi'
           ? <>Xóa giảng viên <b>{confirmDel?.name}</b> ({confirmDel?.code})? Hành động không thể hoàn tác.</>

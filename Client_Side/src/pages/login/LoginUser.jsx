@@ -5,12 +5,8 @@ import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 import { requestLogin, requestForgotPassword, requestVerifyOtp, requestResetPassword } from '../../config/userRequest';
 import {
-  DEMO_USERS,
   PW_RULES,
-  ROLE_ADMIN,
-  ROLE_TEACHER,
-  ROLE_STUDENT,
-  ROLE_ID_PATTERNS,
+  ACCOUNT_ID_PLACEHOLDER,
   OTP_LENGTH,
   OTP_EXPIRY_SECONDS,
   OTP_TIMER_INTERVAL_MS,
@@ -70,7 +66,7 @@ export function PwChecklist({ value, lang }) {
 function BrandPanel() {
   const { t, lang } = useApp();
   return (
-    <div style={{ position: 'relative', overflow: 'hidden', background: 'linear-gradient(155deg, #14253B 0%, #1E3A5F 55%, #285285 100%)', color: '#fff', padding: '56px 52px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+    <div style={{ position: 'relative', overflow: 'hidden', background: 'linear-gradient(155deg, #14253B 0%, #1E3A5F 55%, #285285 100%)', color: '#fff', padding: '56px 52px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%' }}>
       <div style={{ position: 'absolute', top: -120, right: -80, width: 360, height: 360, borderRadius: '50%', background: 'radial-gradient(circle, rgba(168,216,234,.32), transparent 70%)' }} />
       <div style={{ position: 'absolute', bottom: -140, left: -100, width: 380, height: 380, borderRadius: '50%', background: 'radial-gradient(circle, rgba(47,111,237,.28), transparent 70%)' }} />
       <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: .5 }}>
@@ -91,16 +87,7 @@ function BrandPanel() {
         <p style={{ fontSize: 16, opacity: .82, lineHeight: 1.6, marginTop: 18, maxWidth: 380 }}>
           {lang === 'vi' ? 'Quản lý sinh viên, giảng viên, môn học, điểm danh và điểm số — tất cả trong một nền tảng thống nhất.' : 'Manage students, teachers, courses, attendance and grades — all in one unified platform.'}
         </p>
-        <div style={{ display: 'flex', gap: 28, marginTop: 36 }}>
-          {[['1.2K+', lang === 'vi' ? 'Sinh viên' : 'Students'], ['86', lang === 'vi' ? 'Giảng viên' : 'Teachers'], ['4', lang === 'vi' ? 'Khoa' : 'Faculties']].map((s, i) => (
-            <div key={i}>
-              <div style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.02em' }}>{s[0]}</div>
-              <div style={{ fontSize: 12.5, opacity: .7, marginTop: 2 }}>{s[1]}</div>
-            </div>
-          ))}
-        </div>
       </div>
-      <div style={{ position: 'relative', fontSize: 12.5, opacity: .6 }}>© 2025 EduManage · ReactJS · NestJS · PostgreSQL</div>
     </div>
   );
 }
@@ -111,7 +98,6 @@ export default function LoginUser({ renderApp }) {
   const toast = useToast();
 
   const [view, setView]             = useState('login'); // login | forgot | otp | reset | first
-  const [role, setRole]             = useState(ROLE_ADMIN);
   const [identifier, setIdentifier] = useState('');
   const [pw, setPw]                 = useState('');
   const [npw, setNpw]               = useState('');
@@ -167,28 +153,14 @@ export default function LoginUser({ renderApp }) {
 
   if (user) return renderApp(user, logout);
 
-  const roleRule = ROLE_ID_PATTERNS[role];
-  const idPatternError = view === 'login' && idTouched && identifier.trim() && roleRule && !roleRule.test(identifier)
-    ? (lang === 'vi' ? roleRule.label_vi : roleRule.label_en)
-    : '';
   const idError = idTouched && !identifier.trim()
     ? (lang === 'vi' ? 'Vui lòng nhập mã tài khoản' : 'Please enter your account ID')
-    : idPatternError;
-
-  const quick = (r) => {
-    setRole(r);
-    setIdentifier('');
-    setPw('');
-    setApiError('');
-    setIdTouched(false);
-  };
+    : '';
 
   const submitLogin = async (e) => {
     e && e.preventDefault();
     setIdTouched(true);
     if (!identifier.trim()) return;
-    const rule = ROLE_ID_PATTERNS[role];
-    if (rule && !rule.test(identifier)) return;
     if (!pw) {
       setApiError(lang === 'vi' ? 'Vui lòng nhập mật khẩu' : 'Please enter password');
       return;
@@ -222,16 +194,10 @@ export default function LoginUser({ renderApp }) {
   const mm = String(Math.floor(secs / 60)).padStart(2, '0');
   const ss = String(secs % 60).padStart(2, '0');
 
-  const ROLE_BUTTONS = [
-    [ROLE_ADMIN,   I.shield,  t('management')],
-    [ROLE_TEACHER, I.teacher, t('teaching')],
-    [ROLE_STUDENT, I.user,    t('learning')],
-  ];
-
   return (
     <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: 20, background: 'var(--bg)' }}>
       <div className="card anim-up auth-card" style={{ width: 'min(960px, 100%)', display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', overflow: 'hidden', boxShadow: 'var(--shadow-lg)', minHeight: 560 }}>
-        <div className="auth-brand"><BrandPanel /></div>
+        <div className="auth-brand" style={{ height: '100%' }}><BrandPanel /></div>
         <div style={{ padding: '40px 44px', display: 'flex', flexDirection: 'column', position: 'relative' }}>
           <div style={{ position: 'absolute', top: 20, right: 20, display: 'flex', gap: 8 }}>
             <button className="btn btn-icon btn-sm btn-ghost" onClick={toggleLang} title="Language">
@@ -255,7 +221,7 @@ export default function LoginUser({ renderApp }) {
                   <input className={idError ? 'input input-error' : 'input'} type="text" value={identifier}
                     onChange={(e) => { setIdentifier(e.target.value); setApiError(''); }}
                     onBlur={() => setIdTouched(true)}
-                    placeholder={lang === 'vi' ? 'VD: 20216001 hoặc gv1001' : 'e.g. 20216001 or gv1001'} />
+                    placeholder={ACCOUNT_ID_PLACEHOLDER[lang]} />
                 </div>
                 {idError && <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12.5, color: 'var(--danger)', fontWeight: 500 }}><I.alert size={13} />{idError}</span>}
               </div>
@@ -274,21 +240,6 @@ export default function LoginUser({ renderApp }) {
               <button className="btn btn-primary" style={{ height: 46, fontSize: 15 }} type="submit" disabled={loading}>
                 {loading ? (lang === 'vi' ? 'Đang đăng nhập...' : 'Signing in...') : t('loginBtn')}
               </button>
-              <div>
-                <div style={{ fontSize: 12, color: 'var(--muted)', textAlign: 'center', margin: '4px 0 12px', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>{t('loginAs')}</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-                  {ROLE_BUTTONS.map(([r, Ic, lbl]) => (
-                    <button key={r} type="button" onClick={() => quick(r)} style={{
-                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '12px 6px', borderRadius: 11,
-                      background: role === r ? 'color-mix(in srgb, var(--accent) 9%, transparent)' : 'var(--surface-3)',
-                      boxShadow: role === r ? 'inset 0 0 0 1.5px var(--accent)' : 'inset 0 0 0 1px var(--border)',
-                      color: role === r ? 'var(--accent)' : 'var(--text-2)', transition: 'all .15s',
-                    }}>
-                      <Ic size={19} /><span style={{ fontSize: 11.5, fontWeight: 700 }}>{lbl}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
             </form>
           )}
 
@@ -325,7 +276,7 @@ export default function LoginUser({ renderApp }) {
                   <input className={idError ? 'input input-error' : 'input'} type="text" value={identifier}
                     onChange={(e) => { setIdentifier(e.target.value); setApiError(''); }}
                     onBlur={() => setIdTouched(true)}
-                    placeholder={lang === 'vi' ? 'VD: 20216001 hoặc gv1001' : 'e.g. 20216001 or gv1001'} />
+                    placeholder={ACCOUNT_ID_PLACEHOLDER[lang]} />
                 </div>
                 {idError && <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12.5, color: 'var(--danger)', fontWeight: 500 }}><I.alert size={13} />{idError}</span>}
               </div>

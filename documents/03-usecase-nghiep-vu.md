@@ -17,7 +17,7 @@ Cả 3 vai trò đã đăng nhập đều dùng chung: đăng xuất, đổi m�
 
 | Mã | Tên Use Case | Tác nhân | Nhóm |
 |---|---|---|---|
-| UC#01 | Đăng nhập (theo vai trò) | Khách | Xác thực |
+| UC#01 | Đăng nhập | Khách | Xác thực |
 | UC#02 | Quên mật khẩu (OTP qua email) | Khách | Xác thực |
 | UC#03 | Đổi mật khẩu | Mọi vai trò | Xác thực |
 | UC#04 | Đăng xuất | Mọi vai trò | Xác thực |
@@ -98,27 +98,26 @@ flowchart LR
 
 ## 4. Đặc tả chi tiết Use Case
 
-### UC#01: Đăng nhập (theo vai trò)
+### UC#01: Đăng nhập
 
 | | |
 |---|---|
 | **Độ phức tạp** | Cao |
-| **Mô tả** | Người dùng chọn tab vai trò (Admin / Giảng viên / Sinh viên) và đăng nhập bằng mã định danh + mật khẩu. |
+| **Mô tả** | Người dùng đăng nhập bằng mã định danh + mật khẩu; hệ thống tự xác định vai trò (Admin / Giảng viên / Sinh viên) từ tài khoản. |
 | **Tác nhân** | Khách |
 | **Tiền điều kiện** | Tài khoản đã được Admin tạo trước đó (hệ thống không có chức năng tự đăng ký). |
 | **Hậu điều kiện — Thành công** | 3 cookie được thiết lập (`token`, `refreshToken`, `logged`); người dùng vào giao diện theo vai trò. |
 | **Hậu điều kiện — Lỗi** | Không đăng nhập được; không có cookie nào được thiết lập. |
 
 **Luồng sự kiện chính**
-1. Người dùng chọn **tab vai trò** trên màn hình đăng nhập (Admin / Giảng viên / Sinh viên).
-2. Nhập **mã định danh** và **mật khẩu**. Client kiểm tra định dạng mã theo vai trò đang chọn (`ROLE_ID_PATTERNS`): Admin phải là `admin`, Giảng viên dạng `GV` + số (VD `GV1001`), Sinh viên là dãy số (VD `20216001`) — sai định dạng → Luồng A (chặn ngay, không gọi API).
-3. `POST /api/users/login`: server tìm `User` có email khớp `identifier + '@...'`, so khớp mật khẩu bằng bcrypt.
-4. Nếu hợp lệ: xóa toàn bộ `ApiKey` cũ → sinh cặp khóa RSA-2048 mới → ký access token (15 phút) + refresh token (7 ngày) → set 3 cookie → trả về `user`.
-5. Nếu tài khoản bị khóa (`status` không active) → Luồng B. Sai thông tin → Luồng C.
-6. Client lưu `user` vào `AuthContext`, điều hướng vào giao diện theo `role`.
+1. Người dùng nhập **mã định danh** (VD `admin`, `GV1001` hoặc `20216001`) và **mật khẩu** trên màn hình đăng nhập. Client kiểm tra hai trường không được để trống — bỏ trống → Luồng A (chặn ngay, không gọi API).
+2. `POST /api/users/login`: server tìm `User` có email khớp `identifier + '@...'`, so khớp mật khẩu bằng bcrypt.
+3. Nếu hợp lệ: xóa toàn bộ `ApiKey` cũ → sinh cặp khóa RSA-2048 mới → ký access token (15 phút) + refresh token (7 ngày) → set 3 cookie → trả về `user` (kèm `role` đọc từ CSDL).
+4. Nếu tài khoản bị khóa (`status` không active) → Luồng B. Sai thông tin → Luồng C.
+5. Client lưu `user` vào `AuthContext`, tự điều hướng vào giao diện theo `role`.
 
 **Luồng sự kiện phát sinh**
-- **Luồng A** — Mã không khớp định dạng vai trò: hiển thị lỗi inline (VD "Mã Giảng viên phải có dạng GV kèm số"), nút đăng nhập không gửi request.
+- **Luồng A** — Bỏ trống mã định danh hoặc mật khẩu: hiển thị lỗi inline (VD "Vui lòng nhập mã tài khoản"), nút đăng nhập không gửi request.
 - **Luồng B** — Tài khoản bị khóa: server trả `403 ACCOUNT_LOCKED`; client hiển thị modal "Tài khoản đã bị khóa".
 - **Luồng C** — Sai định danh/mật khẩu: hiển thị "Tài khoản hoặc mật khẩu không chính xác".
 

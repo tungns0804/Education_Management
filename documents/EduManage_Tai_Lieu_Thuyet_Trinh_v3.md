@@ -270,7 +270,7 @@ Vì vậy, email cá nhân là thông tin bắt buộc khi tạo tài khoản �
 
 ### 3.1.4. Yêu cầu chức năng — dùng chung cho mọi vai trò
 
-- Đăng nhập theo vai trò (ba tab Admin / Giảng viên / Sinh viên, kiểm tra định dạng mã tài khoản theo vai trò ngay tại giao diện), đăng xuất.
+- Đăng nhập bằng mã tài khoản + mật khẩu (hệ thống tự xác định vai trò Admin / Giảng viên / Sinh viên từ tài khoản, không cần chọn vai trò), đăng xuất.
 
 - Quên mật khẩu bằng mã OTP gửi về email cá nhân; đổi mật khẩu khi đã đăng nhập.
 
@@ -311,7 +311,7 @@ Danh mục 21 ca sử dụng của hệ thống:
 
 | Mã | Tên Use Case | Tác nhân | Nhóm |
 | --- | --- | --- | --- |
-| UC#01 | Đăng nhập (theo vai trò) | Khách | Xác thực |
+| UC#01 | Đăng nhập | Khách | Xác thực |
 | UC#02 | Quên mật khẩu (OTP qua email) | Khách | Xác thực |
 | UC#03 | Đổi mật khẩu | Mọi vai trò | Xác thực |
 | UC#04 | Đăng xuất | Mọi vai trò | Xác thực |
@@ -359,11 +359,11 @@ Danh mục 21 ca sử dụng của hệ thống:
 
 ## 3.4. Đặc tả chi tiết các Use Case
 
-### UC#01: Đăng nhập (theo vai trò)
+### UC#01: Đăng nhập
 
-| UC#01 | Đăng nhập (theo vai trò) | Độ phức tạp: Cao |
+| UC#01 | Đăng nhập | Độ phức tạp: Cao |
 | --- | --- | --- |
-| Mô tả | Người dùng chọn tab vai trò (Admin / Giảng viên / Sinh viên) và đăng nhập bằng mã định danh + mật khẩu. | |
+| Mô tả | Người dùng đăng nhập bằng mã định danh + mật khẩu; hệ thống tự xác định vai trò (Admin / Giảng viên / Sinh viên) từ tài khoản. | |
 | Tác nhân | Khách | |
 | Tiền điều kiện | Tài khoản đã được Admin tạo trước đó. | |
 | Hậu điều kiện — Thành công | Ba cookie được thiết lập; người dùng vào giao diện đúng theo vai trò. | |
@@ -373,17 +373,17 @@ Danh mục 21 ca sử dụng của hệ thống:
 
 **Luồng nghiệp vụ tiêu chuẩn**
 
-1. Người dùng chọn tab vai trò trên màn hình đăng nhập, nhập mã định danh và mật khẩu. Giao diện kiểm tra định dạng mã theo vai trò đang chọn: Admin phải là `admin`, Giảng viên dạng `GV` kèm số (ví dụ GV1001), Sinh viên là dãy số (ví dụ 20216001) — sai định dạng thì thực hiện Luồng A.
+1. Người dùng nhập mã định danh (ví dụ `admin`, `GV1001` hoặc `20216001`) và mật khẩu trên màn hình đăng nhập. Giao diện kiểm tra hai trường không được để trống — bỏ trống thì thực hiện Luồng A.
 
 2. Hệ thống tìm tài khoản theo mã định danh và so khớp mật khẩu (bcrypt). Tài khoản bị khóa → Luồng B; sai thông tin → Luồng C.
 
-3. Hợp lệ: hệ thống xóa cặp khóa RSA cũ, sinh cặp khóa RSA-2048 mới, ký access token (15 phút) + refresh token (7 ngày), thiết lập 3 cookie và trả thông tin người dùng.
+3. Hợp lệ: hệ thống xóa cặp khóa RSA cũ, sinh cặp khóa RSA-2048 mới, ký access token (15 phút) + refresh token (7 ngày), thiết lập 3 cookie và trả thông tin người dùng (kèm vai trò đọc từ CSDL).
 
-4. Giao diện lưu người dùng vào phiên làm việc và mở phân hệ tương ứng với vai trò.
+4. Giao diện lưu người dùng vào phiên làm việc và tự mở phân hệ tương ứng với vai trò của tài khoản.
 
 **Luồng sự kiện phát sinh / Kịch bản phát sinh**
 
-- Luồng A — Mã không khớp định dạng vai trò: hiển thị lỗi ngay tại ô nhập, không gửi yêu cầu lên server.
+- Luồng A — Bỏ trống mã định danh hoặc mật khẩu: hiển thị lỗi ngay tại giao diện, không gửi yêu cầu lên server.
 
 - Luồng B — Tài khoản bị khóa: hiển thị hộp thoại "Tài khoản đã bị khóa".
 
@@ -1044,7 +1044,7 @@ Mỗi ca sử dụng ở mục 3.4 có một sơ đồ tuần tự tương ứng
 
 ### 3.6.1. Nhóm Xác thực và Tài khoản cá nhân
 
-![Hình 3.8. Sơ đồ tuần tự UC#01 — Đăng nhập theo vai trò](assets/uml_seq_uc01.png)
+![Hình 3.8. Sơ đồ tuần tự UC#01 — Đăng nhập](assets/uml_seq_uc01.png)
 
 ![Hình 3.9. Sơ đồ tuần tự UC#02 — Quên mật khẩu bằng OTP qua email](assets/uml_seq_uc02.png)
 
@@ -1100,7 +1100,7 @@ Mỗi ca sử dụng ở mục 3.4 có một sơ đồ tuần tự tương ứng
 
 ### 4.1.1. Màn hình đăng nhập
 
-Màn hình đăng nhập có ba tab vai trò (Admin / Giảng viên / Sinh viên). Người dùng nhập mã tài khoản đúng định dạng của vai trò đang chọn và mật khẩu; nhập sai định dạng sẽ bị nhắc ngay tại chỗ, không gửi yêu cầu lên server. Cùng màn hình này tích hợp trọn luồng quên mật khẩu: nhập mã tài khoản → nhận OTP qua email cá nhân → xác minh OTP → đặt mật khẩu mới với danh sách điều kiện hiển thị trực quan (đủ 8 ký tự, có chữ hoa, chữ số, ký tự đặc biệt).
+Màn hình đăng nhập tối giản chỉ gồm hai trường: mã tài khoản và mật khẩu — người dùng không cần chọn vai trò, hệ thống tự xác định vai trò (Admin / Giảng viên / Sinh viên) từ tài khoản và mở đúng phân hệ tương ứng; bỏ trống trường nào sẽ bị nhắc ngay tại chỗ, không gửi yêu cầu lên server. Cùng màn hình này tích hợp trọn luồng quên mật khẩu: nhập mã tài khoản → nhận OTP qua email cá nhân → xác minh OTP → đặt mật khẩu mới với danh sách điều kiện hiển thị trực quan (đủ 8 ký tự, có chữ hoa, chữ số, ký tự đặc biệt).
 
 ### 4.1.2. Trang hồ sơ cá nhân
 

@@ -178,6 +178,18 @@ function ToastHost({ children }) {
   );
 }
 
+// ---------------- Button spinner ----------------
+// Vòng xoay nhỏ đặt trong nút bấm khi đang gọi API thêm/sửa/xóa — dùng kèm disabled
+function BtnSpinner({ size = 15 }) {
+  return (
+    <span aria-hidden style={{
+      width: size, height: size, flexShrink: 0, display: 'inline-block', borderRadius: '50%',
+      border: '2px solid color-mix(in srgb, currentColor 30%, transparent)',
+      borderTopColor: 'currentColor', animation: 'spin 0.7s linear infinite',
+    }}/>
+  );
+}
+
 // ---------------- Empty state ----------------
 function EmptyRow({ colSpan, label }) {
   return <tr><td colSpan={colSpan} style={{ padding: '48px 0', textAlign: 'center', color: 'var(--muted)', fontSize: 14 }}>{label}</td></tr>;
@@ -257,4 +269,4 @@ function FormField({ label, error, hint, optional, children, optionalLabel }) {
 // input/select className helper for error state
 function fieldCls(error) { return error ? 'input input-error' : 'input'; }
 
-export { Avatar, StatusBadge, Segmented, StatCard, Pagination, Drawer, Modal, ToastHost, useToast, EmptyRow, useForm, validate, FormField, fieldCls };
+export { Avatar, StatusBadge, Segmented, StatCard, Pagination, Drawer, Modal, ToastHost, useToast, BtnSpinner, EmptyRow, useForm, validate, FormField, fieldCls };

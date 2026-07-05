@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { I } from '../../components/icons';
-import { Avatar, Drawer, FormField, StatusBadge, fieldCls, useForm, useToast, validate } from '../../components/ui';
+import { Avatar, BtnSpinner, Drawer, FormField, StatusBadge, fieldCls, useForm, useToast, validate } from '../../components/ui';
 import { useApp } from '../../context/AppContext';
 import { requestNextStudentId } from '../../config/userRequest';
 
@@ -13,6 +13,7 @@ export default function StudentDrawer({ state, classes = [], onClose, onSave }) 
   const isEdit = state?.mode === 'edit';
 
   const [previewId, setPreviewId] = useState('...');
+  const [saving,    setSaving]    = useState(false);
 
   const validators = useMemo(() => ({
     name:          validate.fullName(t),
@@ -29,6 +30,7 @@ export default function StudentDrawer({ state, classes = [], onClose, onSave }) 
 
   useEffect(() => {
     if (!state) return;
+    setSaving(false);
     const def = classes[0]?.code || '';
     if (!row) {
       setPreviewId('...');
@@ -43,7 +45,10 @@ export default function StudentDrawer({ state, classes = [], onClose, onSave }) 
   }, [state, classes]);
 
   const handleSave = () => {
-    const ok = submit((data) => onSave(data));
+    const ok = submit(async (data) => {
+      setSaving(true);
+      try { await onSave(data); } finally { setSaving(false); }
+    });
     if (!ok) toast(t('errFixForm'), 'danger');
   };
 
@@ -52,8 +57,12 @@ export default function StudentDrawer({ state, classes = [], onClose, onSave }) 
       title={isEdit ? (lang === 'vi' ? 'Sửa hồ sơ sinh viên' : 'Edit student') : (lang === 'vi' ? 'Thêm sinh viên mới' : 'Add new student')}
       subtitle={isEdit ? row?.code : (lang === 'vi' ? 'Mã sinh viên & email trường tự động sinh' : 'Student code & school email auto-generated')}
       footer={<>
-        <button className="btn btn-ghost" onClick={onClose}>{t('cancel')}</button>
-        <button className="btn btn-primary" onClick={handleSave}>{isEdit ? t('save') : (lang === 'vi' ? 'Tạo & cấp tài khoản' : 'Create & provision')}</button>
+        <button className="btn btn-ghost" onClick={onClose} disabled={saving}>{t('cancel')}</button>
+        <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
+          {saving
+            ? <><BtnSpinner/>{isEdit ? (lang === 'vi' ? 'Đang lưu…' : 'Saving…') : (lang === 'vi' ? 'Đang tạo tài khoản…' : 'Provisioning…')}</>
+            : (isEdit ? t('save') : (lang === 'vi' ? 'Tạo & cấp tài khoản' : 'Create & provision'))}
+        </button>
       </>}>
       {isEdit && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 13, padding: 14, background: 'var(--surface-3)', borderRadius: 12, marginBottom: 20 }}>

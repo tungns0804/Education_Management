@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { I } from './icons';
-import { Drawer, useToast } from './ui';
+import { BtnSpinner, Drawer, useToast } from './ui';
 import { useApp } from '../context/AppContext';
 import { parseCSV, SAMPLE_CSV } from '../utils/csv';
 import { readFileAsText, generateStudentExcelTemplate } from '../utils/excel';
@@ -12,9 +12,10 @@ function BulkImportDrawer({ open, onClose, onProvision, classes = [] }) {
   const [text, setText] = useState('');
   const [parsed, setParsed] = useState(null);
   const [dragOver, setDragOver] = useState(false);
+  const [importing, setImporting] = useState(false);
   const fileRef = useRef(null);
 
-  useEffect(() => { if (open) { setText(''); setParsed(null); } }, [open]);
+  useEffect(() => { if (open) { setText(''); setParsed(null); setImporting(false); } }, [open]);
   useEffect(() => { setParsed(text.trim() ? parseCSV(text, classes) : null); }, [text, classes]);
 
   const readFile = async (file) => {
@@ -37,8 +38,10 @@ function BulkImportDrawer({ open, onClose, onProvision, classes = [] }) {
   // Chỉ cho phép import khi TẤT CẢ dòng đều hợp lệ
   const canProvision = parsed && parsed.rows.length > 0 && errorRows.length === 0;
 
-  const provision = () => {
-    onProvision(validRows);
+  // Giữ drawer mở với spinner trong lúc gọi API cấp tài khoản hàng loạt
+  const provision = async () => {
+    setImporting(true);
+    try { await onProvision(validRows); } finally { setImporting(false); }
     onClose();
   };
 
@@ -46,9 +49,11 @@ function BulkImportDrawer({ open, onClose, onProvision, classes = [] }) {
     <Drawer open={open} onClose={onClose} width={620}
       title={t('importStudents')} subtitle={t('bulkProvision')}
       footer={<>
-        <button className="btn btn-ghost" onClick={onClose}>{t('cancel')}</button>
-        <button className="btn btn-primary" disabled={!canProvision} onClick={provision}>
-          <I.shield size={16}/>{t('provisionNow')} ({validRows.length})
+        <button className="btn btn-ghost" onClick={onClose} disabled={importing}>{t('cancel')}</button>
+        <button className="btn btn-primary" disabled={!canProvision || importing} onClick={provision}>
+          {importing
+            ? <><BtnSpinner/>{lang === 'vi' ? 'Đang cấp tài khoản…' : 'Provisioning…'}</>
+            : <><I.shield size={16}/>{t('provisionNow')} ({validRows.length})</>}
         </button>
       </>}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>

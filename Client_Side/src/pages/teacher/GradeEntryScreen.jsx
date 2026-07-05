@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { I } from '../../components/icons';
-import { Avatar, useToast } from '../../components/ui';
+import { Avatar, BtnSpinner, useToast } from '../../components/ui';
 import { Page, SectionHead } from '../../components/shell';
 import { Spinner, Empty, SimplePagination } from '../../components/feedback';
 import { useApp } from '../../context/AppContext';
@@ -157,7 +157,7 @@ export default function GradeEntryScreen({ sectionId }) {
         desc={lang==='vi'?'Điểm tổng = 10% chuyên cần + 30% giữa kỳ + 60% cuối kỳ':'Total = 10% attendance + 30% midterm + 60% final'}
         right={
           <button className="btn btn-primary btn-sm" style={{ height: 40 }} onClick={saveAll} disabled={saving}>
-            {saving ? '…' : <><I.check size={16}/>{lang==='vi'?'Lưu điểm':'Save grades'}</>}
+            {saving ? <><BtnSpinner size={14}/>{lang==='vi'?'Đang lưu…':'Saving…'}</> : <><I.check size={16}/>{lang==='vi'?'Lưu điểm':'Save grades'}</>}
           </button>
         }/>
 
@@ -260,7 +260,7 @@ export default function GradeEntryScreen({ sectionId }) {
                             disabled={lockLoading[e.id]}
                             onClick={() => toggleLock(e.id, locked)}
                             style={{ color: locked ? 'var(--danger)' : 'var(--muted)' }}>
-                            {locked ? <I.lock size={15}/> : <I.unlock size={15}/>}
+                            {lockLoading[e.id] ? <BtnSpinner size={14}/> : locked ? <I.lock size={15}/> : <I.unlock size={15}/>}
                           </button>
                         </td>
                       </tr>

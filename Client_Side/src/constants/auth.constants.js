@@ -17,27 +17,13 @@ export const DB_ROLE_MAP = {
 // Fallback role when mapping is unknown
 export const DEFAULT_ROLE = ROLE_ADMIN;
 
-// ---- Account ID pattern per role ---------------------------------
-// Used to make sure the account ID entered actually matches the role
-// option currently selected on the login screen (admin / teacher / student),
-// so switching the role tab after typing an ID for another role is rejected
-// instead of silently logging in.
-export const ROLE_ID_PATTERNS = {
-  [ROLE_ADMIN]: {
-    test:     (v) => v.trim().toLowerCase() === 'admin',
-    label_vi: 'Mã tài khoản Quản trị phải là "admin"',
-    label_en: 'Admin account ID must be "admin"',
-  },
-  [ROLE_TEACHER]: {
-    test:     (v) => /^gv\d+$/i.test(v.trim()),
-    label_vi: 'Mã Giảng viên phải có dạng GV kèm số (VD: GV1001)',
-    label_en: 'Teacher ID must be "GV" followed by digits (e.g. GV1001)',
-  },
-  [ROLE_STUDENT]: {
-    test:     (v) => /^(sv)?\d{4,}$/i.test(v.trim()),
-    label_vi: 'Mã Sinh viên phải là dãy số (VD: 20216001)',
-    label_en: 'Student ID must be numeric (e.g. 20216001)',
-  },
+// ---- Account ID input placeholder --------------------------------
+// Shown in the account ID field on the login / forgot-password screens.
+// One shared placeholder for every role — the server resolves the role
+// from the account ID, no role selection needed on the client.
+export const ACCOUNT_ID_PLACEHOLDER = {
+  vi: 'Nhập mã tài khoản',
+  en: 'Enter your account ID',
 };
 
 // ---- Avatar hue (HSL) — gives each role a distinct color --------
