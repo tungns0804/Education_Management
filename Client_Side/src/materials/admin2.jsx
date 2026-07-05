@@ -14,6 +14,7 @@ import {
   requestSubjectClasses, requestCreateSubjectClass, requestUpdateSubjectClass, requestDeleteSubjectClass,
   requestSemesters, requestCreateSemester, requestUpdateSemester, requestToggleSemesterActive, requestDeleteSemester,
 } from '../config/userRequest';
+import { WEEKDAYS, formatSchedule } from '../constants/schedule.constants';
 
 /* EduManage — Admin: Teachers, Catalog (Faculty/Major/Class/Subject), Sections */
 
@@ -1077,28 +1078,40 @@ function SectionDrawer({ open, row, subjects, teachers, onClose, onSave }) {
     teacherId:   validate.required(t),
     semester:    validate.required(t),
     maxStudents: (v) => v && (isNaN(+v) || +v < 1 || +v > 500) ? (lang === 'vi' ? 'Sĩ số 1–500' : 'Max 1–500') : null,
+    scheduleDays: (v) => (!v || v.length === 0) ? (lang === 'vi' ? 'Chọn ít nhất 1 ngày học' : 'Pick at least 1 day') : null,
+    startTime:   (v, f) => !v ? (lang === 'vi' ? 'Chọn giờ bắt đầu' : 'Start time required')
+      : (f.endTime && v >= f.endTime) ? (lang === 'vi' ? 'Giờ bắt đầu phải trước giờ kết thúc' : 'Start must be before end') : null,
+    endTime:     (v, f) => !v ? (lang === 'vi' ? 'Chọn giờ kết thúc' : 'End time required')
+      : (f.startTime && f.startTime >= v) ? (lang === 'vi' ? 'Giờ kết thúc phải sau giờ bắt đầu' : 'End must be after start') : null,
   }), [t, lang]);
 
-  const { form, set, touch, showError, submit, reset, setForm } = useForm(
-    { code: '', subjectId: '', teacherId: '', semester: '', maxStudents: '50', status: 'active' },
-    validators,
-  );
+  const EMPTY_FORM = { code: '', subjectId: '', teacherId: '', semester: '', maxStudents: '50', status: 'active', scheduleDays: [], startTime: '', endTime: '' };
+
+  const { form, set, touch, showError, submit, reset, setForm } = useForm(EMPTY_FORM, validators);
 
   useEffect(() => {
     if (!open) return;
     if (row) {
       setForm({
-        code:        row.code || '',
-        subjectId:   row.subjectId || row.subject?.id || '',
-        teacherId:   row.teacherId || row.teacher?.id || '',
-        semester:    row.semester || '',
-        maxStudents: String(row.maxStudents ?? 50),
-        status:      row.status || 'active',
+        code:         row.code || '',
+        subjectId:    row.subjectId || row.subject?.id || '',
+        teacherId:    row.teacherId || row.teacher?.id || '',
+        semester:     row.semester || '',
+        maxStudents:  String(row.maxStudents ?? 50),
+        status:       row.status || 'active',
+        scheduleDays: row.scheduleDays || [],
+        startTime:    row.startTime || '',
+        endTime:      row.endTime || '',
       });
     } else {
-      reset({ code: '', subjectId: '', teacherId: '', semester: '', maxStudents: '50', status: 'active' });
+      reset(EMPTY_FORM);
     }
   }, [open, row]);
+
+  const toggleDay = (d) => {
+    const cur = form.scheduleDays || [];
+    set('scheduleDays', cur.includes(d) ? cur.filter(x => x !== d) : [...cur, d].sort((a, b) => a - b));
+  };
 
   const statusLabel = { active: lang === 'vi' ? 'Đang mở' : 'Active', completed: lang === 'vi' ? 'Đã kết thúc' : 'Completed', canceled: lang === 'vi' ? 'Đã hủy' : 'Canceled' };
 
@@ -1137,6 +1150,32 @@ function SectionDrawer({ open, row, subjects, teachers, onClose, onSave }) {
           </FormField>
           <FormField label={lang === 'vi' ? 'Sĩ số tối đa' : 'Max students'} error={showError('maxStudents')} optional optionalLabel={t('optional') || 'tùy chọn'}>
             <input className={fieldCls(showError('maxStudents'))} value={form.maxStudents} onChange={e => set('maxStudents', e.target.value.replace(/\D/g, ''))} onBlur={() => touch('maxStudents')} placeholder="50" inputMode="numeric"/>
+          </FormField>
+        </div>
+
+        <FormField label={lang === 'vi' ? 'Ngày học trong tuần' : 'Days of week'} error={showError('scheduleDays')}>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }} onBlur={() => touch('scheduleDays')}>
+            {WEEKDAYS.map(d => {
+              const on = (form.scheduleDays || []).includes(d.value);
+              return (
+                <button key={d.value} type="button" onClick={() => { toggleDay(d.value); touch('scheduleDays'); }}
+                  className={on ? 'btn btn-primary btn-sm' : 'btn btn-ghost btn-sm'}
+                  style={{ minWidth: 46, padding: '0 10px', boxShadow: on ? 'none' : 'inset 0 0 0 1px var(--border)' }}>
+                  {lang === 'vi' ? d.short_vi : d.short_en}
+                </button>
+              );
+            })}
+          </div>
+        </FormField>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+          <FormField label={lang === 'vi' ? 'Giờ bắt đầu' : 'Start time'} error={showError('startTime')}>
+            <input type="time" className={fieldCls(showError('startTime'))} value={form.startTime}
+              onChange={e => set('startTime', e.target.value)} onBlur={() => touch('startTime')}/>
+          </FormField>
+          <FormField label={lang === 'vi' ? 'Giờ kết thúc' : 'End time'} error={showError('endTime')}>
+            <input type="time" className={fieldCls(showError('endTime'))} value={form.endTime}
+              onChange={e => set('endTime', e.target.value)} onBlur={() => touch('endTime')}/>
           </FormField>
         </div>
 
@@ -1273,6 +1312,9 @@ function SectionsScreen() {
               <div style={{ fontSize: 12.5, color: 'var(--muted)' }}>
                 {lang === 'vi' ? 'HK:' : 'Semester:'} {s.semester}
               </div>
+              <div style={{ fontSize: 12.5, color: 'var(--text-2)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <I.clock size={13}/>{formatSchedule(s, lang)}
+              </div>
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, marginBottom: 6 }}>
                   <span style={{ color: 'var(--muted)' }}>{lang === 'vi' ? 'Sĩ số' : 'Enrolled'}</span>
@@ -1314,19 +1356,25 @@ function SectionsScreen() {
           try {
             if (drawer.mode === 'edit') {
               await requestUpdateSubjectClass(drawer.row.id, {
-                semester:    data.semester,
-                maxStudents: data.maxStudents ? +data.maxStudents : undefined,
-                status:      data.status,
-                teacherId:   data.teacherId,
+                semester:     data.semester,
+                maxStudents:  data.maxStudents ? +data.maxStudents : undefined,
+                status:       data.status,
+                teacherId:    data.teacherId,
+                scheduleDays: data.scheduleDays,
+                startTime:    data.startTime,
+                endTime:      data.endTime,
               });
               toast(lang === 'vi' ? 'Đã cập nhật lớp HP' : 'Section updated');
             } else {
               await requestCreateSubjectClass({
-                code:        data.code,
-                semester:    data.semester,
-                maxStudents: data.maxStudents ? +data.maxStudents : 50,
-                subjectId:   data.subjectId,
-                teacherId:   data.teacherId,
+                code:         data.code,
+                semester:     data.semester,
+                maxStudents:  data.maxStudents ? +data.maxStudents : 50,
+                subjectId:    data.subjectId,
+                teacherId:    data.teacherId,
+                scheduleDays: data.scheduleDays,
+                startTime:    data.startTime,
+                endTime:      data.endTime,
               });
               toast(lang === 'vi' ? 'Đã tạo lớp học phần' : 'Section created');
             }

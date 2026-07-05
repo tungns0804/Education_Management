@@ -227,6 +227,11 @@ model SubjectClass {
   maxStudents Int                @default(50)
   status      SubjectClassStatus @default(active)
 
+  // Lịch học trong tuần: dạy vào những thứ nào, từ giờ nào đến giờ nào
+  scheduleDays Int[]   @default([]) // 1 = Thứ 2 … 6 = Thứ 7, 7 = Chủ nhật
+  startTime    String? // "HH:mm", ví dụ "07:00"
+  endTime      String? // "HH:mm", ví dụ "09:30"
+
   subjectId   String
   subject     Subject      @relation(fields: [subjectId], references: [id])
   teacherId   String

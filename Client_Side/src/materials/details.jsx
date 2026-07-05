@@ -5,6 +5,7 @@ import { LineChart, Ring } from './charts';
 import { Page, SectionHead } from './shell';
 import { StudentDrawer } from './admin';
 import { requestUser, requestMySections, requestMyEnrollments, requestUpdateUser, requestToggleUserStatus } from '../config/userRequest';
+import { formatSchedule } from '../constants/schedule.constants';
 
 /* EduManage — Detail screens: Student Profile, Weekly Timetable, Schedule */
 
@@ -230,6 +231,9 @@ function ScheduleScreen({ role }) {
                       <span>· {s.semester}</span>
                       {subj?.credits && <span>· {subj.credits} TC</span>}
                     </div>
+                    <div style={{ marginTop: 6, fontSize: 12.5, color: 'var(--text-2)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <I.clock size={12}/>{formatSchedule(s, lang)}
+                    </div>
                     {role === 'TEACHER' && enrolled !== null && (
                       <div style={{ marginTop: 6, fontSize: 12, color: 'var(--muted)' }}>
                         <I.users size={12} style={{ verticalAlign: 'middle', marginRight: 4 }}/>{enrolled} {lang==='vi'?'sinh viên':'students'}
@@ -264,7 +268,7 @@ function ScheduleScreen({ role }) {
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr style={{ background: 'var(--surface-2)' }}>
-                      {[lang==='vi'?'Môn học':'Subject', lang==='vi'?'Mã HP':'Code', lang==='vi'?'Tín chỉ':'Credits',
+                      {[lang==='vi'?'Môn học':'Subject', lang==='vi'?'Mã HP':'Code', lang==='vi'?'Lịch học':'Schedule', lang==='vi'?'Tín chỉ':'Credits',
                         ...(role === 'TEACHER' ? [lang==='vi'?'SV đăng ký':'Students', lang==='vi'?'Trạng thái':'Status'] : [])
                       ].map((h, i) => (
                         <th key={i} style={{ textAlign: i === 0 ? 'left' : 'center', padding: '11px 16px', fontSize: 11.5, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--muted)', borderBottom: '1px solid var(--border)' }}>{h}</th>
@@ -289,6 +293,7 @@ function ScheduleScreen({ role }) {
                             </div>
                           </td>
                           <td style={{ padding: '12px 16px', textAlign: 'center', fontFamily: 'var(--mono)', fontSize: 13 }}>{s.code}</td>
+                          <td style={{ padding: '12px 16px', textAlign: 'center', fontSize: 12.5 }}>{formatSchedule(s, lang)}</td>
                           <td style={{ padding: '12px 16px', textAlign: 'center', fontFamily: 'var(--mono)' }}>{subj?.credits}</td>
                           {role === 'TEACHER' && <>
                             <td style={{ padding: '12px 16px', textAlign: 'center' }}>{s._count?.enrollments ?? 0}</td>

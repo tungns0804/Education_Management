@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { EnrollmentStatus, LetterGrade, SubjectClassStatus } from '@prisma/client';
+import { schedulesOverlap, formatSchedule, hasSchedule } from '../common/utils/schedule.util';
 
 function calcLetter(total: number): LetterGrade {
   if (total >= 8.5) return LetterGrade.A;
@@ -133,6 +134,33 @@ export class EnrollmentsService {
       where: { studentId_subjectClassId: { studentId, subjectClassId } },
     });
     if (existing) throw new ConflictException('Bạn đã đăng ký lớp học phần này');
+
+    // Nghiệp vụ: không cho đăng ký lớp trùng lịch (cùng học kỳ, trùng ngày
+    // trong tuần và giao nhau về khung giờ) với lớp đã đăng ký trước đó
+    if (hasSchedule(sc)) {
+      const myEnrollments = await this.prisma.enrollment.findMany({
+        where: {
+          studentId,
+          status: EnrollmentStatus.registered,
+          subjectClass: { semester: sc.semester, status: { not: SubjectClassStatus.canceled } },
+        },
+        include: {
+          subjectClass: {
+            select: {
+              code: true, scheduleDays: true, startTime: true, endTime: true,
+              subject: { select: { name: true } },
+            },
+          },
+        },
+      });
+      const conflict = myEnrollments.find(e => schedulesOverlap(sc, e.subjectClass));
+      if (conflict) {
+        throw new ConflictException(
+          `Trùng lịch học: bạn đã đăng ký lớp ${conflict.subjectClass.code} (${conflict.subjectClass.subject.name}) ` +
+          `vào ${formatSchedule(conflict.subjectClass)}. Vui lòng chọn lớp học phần khác.`,
+        );
+      }
+    }
 
     return this.prisma.enrollment.create({
       data: { studentId, subjectClassId, status: EnrollmentStatus.registered },

@@ -13,6 +13,7 @@ import {
   requestUpdateGrade,
   requestToggleGradeLock,
 } from '../config/userRequest';
+import { formatSchedule } from '../constants/schedule.constants';
 
 /* EduManage — Teacher screens: Dashboard, My Sections, Attendance, Grade Entry */
 
@@ -151,6 +152,9 @@ function TeacherDashboard() {
                       <div style={{ flex: 1 }}>
                         <div style={{ fontWeight: 700, fontSize: 14 }}>{s.subjectName}</div>
                         <div style={{ fontSize: 12.5, color: 'var(--muted)', marginTop: 3, fontFamily: 'var(--mono)' }}>{s.code} · {s.semester}</div>
+                        <div style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 3, display: 'flex', alignItems: 'center', gap: 5 }}>
+                          <I.clock size={12}/>{formatSchedule(s, lang)}
+                        </div>
                       </div>
                       <span className="badge badge-info" style={{ alignSelf: 'center' }}>{s.enrolled} SV</span>
                     </div>
@@ -235,6 +239,9 @@ function MySectionsScreen({ onOpenAttendance, onOpenGrades }) {
                   <div>
                     <div style={{ fontWeight: 700, fontSize: 16, letterSpacing: '-0.01em' }}>{s.subject?.name}</div>
                     <div style={{ fontSize: 12.5, color: 'var(--muted)', marginTop: 4 }}>{s.semester}</div>
+                    <div style={{ fontSize: 12.5, color: 'var(--text-2)', marginTop: 5, display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600 }}>
+                      <I.clock size={13}/>{formatSchedule(s, lang)}
+                    </div>
                   </div>
 
                   <div style={{ display: 'flex', gap: 20, fontSize: 13 }}>

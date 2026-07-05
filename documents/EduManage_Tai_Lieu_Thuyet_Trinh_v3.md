@@ -41,7 +41,7 @@ Ngày phát hành: 05/07/2026
 
 ## Giới thiệu chung
 
-EduManage là hệ thống quản lý đào tạo đại học dạng website, được xây dựng nhằm số hóa các nghiệp vụ cốt lõi của một trường đại học: quản lý tài khoản sinh viên và giảng viên, quản lý danh mục đào tạo (Khoa, Ngành, Lớp, Môn học, Lớp học phần, Học kỳ), đăng ký học phần, điểm danh, nhập điểm, tính điểm trung bình tích lũy (GPA) và thống kê tổng quan theo từng vai trò.
+EduManage là hệ thống quản lý đào tạo đại học dạng website, được xây dựng nhằm số hóa các nghiệp vụ cốt lõi của một trường đại học: quản lý tài khoản sinh viên và giảng viên, quản lý danh mục đào tạo (Khoa, Ngành, Lớp, Môn học, Lớp học phần, Học kỳ), lịch học trong tuần của lớp học phần, đăng ký học phần có kiểm soát trùng lịch, điểm danh, nhập điểm, tính điểm trung bình tích lũy (GPA) và thống kê tổng quan theo từng vai trò.
 
 Hệ thống EduManage phục vụ ba nhóm người dùng chính:
 
@@ -67,7 +67,7 @@ Tài liệu này trình bày tổng quan kiến trúc, các công nghệ sử d�
 
 ## Phạm vi của hệ thống
 
-Hệ thống EduManage bao phủ các nghiệp vụ: quản lý tài khoản (tạo đơn lẻ, nhập hàng loạt từ CSV/Excel, khóa/mở khóa, xóa), quản lý danh mục đào tạo theo phân cấp Khoa → Ngành → Lớp / Môn học, quản lý lớp học phần và học kỳ, đăng ký / hủy đăng ký học phần, điểm danh theo buổi, nhập điểm và khóa điểm, bảng điểm và GPA, thống kê tổng quan theo vai trò, xuất danh sách ra CSV/Excel.
+Hệ thống EduManage bao phủ các nghiệp vụ: quản lý tài khoản (tạo đơn lẻ, nhập hàng loạt từ CSV/Excel, khóa/mở khóa, xóa), quản lý danh mục đào tạo theo phân cấp Khoa → Ngành → Lớp / Môn học, quản lý lớp học phần và học kỳ kèm lịch học trong tuần (ngày học, khung giờ, kiểm tra trùng lịch dạy của giảng viên), đăng ký / hủy đăng ký học phần có chặn trùng lịch học, điểm danh theo buổi, nhập điểm và khóa điểm, bảng điểm và GPA, thống kê tổng quan theo vai trò, xuất danh sách ra CSV/Excel.
 
 Hệ thống không có chức năng tự đăng ký tài khoản: mọi tài khoản đều do Quản trị viên tạo, nhằm đảm bảo dữ liệu người học khớp với hồ sơ tuyển sinh thực tế của nhà trường.
 
@@ -128,8 +128,8 @@ Các module nghiệp vụ của server:
 | Ngành (branches) | Quản lý danh mục Ngành (thuộc Khoa) |
 | Lớp (classes) | Quản lý Lớp hành chính (thuộc Ngành) |
 | Môn học (subjects) | Quản lý Môn học (thuộc Ngành) |
-| Lớp học phần (subject-classes) | Mở lớp học phần theo Môn học + Giảng viên + Học kỳ; danh sách lớp theo vai trò |
-| Đăng ký học phần (enrollments) | Đăng ký / hủy đăng ký, nhập điểm, khóa điểm, bảng điểm, GPA |
+| Lớp học phần (subject-classes) | Mở lớp học phần theo Môn học + Giảng viên + Học kỳ kèm lịch học trong tuần (ngày học, giờ bắt đầu – kết thúc); kiểm tra trùng lịch dạy của giảng viên; danh sách lớp theo vai trò |
+| Đăng ký học phần (enrollments) | Đăng ký / hủy đăng ký (chặn đăng ký lớp trùng lịch học), nhập điểm, khóa điểm, bảng điểm, GPA |
 | Điểm danh (attendance) | Điểm danh từng buổi học (đơn lẻ và cả lớp) |
 | Thống kê (dashboard) | Số liệu tổng quan riêng cho từng vai trò |
 | Học kỳ (semesters) | Quản lý danh sách học kỳ, đánh dấu học kỳ đang hoạt động |
@@ -234,7 +234,7 @@ Vì vậy, email cá nhân là thông tin bắt buộc khi tạo tài khoản �
 
 - **Quản lý danh mục đào tạo**: thêm, sửa, xóa Khoa; Ngành (thuộc Khoa); Lớp hành chính và Môn học (thuộc Ngành).
 
-- **Quản lý lớp học phần**: mở lớp học phần gắn với Môn học, Giảng viên phụ trách, tên học kỳ, sĩ số tối đa và trạng thái.
+- **Quản lý lớp học phần**: mở lớp học phần gắn với Môn học, Giảng viên phụ trách, tên học kỳ, sĩ số tối đa, trạng thái và **lịch học trong tuần** (chọn các ngày học Thứ 2 → Chủ nhật, giờ bắt đầu và giờ kết thúc). Khi phân công, hệ thống kiểm tra giảng viên có trống lịch trong khung giờ đó không: nếu trùng với một lớp khác cùng học kỳ, hệ thống từ chối và báo rõ lớp bị trùng để Admin chọn giảng viên khác hoặc đổi lịch.
 
 - **Quản lý học kỳ**: tạo danh sách học kỳ và đánh dấu học kỳ đang hoạt động — căn cứ để hệ thống lọc dữ liệu "hiện hành" ở các màn hình đăng ký, thống kê.
 
@@ -252,15 +252,17 @@ Vì vậy, email cá nhân là thông tin bắt buộc khi tạo tài khoản �
 
 - **Nhập điểm**: nhập điểm chuyên cần, giữa kỳ, cuối kỳ cho từng sinh viên; hệ thống tự tính điểm tổng kết và xếp loại chữ; khóa điểm sau khi hoàn tất để chống chỉnh sửa.
 
-- **Xem lịch dạy** và **thống kê riêng**: số lớp phụ trách, tổng sinh viên, tỷ lệ điểm danh, số bài chưa chấm, xu hướng điểm danh các buổi gần nhất.
+- **Xem lịch dạy**: mỗi lớp phụ trách hiển thị rõ dạy vào những thứ nào trong tuần và khung giờ nào (ví dụ "Thứ 2, Thứ 4 · 07:00–09:30") — trên Dashboard, màn hình "Lớp của tôi" và màn hình "Lịch dạy".
+
+- **Thống kê riêng**: số lớp phụ trách, tổng sinh viên, tỷ lệ điểm danh, số bài chưa chấm, xu hướng điểm danh các buổi gần nhất.
 
 ### 3.1.3. Yêu cầu chức năng — phân hệ Sinh viên
 
-- **Đăng ký học phần**: xem các lớp học phần đang mở trong học kỳ hoạt động và đăng ký; hệ thống kiểm tra sĩ số và chặn đăng ký trùng.
+- **Đăng ký học phần**: xem các lớp học phần đang mở trong học kỳ hoạt động (kèm lịch học từng lớp) và đăng ký; hệ thống kiểm tra sĩ số, chặn đăng ký trùng và **chặn đăng ký lớp trùng lịch học** với môn đã đăng ký trước đó (trùng ngày trong tuần và giao nhau về khung giờ) — giao diện cảnh báo sớm bằng nhãn "Trùng lịch", server từ chối và báo rõ lớp bị trùng.
 
 - **Hủy đăng ký**: hủy các môn đã đăng ký khi điểm chưa bị khóa.
 
-- **Xem lịch học**: danh sách môn đã đăng ký, nhóm theo học kỳ.
+- **Xem lịch học**: danh sách môn đã đăng ký, nhóm theo học kỳ, mỗi môn hiển thị rõ học vào những thứ nào trong tuần và từ giờ nào đến giờ nào.
 
 - **Xem bảng điểm và GPA**: bảng điểm toàn khóa với điểm thành phần, điểm tổng kết, xếp loại chữ; GPA tích lũy và biểu đồ xu hướng GPA theo học kỳ.
 
@@ -621,9 +623,9 @@ Danh mục 21 ca sử dụng của hệ thống:
 
 | UC#12 | Quản lý Lớp học phần và Học kỳ | Độ phức tạp: Cao |
 | --- | --- | --- |
-| Mô tả | Admin mở lớp học phần (gắn Môn học + Giảng viên + tên học kỳ) và quản lý danh sách Học kỳ, đánh dấu học kỳ đang hoạt động. | |
+| Mô tả | Admin mở lớp học phần (gắn Môn học + Giảng viên + tên học kỳ + lịch học trong tuần) và quản lý danh sách Học kỳ, đánh dấu học kỳ đang hoạt động. | |
 | Tác nhân | Admin | |
-| Hậu điều kiện — Thành công | Lớp học phần sẵn sàng cho sinh viên đăng ký khi ở trạng thái hoạt động và thuộc học kỳ đang hoạt động. | |
+| Hậu điều kiện — Thành công | Lớp học phần có lịch học rõ ràng (ngày trong tuần + khung giờ), giảng viên phụ trách không bị trùng lịch dạy, sẵn sàng cho sinh viên đăng ký khi ở trạng thái hoạt động và thuộc học kỳ đang hoạt động. | |
 
 **ĐẶC TẢ CHỨC NĂNG**
 
@@ -631,13 +633,23 @@ Danh mục 21 ca sử dụng của hệ thống:
 
 1. Màn hình "Học kỳ": Admin tạo học kỳ mới, bật / tắt trạng thái hoạt động, sửa hoặc xóa.
 
-2. Màn hình "Lớp học phần": Admin tạo lớp mới — chọn Môn học, Giảng viên phụ trách, nhập tên học kỳ, sĩ số tối đa và trạng thái.
+2. Màn hình "Lớp học phần": Admin tạo lớp mới — chọn Môn học, Giảng viên phụ trách, nhập tên học kỳ, sĩ số tối đa, trạng thái và **lịch học trong tuần**: chọn một hoặc nhiều ngày học (Thứ 2 → Chủ nhật, ví dụ dạy Thứ 3 – Thứ 5 – Thứ 6, tức 2–3 buổi mỗi tuần), giờ bắt đầu và giờ kết thúc.
 
-3. Các chức năng khác (đăng ký học phần, thống kê) tự lọc theo các lớp học phần có tên học kỳ khớp với học kỳ đang hoạt động.
+3. Hệ thống kiểm tra lịch học hợp lệ: đã chọn ít nhất một ngày, giờ đúng định dạng, giờ bắt đầu phải trước giờ kết thúc (sai → Luồng B).
+
+4. Hệ thống kiểm tra giảng viên được phân công **trống lịch dạy**: so sánh với mọi lớp học phần khác (chưa hủy) của cùng giảng viên trong cùng học kỳ; nếu trùng ít nhất một ngày trong tuần và khung giờ giao nhau → Luồng C.
+
+5. Hợp lệ: lưu lớp học phần kèm lịch học. Chức năng **cập nhật** lớp học phần cũng cho sửa lịch học / đổi giảng viên và kiểm tra lại đúng hai bước 3–4 (loại trừ chính lớp đang sửa).
+
+6. Các chức năng khác (đăng ký học phần, thống kê) tự lọc theo các lớp học phần có tên học kỳ khớp với học kỳ đang hoạt động.
 
 **Luồng sự kiện phát sinh / Kịch bản phát sinh**
 
 - Luồng A — Tên học kỳ trên lớp học phần gõ sai / khác chính tả so với danh sách Học kỳ: lớp đó không xuất hiện trong bộ lọc "học kỳ hiện hành" (hai bảng liên kết bằng so khớp tên — xem mục 3.5.4).
+
+- Luồng B — Lịch học không hợp lệ (chưa chọn ngày, giờ sai định dạng, giờ bắt đầu không trước giờ kết thúc): từ chối lưu (400) và báo lỗi cụ thể ngay trên biểu mẫu.
+
+- Luồng C — Giảng viên bị trùng lịch dạy: từ chối lưu (409) kèm thông báo nêu rõ mã lớp, tên môn và lịch của lớp bị trùng (ví dụ "Giáo viên đã có lịch dạy lớp LTCB-HK1-2425 (Lập trình Cơ bản) vào Thứ 2, Thứ 4 · 07:00–09:30…") để Admin chọn giảng viên khác hoặc đổi lịch.
 
 ### UC#13: Xuất danh sách (CSV / Excel)
 
@@ -740,11 +752,11 @@ Danh mục 21 ca sử dụng của hệ thống:
 
 **Luồng nghiệp vụ tiêu chuẩn**
 
-1. Sinh viên vào "Đăng ký học phần": hệ thống chỉ hiển thị các lớp đang mở thuộc học kỳ hoạt động.
+1. Sinh viên vào "Đăng ký học phần": hệ thống chỉ hiển thị các lớp đang mở thuộc học kỳ hoạt động, mỗi lớp kèm lịch học (ngày trong tuần + khung giờ). Lớp nào trùng lịch với môn đã đăng ký được gắn sẵn nhãn cảnh báo "Trùng lịch" ngay trên danh sách.
 
 2. Sinh viên bấm "Đăng ký" một lớp.
 
-3. Hệ thống kiểm tra lần lượt: lớp tồn tại và đang mở (không → Luồng A); số người đã đăng ký còn dưới sĩ số tối đa (đầy → Luồng B); sinh viên chưa đăng ký lớp này trước đó (trùng → Luồng C — được chặn thêm bằng ràng buộc duy nhất ở CSDL).
+3. Hệ thống kiểm tra lần lượt: lớp tồn tại và đang mở (không → Luồng A); số người đã đăng ký còn dưới sĩ số tối đa (đầy → Luồng B); sinh viên chưa đăng ký lớp này trước đó (trùng → Luồng C — được chặn thêm bằng ràng buộc duy nhất ở CSDL); lớp **không trùng lịch học** với bất kỳ môn nào sinh viên đã đăng ký trong cùng học kỳ — trùng ít nhất một ngày trong tuần và khung giờ giao nhau bị coi là xung đột (trùng → Luồng D).
 
 4. Hợp lệ: tạo bản ghi đăng ký và thông báo "Đăng ký thành công".
 
@@ -755,6 +767,8 @@ Danh mục 21 ca sử dụng của hệ thống:
 - Luồng B — Lớp đầy: báo "Lớp học phần đã đầy".
 
 - Luồng C — Đã đăng ký: báo lỗi trùng.
+
+- Luồng D — Trùng lịch học: từ chối đăng ký (409) kèm thông báo nêu rõ lớp bị trùng và lịch của lớp đó (ví dụ "Trùng lịch học: bạn đã đăng ký lớp TA1-HK1-2425 (Tiếng Anh 1) vào Thứ 6 · 07:00–09:30…"), đảm bảo sinh viên không thể có hai môn học cùng ngày, cùng giờ.
 
 ### UC#18: Hủy đăng ký học phần
 
@@ -782,7 +796,7 @@ Danh mục 21 ca sử dụng của hệ thống:
 
 | UC#19 | Xem môn đã đăng ký và lịch học / lịch dạy | Độ phức tạp: Thấp |
 | --- | --- | --- |
-| Mô tả | Xem danh sách môn học nhóm theo học kỳ: sinh viên xem môn đã đăng ký (lịch học); giảng viên xem lớp được phân công (lịch dạy). | |
+| Mô tả | Xem danh sách môn học nhóm theo học kỳ kèm lịch học trong tuần: sinh viên xem môn đã đăng ký học vào những ngày nào, giờ nào (lịch học); giảng viên xem lớp được phân công dạy vào những ngày nào, giờ nào (lịch dạy). | |
 | Tác nhân | Sinh viên, Giảng viên | |
 
 **ĐẶC TẢ CHỨC NĂNG**
@@ -793,7 +807,9 @@ Danh mục 21 ca sử dụng của hệ thống:
 
 2. Sinh viên nhận danh sách các môn đang đăng ký trong học kỳ hiện hành; giảng viên nhận danh sách lớp được phân công.
 
-3. Dữ liệu được nhóm theo học kỳ; chưa có dữ liệu thì hiển thị trạng thái trống thân thiện.
+3. Mỗi môn / lớp hiển thị rõ lịch học trong tuần dạng "Thứ 2, Thứ 4 · 07:00–09:30" trên cả thẻ tóm tắt và cột "Lịch học" trong bảng chi tiết; giảng viên còn thấy lịch dạy ngay trên Dashboard và màn hình "Lớp của tôi", sinh viên thấy lịch học trên Dashboard và các thẻ môn học.
+
+4. Dữ liệu được nhóm theo học kỳ; chưa có dữ liệu thì hiển thị trạng thái trống thân thiện.
 
 ### UC#20: Xem bảng điểm và GPA
 
@@ -910,8 +926,11 @@ Cơ sở dữ liệu PostgreSQL của hệ thống EduManage gồm 12 bảng. Da
 | 3 | semester | String | Tên học kỳ (chuỗi) — xem mục 3.5.4 |
 | 4 | maxStudents | Int, mặc định 50 | Sĩ số tối đa |
 | 5 | status | Enum, mặc định active | Trạng thái: đang mở / đã kết thúc / đã hủy |
-| 6 | subjectId | UUID (FK → subjects) | Môn học được mở lớp |
-| 7 | teacherId | UUID (FK → users) | Giảng viên phụ trách |
+| 6 | scheduleDays | Mảng Int, mặc định rỗng | Các ngày học trong tuần: 1 = Thứ 2 … 6 = Thứ 7, 7 = Chủ nhật |
+| 7 | startTime | String, tùy chọn | Giờ bắt đầu buổi học, định dạng "HH:mm" (ví dụ "07:00") |
+| 8 | endTime | String, tùy chọn | Giờ kết thúc buổi học, định dạng "HH:mm" (ví dụ "09:30") |
+| 9 | subjectId | UUID (FK → subjects) | Môn học được mở lớp |
+| 10 | teacherId | UUID (FK → users) | Giảng viên phụ trách |
 
 *Bảng enrollments (Đăng ký học phần và Điểm)*
 
@@ -1005,6 +1024,20 @@ Trường `semester` trên bảng lớp học phần là chuỗi tên học kỳ
 
 Do liên kết bằng so khớp tên, việc đổi tên một Học kỳ sẽ không tự cập nhật các lớp học phần đã lưu tên cũ — đây là điểm cần lưu ý khi vận hành (xem phần Hạn chế).
 
+### 3.5.5. Lịch học trong tuần và quy tắc chống trùng lịch
+
+Mỗi lớp học phần mang lịch học lặp hằng tuần, lưu ngay trên bảng `subject_classes` bằng ba trường: `scheduleDays` (mảng các ngày trong tuần, 1 = Thứ 2 … 7 = Chủ nhật), `startTime` và `endTime` (chuỗi "HH:mm"). Ví dụ lớp dạy Thứ 3 – Thứ 5, 07:00–09:30 được lưu là `scheduleDays = [2, 4]`, `startTime = "07:00"`, `endTime = "09:30"`.
+
+Hai lớp học phần bị coi là **trùng lịch** khi thỏa đồng thời ba điều kiện:
+
+1. Cùng tên học kỳ (lịch chỉ so sánh trong phạm vi một học kỳ);
+
+2. Có ít nhất một ngày học trong tuần trùng nhau;
+
+3. Hai khoảng giờ giao nhau (giờ bắt đầu của lớp này nhỏ hơn giờ kết thúc của lớp kia và ngược lại).
+
+Quy tắc này được cài đặt một lần trong tiện ích dùng chung phía server (`src/common/utils/schedule.util.ts`) và áp dụng cho hai nghiệp vụ: (1) khi Admin tạo / cập nhật lớp học phần — giảng viên được phân công phải trống lịch, lớp đã hủy không tính; (2) khi sinh viên đăng ký học phần — lớp mới không được trùng lịch với các môn đã đăng ký. Vi phạm sẽ bị từ chối với mã lỗi 409 kèm thông báo nêu rõ lớp bị trùng và lịch của lớp đó. Phía client có bộ tiện ích tương ứng (`src/constants/schedule.constants.js`) để hiển thị lịch dạng "Thứ 2, Thứ 4 · 07:00–09:30" và cảnh báo sớm "Trùng lịch" ngay trên danh sách đăng ký.
+
 ## 3.6. Sơ đồ tuần tự các nghiệp vụ
 
 Mỗi ca sử dụng ở mục 3.4 có một sơ đồ tuần tự tương ứng, vẽ theo chuẩn UML với bốn thành phần: Người dùng (tác nhân) → Front-End → Back-End → Database. Mũi tên nét liền là yêu cầu gửi đi, mũi tên nét đứt là phản hồi trả về; khung Alt thể hiện hai nhánh kết quả [Thành công] / [Thất bại].
@@ -1085,29 +1118,29 @@ Toàn hệ thống hỗ trợ hai ngôn ngữ (Tiếng Việt / Tiếng Anh) và
 
 - **Quản lý danh mục**: các màn hình Khoa, Ngành, Lớp hành chính, Môn học theo phân cấp Khoa → Ngành → Lớp / Môn học; chọn phần tử cha ngay trong biểu mẫu.
 
-- **Quản lý Lớp học phần**: mở lớp gắn Môn học + Giảng viên + Học kỳ, đặt sĩ số tối đa và trạng thái.
+- **Quản lý Lớp học phần**: mở lớp gắn Môn học + Giảng viên + Học kỳ, đặt sĩ số tối đa và trạng thái; chọn lịch học trong tuần bằng các nút ngày (T2 → CN) và hai ô giờ bắt đầu / kết thúc — áp dụng cho cả tạo mới và cập nhật; lịch của từng lớp hiển thị ngay trên thẻ danh sách; nếu giảng viên được phân công bị trùng lịch dạy, hệ thống báo lỗi nêu rõ lớp bị trùng.
 
 - **Quản lý Học kỳ**: tạo học kỳ và bật / tắt trạng thái hoạt động — công tắc điều khiển phạm vi dữ liệu "hiện hành" của toàn hệ thống.
 
 ## 4.3. Phân hệ Giảng viên
 
-- **Dashboard**: số lớp phụ trách trong học kỳ hiện hành, tổng sinh viên, tỷ lệ điểm danh, số bài chưa chấm, biểu đồ xu hướng điểm danh 8 buổi gần nhất.
+- **Dashboard**: số lớp phụ trách trong học kỳ hiện hành, tổng sinh viên, tỷ lệ điểm danh, số bài chưa chấm, biểu đồ xu hướng điểm danh 8 buổi gần nhất; danh sách lớp phụ trách kèm lịch dạy từng lớp.
 
-- **Lớp của tôi**: danh sách lớp học phần được phân công kèm sĩ số; xem danh sách sinh viên từng lớp.
+- **Lớp của tôi**: danh sách lớp học phần được phân công kèm sĩ số và lịch dạy trong tuần (ngày học + khung giờ, ví dụ "Thứ 2, Thứ 4 · 07:00–09:30"); xem danh sách sinh viên từng lớp.
 
 - **Điểm danh**: chọn lớp và ngày, đánh dấu trạng thái từng sinh viên (có mặt / vắng / muộn / có phép) kèm ghi chú; lưu cả lớp một lần; điểm danh lại trong ngày sẽ cập nhật bản ghi cũ.
 
 - **Nhập điểm**: bảng điểm cả lớp với ba cột điểm thành phần; điểm tổng kết và xếp loại chữ tự tính ngay khi nhập; nút khóa điểm sau khi hoàn tất.
 
-- **Lịch dạy**: các lớp phụ trách nhóm theo học kỳ.
+- **Lịch dạy**: các lớp phụ trách nhóm theo học kỳ, mỗi lớp hiển thị rõ dạy vào những thứ nào và từ giờ nào đến giờ nào, trên cả thẻ tóm tắt và cột "Lịch học" trong bảng.
 
 ## 4.4. Phân hệ Sinh viên
 
-- **Dashboard**: tín chỉ đang học, GPA hiện tại, tỷ lệ điểm danh cá nhân, biểu đồ xu hướng GPA theo học kỳ.
+- **Dashboard**: tín chỉ đang học, GPA hiện tại, tỷ lệ điểm danh cá nhân, biểu đồ xu hướng GPA theo học kỳ; các môn học kỳ này kèm lịch học từng môn.
 
-- **Đăng ký học phần**: danh sách lớp đang mở của học kỳ hoạt động kèm số chỗ còn lại; đăng ký một chạm; báo lỗi rõ ràng khi lớp đầy hoặc đã đăng ký.
+- **Đăng ký học phần**: danh sách lớp đang mở của học kỳ hoạt động kèm số chỗ còn lại và lịch học từng lớp; lớp trùng lịch với môn đã đăng ký được gắn nhãn cảnh báo "Trùng lịch" ngay trên danh sách; đăng ký một chạm; báo lỗi rõ ràng khi lớp đầy, đã đăng ký hoặc trùng lịch học; giỏ đăng ký bên phải hiển thị lịch học các môn đã chọn.
 
-- **Môn của tôi / Lịch học**: các môn đã đăng ký nhóm theo học kỳ; hủy đăng ký khi điểm chưa khóa.
+- **Môn của tôi / Lịch học**: các môn đã đăng ký nhóm theo học kỳ, mỗi môn hiển thị rõ học vào những thứ nào và từ giờ nào đến giờ nào; hủy đăng ký khi điểm chưa khóa.
 
 - **Bảng điểm**: bảng điểm toàn khóa với điểm thành phần, điểm tổng kết, xếp loại chữ; GPA tích lũy, tổng tín chỉ; biểu đồ xu hướng GPA.
 
@@ -1130,6 +1163,8 @@ Toàn bộ tham số nhạy cảm (chuỗi kết nối CSDL, tài khoản SMTP, 
 
 - Các nghiệp vụ chính (đăng nhập, quên mật khẩu, tạo tài khoản, nhập hàng loạt, đăng ký học phần, điểm danh, nhập điểm, khóa điểm) đã được kiểm thử thủ công theo kịch bản trên cả ba vai trò, bao gồm các nhánh lỗi (sai mật khẩu, tài khoản bị khóa, lớp đầy, điểm đã khóa, dữ liệu nhập hàng loạt có dòng lỗi…).
 
+- Nghiệp vụ lịch học được kiểm thử tự động đầu-cuối qua API với đầy đủ các nhánh: tạo lớp thiếu ngày học / giờ sai thứ tự (bị chặn 400); phân công giảng viên trùng lịch khi tạo mới và khi cập nhật (bị chặn 409, thông báo nêu rõ lớp trùng); cùng khung giờ nhưng khác học kỳ (cho phép); sinh viên đăng ký lớp trùng lịch (bị chặn 409) và lớp không trùng lịch (thành công); các chức năng cũ (hủy đăng ký, xem lịch, bảng điểm) không bị ảnh hưởng.
+
 - Ràng buộc dữ liệu được kiểm chứng ở tầng CSDL: đăng ký trùng và điểm danh trùng đều bị chặn bởi ràng buộc duy nhất ngay cả khi thao tác đồng thời.
 
 # KẾT LUẬN VÀ HƯỚNG PHÁT TRIỂN
@@ -1142,7 +1177,7 @@ Toàn bộ tham số nhạy cảm (chuỗi kết nối CSDL, tài khoản SMTP, 
 
 - Tự động hóa trọn vòng đời tài khoản: tự sinh mã, tự tạo email trường và mật khẩu tạm, gửi thông tin qua email cá nhân, quên mật khẩu bằng OTP có thời hạn.
 
-- Số hóa trọn chuỗi nghiệp vụ học vụ: mở lớp theo học kỳ → đăng ký có kiểm soát sĩ số → điểm danh chống trùng → nhập điểm tự tính xếp loại → khóa điểm → bảng điểm và GPA.
+- Số hóa trọn chuỗi nghiệp vụ học vụ: mở lớp theo học kỳ kèm lịch học trong tuần (ngày học + khung giờ) → phân công giảng viên có kiểm tra trống lịch → đăng ký có kiểm soát sĩ số và chống trùng lịch học → điểm danh chống trùng → nhập điểm tự tính xếp loại → khóa điểm → bảng điểm và GPA.
 
 - Giao diện hiện đại, thống nhất, hai ngôn ngữ, hai chế độ sáng / tối, có biểu đồ thống kê trực quan cho từng vai trò.
 
@@ -1168,4 +1203,4 @@ Toàn bộ tham số nhạy cảm (chuỗi kết nối CSDL, tài khoản SMTP, 
 
 - Bổ sung màn hình chi tiết điểm danh cho sinh viên, thông báo trong ứng dụng, và báo cáo thống kê nâng cao (xuất bảng điểm có chữ ký số, cảnh báo học vụ tự động).
 
-- Mở rộng thời khóa biểu theo tiết học / phòng học và tích hợp lịch (iCal) cho sinh viên, giảng viên.
+- Mở rộng lịch học trong tuần hiện có (ngày học + khung giờ) theo tiết học chuẩn / phòng học, hiển thị dạng thời khóa biểu lưới tuần và tích hợp lịch (iCal) cho sinh viên, giảng viên.

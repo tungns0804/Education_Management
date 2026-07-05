@@ -13,6 +13,7 @@ import {
   requestRegister,
   requestDropEnrollment,
 } from '../config/userRequest';
+import { formatSchedule, hasSchedule, schedulesConflict } from '../constants/schedule.constants';
 
 /* EduManage — Student screens: Dashboard, Registration, Transcript */
 
@@ -163,6 +164,9 @@ function StudentDashboard({ onNav }) {
                       </div>
                       <div style={{ fontWeight: 700, fontSize: 14, letterSpacing: '-0.01em' }}>{sub?.name}</div>
                       {tc && <div style={{ fontSize: 12.5, color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: 6 }}><I.user size={13}/>{tc.fullName}</div>}
+                      <div style={{ fontSize: 12.5, color: 'var(--text-2)', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600 }}>
+                        <I.clock size={13}/>{formatSchedule(e.subjectClass, lang)}
+                      </div>
                       <div style={{ fontSize: 12, color: 'var(--muted)', fontFamily: 'var(--mono)' }}>{e.subjectClass?.code}</div>
                     </div>
                   );
@@ -335,6 +339,8 @@ function RegistrationScreen() {
                   const busy   = !!actionBusy[s.id];
                   const count  = s._count?.enrollments ?? 0;
                   const full   = count >= (s.maxStudents ?? 50);
+                  // Cảnh báo sớm: lớp này trùng lịch với một lớp đã đăng ký
+                  const clash  = !isReg && regSections.find(r => schedulesConflict(s, r));
                   return (
                     <div key={s.id} className="card" style={{ padding: 16, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap',
                       boxShadow: isReg ? 'inset 0 0 0 1.5px var(--accent), var(--shadow-sm)' : 'var(--shadow-sm)' }}>
@@ -349,11 +355,22 @@ function RegistrationScreen() {
                           {s.teacher?.fullName && <span>· {s.teacher.fullName}</span>}
                           {s.semester && <span>· {s.semester}</span>}
                         </div>
+                        <div style={{ fontSize: 12.5, color: 'var(--text-2)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600 }}>
+                          <I.clock size={13}/>{formatSchedule(s, lang)}
+                        </div>
                       </div>
                       <span className="badge badge-muted">{s.subject?.credits} {t('credits')}</span>
                       <span className="badge" style={{ background: full ? 'var(--danger-soft)' : 'var(--success-soft)', color: full ? 'var(--danger)' : 'var(--success)' }}>
                         {count}/{s.maxStudents ?? 50}
                       </span>
+                      {clash && (
+                        <span className="badge" style={{ background: 'var(--warn-soft)', color: 'var(--warn)' }}
+                          title={lang==='vi'
+                            ? `Trùng lịch với ${clash.code} (${formatSchedule(clash, lang)})`
+                            : `Conflicts with ${clash.code} (${formatSchedule(clash, lang)})`}>
+                          {lang==='vi'?'Trùng lịch':'Time clash'}
+                        </span>
+                      )}
                       <button
                         className={isReg ? 'btn btn-outline btn-sm' : 'btn btn-primary btn-sm'}
                         style={{ minWidth: 110 }}
@@ -404,6 +421,9 @@ function RegistrationScreen() {
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontWeight: 600, fontSize: 13.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.subject?.name}</div>
                       <div style={{ fontSize: 12, color: 'var(--muted)', fontFamily: 'var(--mono)' }}>{s.code} · {s.subject?.credits} TC</div>
+                      {hasSchedule(s) && (
+                        <div style={{ fontSize: 11.5, color: 'var(--text-2)', marginTop: 2 }}>{formatSchedule(s, lang)}</div>
+                      )}
                     </div>
                     <button className="btn btn-icon btn-sm btn-ghost" style={{ color: 'var(--danger)' }}
                       disabled={!!actionBusy[s.id]}

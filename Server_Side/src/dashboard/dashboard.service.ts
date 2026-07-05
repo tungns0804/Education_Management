@@ -152,6 +152,7 @@ export class DashboardService {
       sections: sections.map(s => ({
         id: s.id, code: s.code, semester: s.semester,
         subjectName: s.subject.name, enrolled: s._count.enrollments, status: s.status,
+        scheduleDays: s.scheduleDays, startTime: s.startTime, endTime: s.endTime,
       })),
       attendanceTrend: trend,
     };

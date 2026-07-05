@@ -71,14 +71,16 @@ const SEMESTERS_RAW = [
 ];
 
 // SubjectClasses (lớp học phần): cần subjectCode & teacherEmail → resolve lúc runtime
+// scheduleDays: 1 = Thứ 2 … 6 = Thứ 7, 7 = Chủ nhật (lịch không trùng nhau
+// cho cùng giáo viên/sinh viên trong cùng học kỳ)
 const SUBJECT_CLASSES_RAW = [
-  { code: 'LTCB-HK1-2425',   semester: 'HK1 2024-2025', maxStudents: 45, status: 'active'    as const, subjectCode: 'LTCB',   teacherEmail: 'gv1001@school.edu.vn' },
-  { code: 'CTDLGT-HK1-2425', semester: 'HK1 2024-2025', maxStudents: 40, status: 'active'    as const, subjectCode: 'CTDLGT', teacherEmail: 'gv1001@school.edu.vn' },
-  { code: 'CSDL-HK2-2425',   semester: 'HK2 2024-2025', maxStudents: 40, status: 'active'    as const, subjectCode: 'CSDL',   teacherEmail: 'gv1001@school.edu.vn' },
-  { code: 'LTWEB-HK2-2425',  semester: 'HK2 2024-2025', maxStudents: 40, status: 'active'    as const, subjectCode: 'LTWEB',  teacherEmail: 'gv1001@school.edu.vn' },
-  { code: 'TA1-HK1-2425',    semester: 'HK1 2024-2025', maxStudents: 30, status: 'active'    as const, subjectCode: 'TA1',    teacherEmail: 'gv1004@school.edu.vn' },
-  { code: 'NLKT-HK1-2425',   semester: 'HK1 2024-2025', maxStudents: 35, status: 'active'    as const, subjectCode: 'NLKT',   teacherEmail: 'gv1002@school.edu.vn' },
-  { code: 'TOARR-HK1-2324',  semester: 'HK1 2023-2024', maxStudents: 40, status: 'completed' as const, subjectCode: 'TOARR',  teacherEmail: 'gv1001@school.edu.vn' },
+  { code: 'LTCB-HK1-2425',   semester: 'HK1 2024-2025', maxStudents: 45, status: 'active'    as const, subjectCode: 'LTCB',   teacherEmail: 'gv1001@school.edu.vn', scheduleDays: [1, 3], startTime: '07:00', endTime: '09:30' },
+  { code: 'CTDLGT-HK1-2425', semester: 'HK1 2024-2025', maxStudents: 40, status: 'active'    as const, subjectCode: 'CTDLGT', teacherEmail: 'gv1001@school.edu.vn', scheduleDays: [2, 4], startTime: '07:00', endTime: '09:30' },
+  { code: 'CSDL-HK2-2425',   semester: 'HK2 2024-2025', maxStudents: 40, status: 'active'    as const, subjectCode: 'CSDL',   teacherEmail: 'gv1001@school.edu.vn', scheduleDays: [1, 3], startTime: '09:45', endTime: '11:45' },
+  { code: 'LTWEB-HK2-2425',  semester: 'HK2 2024-2025', maxStudents: 40, status: 'active'    as const, subjectCode: 'LTWEB',  teacherEmail: 'gv1001@school.edu.vn', scheduleDays: [2, 4], startTime: '13:00', endTime: '15:30' },
+  { code: 'TA1-HK1-2425',    semester: 'HK1 2024-2025', maxStudents: 30, status: 'active'    as const, subjectCode: 'TA1',    teacherEmail: 'gv1004@school.edu.vn', scheduleDays: [5],    startTime: '07:00', endTime: '09:30' },
+  { code: 'NLKT-HK1-2425',   semester: 'HK1 2024-2025', maxStudents: 35, status: 'active'    as const, subjectCode: 'NLKT',   teacherEmail: 'gv1002@school.edu.vn', scheduleDays: [3, 5], startTime: '13:00', endTime: '15:30' },
+  { code: 'TOARR-HK1-2324',  semester: 'HK1 2023-2024', maxStudents: 40, status: 'completed' as const, subjectCode: 'TOARR',  teacherEmail: 'gv1001@school.edu.vn', scheduleDays: [1, 4], startTime: '07:00', endTime: '09:30' },
 ];
 
 // Enrollments: [studentEmail, subjectClassCode]
@@ -226,10 +228,11 @@ async function main() {
   for (const sc of SUBJECT_CLASSES_RAW) {
     const subjectId = subjectMap.get(sc.subjectCode)!;
     const teacherId = userMap.get(sc.teacherEmail)!;
+    const schedule = { scheduleDays: sc.scheduleDays, startTime: sc.startTime, endTime: sc.endTime };
     const record = await prisma.subjectClass.upsert({
       where:  { code: sc.code },
-      update: { semester: sc.semester, maxStudents: sc.maxStudents, status: sc.status, subjectId, teacherId },
-      create: { code: sc.code, semester: sc.semester, maxStudents: sc.maxStudents, status: sc.status, subjectId, teacherId },
+      update: { semester: sc.semester, maxStudents: sc.maxStudents, status: sc.status, subjectId, teacherId, ...schedule },
+      create: { code: sc.code, semester: sc.semester, maxStudents: sc.maxStudents, status: sc.status, subjectId, teacherId, ...schedule },
     });
     scMap.set(sc.code, record.id);
     ok(`${sc.code} (${sc.semester})`);

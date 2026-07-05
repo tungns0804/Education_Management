@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, ConflictException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { SubjectClassStatus } from '@prisma/client';
+import { validateSchedule, schedulesOverlap, formatSchedule, hasSchedule } from '../common/utils/schedule.util';
 
 @Injectable()
 export class SubjectClassesService {
@@ -66,15 +67,55 @@ export class SubjectClassesService {
     });
   }
 
+  /**
+   * Nghiệp vụ: một giáo viên không thể dạy 2 lớp học phần trùng lịch
+   * (cùng học kỳ, trùng ngày trong tuần và giao nhau về khung giờ).
+   * Ném ConflictException kèm thông tin lớp bị trùng để admin biết.
+   */
+  private async assertTeacherAvailable(
+    teacherId: string,
+    semester: string,
+    schedule: { scheduleDays: number[]; startTime: string; endTime: string },
+    excludeId?: string,
+  ) {
+    if (!hasSchedule(schedule)) return;
+    const others = await this.prisma.subjectClass.findMany({
+      where: {
+        teacherId,
+        semester,
+        status: { not: SubjectClassStatus.canceled },
+        ...(excludeId ? { id: { not: excludeId } } : {}),
+      },
+      select: {
+        code: true, scheduleDays: true, startTime: true, endTime: true,
+        subject: { select: { name: true } },
+      },
+    });
+    const conflict = others.find(o => schedulesOverlap(schedule, o));
+    if (conflict) {
+      throw new ConflictException(
+        `Giáo viên đã có lịch dạy lớp ${conflict.code} (${conflict.subject.name}) vào ${formatSchedule(conflict)} trong học kỳ ${semester}. ` +
+        `Vui lòng chọn giáo viên khác hoặc thay đổi lịch học.`,
+      );
+    }
+  }
+
   async create(data: {
     code: string;
     semester: string;
     maxStudents?: number;
     subjectId: string;
     teacherId: string;
+    scheduleDays: number[];
+    startTime: string;
+    endTime: string;
   }) {
     const existing = await this.prisma.subjectClass.findUnique({ where: { code: data.code } });
     if (existing) throw new ConflictException(`Mã lớp học phần ${data.code} đã tồn tại`);
+
+    validateSchedule(data);
+    await this.assertTeacherAvailable(data.teacherId, data.semester, data);
+
     return this.prisma.subjectClass.create({
       data: { ...data, maxStudents: data.maxStudents ?? 50 },
       include: this.sectionInclude,
@@ -83,9 +124,36 @@ export class SubjectClassesService {
 
   async update(
     id: string,
-    data: { code?: string; semester?: string; maxStudents?: number; status?: SubjectClassStatus; teacherId?: string },
+    data: {
+      code?: string; semester?: string; maxStudents?: number; status?: SubjectClassStatus; teacherId?: string;
+      scheduleDays?: number[]; startTime?: string; endTime?: string;
+    },
   ) {
-    await this.findOne(id);
+    const current = await this.findOne(id);
+
+    // Lịch/giáo viên/học kỳ sau khi update = giá trị mới nếu có, ngược lại giữ giá trị cũ
+    const effective = {
+      teacherId:    data.teacherId    ?? current.teacherId,
+      semester:     data.semester     ?? current.semester,
+      status:       data.status       ?? current.status,
+      scheduleDays: data.scheduleDays ?? current.scheduleDays,
+      startTime:    data.startTime    ?? current.startTime,
+      endTime:      data.endTime      ?? current.endTime,
+    };
+
+    if (data.scheduleDays !== undefined || data.startTime !== undefined || data.endTime !== undefined) {
+      validateSchedule(effective);
+    }
+
+    if (effective.status !== SubjectClassStatus.canceled && hasSchedule(effective)) {
+      await this.assertTeacherAvailable(
+        effective.teacherId,
+        effective.semester,
+        { scheduleDays: effective.scheduleDays, startTime: effective.startTime!, endTime: effective.endTime! },
+        id,
+      );
+    }
+
     return this.prisma.subjectClass.update({ where: { id }, data, include: this.sectionInclude });
   }
 
