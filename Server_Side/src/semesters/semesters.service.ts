@@ -31,13 +31,27 @@ export class SemestersService {
       const dup = await this.prisma.semester.findUnique({ where: { name: data.name } });
       if (dup) throw new ConflictException(`Học kỳ "${data.name}" đã tồn tại`);
     }
+    if (data.isActive === true) {
+      return this.prisma.$transaction(async (tx) => {
+        await tx.semester.updateMany({ where: { isActive: true, NOT: { id } }, data: { isActive: false } });
+        return tx.semester.update({ where: { id }, data });
+      });
+    }
     return this.prisma.semester.update({ where: { id }, data });
   }
 
   async toggleActive(id: number) {
     const sem = await this.prisma.semester.findUnique({ where: { id } });
     if (!sem) throw new NotFoundException('Học kỳ không tồn tại');
-    return this.prisma.semester.update({ where: { id }, data: { isActive: !sem.isActive } });
+
+    if (sem.isActive) {
+      return this.prisma.semester.update({ where: { id }, data: { isActive: false } });
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      await tx.semester.updateMany({ where: { isActive: true }, data: { isActive: false } });
+      return tx.semester.update({ where: { id }, data: { isActive: true } });
+    });
   }
 
   async remove(id: number) {

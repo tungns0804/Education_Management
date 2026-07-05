@@ -93,18 +93,18 @@ function RowAction({ onEdit, onToggle, active, onDelete }) {
 function AdminDashboard() {
   const { t, lang } = useApp();
   const [stats, setStats] = useState(null);
-  const [deptDist, setDeptDist] = useState({ years: [], total: 0, data: [] });
-  const [year, setYear] = useState('');
+  const [deptDist, setDeptDist] = useState({ semesters: [], total: 0, data: [] });
+  const [semester, setSemester] = useState('');
 
   useEffect(() => {
     requestDashboard().then(r => setStats(r.metadata)).catch(() => {});
   }, []);
 
   useEffect(() => {
-    requestStudentsByDepartment(year)
-      .then(r => setDeptDist(r.metadata ?? { years: [], total: 0, data: [] }))
+    requestStudentsByDepartment(semester)
+      .then(r => setDeptDist(r.metadata ?? { semesters: [], total: 0, data: [] }))
       .catch(() => {});
-  }, [year]);
+  }, [semester]);
 
   const s = stats ?? { students: 0, teachers: 0, sections: 0, subjects: 0, gender: { male: 0, female: 0 } };
 
@@ -115,8 +115,8 @@ function AdminDashboard() {
     color: DEPT_PALETTE[i % DEPT_PALETTE.length],
   }));
   const deptDesc = lang === 'vi'
-    ? (year ? `Phân bổ sinh viên khóa ${year} · ${deptDist.total ?? 0} SV` : `Phân bổ toàn trường · ${deptDist.total ?? 0} sinh viên`)
-    : (year ? `Distribution · cohort ${year} · ${deptDist.total ?? 0} students` : `Distribution across faculties · ${deptDist.total ?? 0} students`);
+    ? (semester ? `Phân bổ sinh viên học kỳ ${semester} · ${deptDist.total ?? 0} SV` : `Phân bổ toàn trường · ${deptDist.total ?? 0} sinh viên`)
+    : (semester ? `Distribution · semester ${semester} · ${deptDist.total ?? 0} students` : `Distribution across faculties · ${deptDist.total ?? 0} students`);
 
   return (
     <Page>
@@ -131,10 +131,10 @@ function AdminDashboard() {
         <div className="card" style={{ padding: 22 }}>
           <SectionHead title={lang==='vi'?'Sinh viên theo khoa':'Students by faculty'} desc={deptDesc}
             right={
-              <select className="select" style={{ height: 38, width: 'auto', minWidth: 140, paddingRight: 30 }} value={year} onChange={e => setYear(e.target.value)}>
-                <option value="">{lang === 'vi' ? 'Mọi khóa' : 'All cohorts'}</option>
-                {(deptDist.years ?? []).map(y => (
-                  <option key={y} value={y}>{lang === 'vi' ? `Khóa ${y}` : `Cohort ${y}`}</option>
+              <select className="select" style={{ height: 38, width: 'auto', minWidth: 140, paddingRight: 30 }} value={semester} onChange={e => setSemester(e.target.value)}>
+                <option value="">{lang === 'vi' ? 'Mọi học kỳ' : 'All semesters'}</option>
+                {(deptDist.semesters ?? []).map(sem => (
+                  <option key={sem} value={sem}>{sem}</option>
                 ))}
               </select>
             }/>

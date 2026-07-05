@@ -21,8 +21,8 @@ export class DashboardController {
 
   @Get('students-by-department')
   @Roles('admin')
-  async getStudentsByDepartment(@Query('year') year?: string) {
-    const data = await this.dashboardService.getStudentsByDepartment(year || undefined);
+  async getStudentsByDepartment(@Query('semester') semester?: string) {
+    const data = await this.dashboardService.getStudentsByDepartment(semester || undefined);
     return { success: true, message: 'success', metadata: data };
   }
 
