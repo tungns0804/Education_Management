@@ -1,7 +1,8 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { useApp, useToast, FormField, fieldCls } from '../../materials/ui';
-import { I } from '../../materials/icons';
+import { useApp } from '../../context/AppContext';
+import { useToast, FormField, fieldCls } from '../../components/ui';
+import { I } from '../../components/icons';
 import { PwField, PwChecklist } from '../login/LoginUser';
 import { requestUpdateUser, requestChangePassword } from '../../config/userRequest';
 import { ROLE_TEACHER, ROLE_STUDENT, AVATAR_HUE, PW_RULES } from '../../constants/auth.constants';

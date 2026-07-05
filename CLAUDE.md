@@ -73,11 +73,15 @@ All token lifetimes, cookie names, bcrypt rounds, and algorithm are centralised 
 
 ## Client Architecture
 
-### Routing & auth gating
-`src/App.jsx` renders `<LoginUser renderApp={…} />` when the user is not authenticated. `renderApp` receives the user object and renders the appropriate layout (`AdminLayout`, `TeacherLayout`, `StudentLayout`). There are no React Router `<Route>` guards — the gate is `AuthContext.user === null`.
+### Folder layout (`client_side/src/`)
+Standardised structure (refactored 2026-07): `components/` (shared UI), `config/` (axios + API request functions), `constants/`, `context/` (AppContext, AuthContext), `layouts/` (MainLayout), `pages/` (per role: `admin/`, `teacher/`, `student/`, plus `login/`, `profile/`, `shared/`), `routes/` (central route registry), `utils/` (csv, excel, schedule helpers).
 
-### AuthContext (`src/context/AuthContext.jsx`)
-On mount, calls `GET /api/users/auth` to rehydrate the session. Provides `{ user, loading, login, logout }`. The `user` object is enriched with a `roleKey` field mapped from the DB role string.
+### Routing & auth gating
+`src/App.jsx` renders `<LoginUser renderApp={…} />` when the user is not authenticated; on success it renders `layouts/MainLayout.jsx` — the single shell (Sidebar + Topbar + content + logout modal) used by all three roles. Navigation is **state-based** (internal route keys like `a-students`, `t-grades`), not URL/React Router. The route key → screen/title mapping lives in `src/routes/index.jsx` (`ROUTES`, `HOME_ROUTE`); per-role sidebar menus (`NAV`) are declared in MainLayout. The auth gate is `AuthContext.user === null`.
+
+### Contexts (`src/context/`)
+- `AppContext.jsx` — theme (light/dark), language (vi/en), `t()` i18n lookup into `constants/i18n.constants.js`.
+- `AuthContext.jsx` — on mount calls `GET /api/users/auth` to rehydrate the session. Provides `{ user, loading, login, logout }`. The `user` object is enriched with a `roleKey` field mapped from the DB role string.
 
 ### HTTP clients (`src/config/`)
 Two axios instances:
@@ -86,11 +90,17 @@ Two axios instances:
 
 All API paths are defined in `src/constants/api.constants.js`. All request functions are in `src/config/userRequest.js`.
 
-### Shared UI building blocks (`src/materials/`)
-This folder holds reusable JSX components and utilities **not** in a traditional component tree:
+### Shared UI building blocks (`src/components/`)
 - `icons.jsx` — named icon exports (`I.mail`, `I.lock`, etc.)
-- `ui.jsx` — `useApp()` hook (theme, lang, `t()` i18n), `useToast()`, shared UI primitives
-- `auth.jsx` — `PwField`, `PwChecklist`, `PwRules` re-exported for use in the login page
+- `ui.jsx` — `useToast()`, `useForm()`/`validate`, primitives (Avatar, Modal, Drawer, StatCard, FormField…)
+- `shell.jsx` — Sidebar, Topbar, DataTable, Page, SectionHead
+- `charts.jsx` — pure-SVG LineChart/BarChart/DonutChart/HBars/Ring
+- `feedback.jsx` — Spinner, Empty, SimplePagination
+- `table.jsx` — TableToolbar, FilterSelect, RowAction
+- `BulkImportDrawer.jsx` / `TeacherBulkImportDrawer.jsx` — CSV/Excel bulk-import drawers
+
+### E2E regression tests
+`client_side/tests/e2e.regression.mjs` (run: `npm run test:e2e`, needs backend + seeded DB + dev server on 5173). Testcase catalogue: `documents/testcases/client-side-regression-testcases.md`.
 
 ### Password rules
 Defined in `src/constants/auth.constants.js` as `PW_RULES` (array of `{ key, test, label_vi, label_en }`). Any form that sets a password must validate against all rules before enabling submit.

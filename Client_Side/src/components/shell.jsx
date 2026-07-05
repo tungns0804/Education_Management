@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { I } from './icons';
-import { Avatar, EmptyRow, Pagination, useApp } from './ui';
+import { Avatar, EmptyRow, Pagination } from './ui';
+import { useApp } from '../context/AppContext';
 
 /* EduManage — App shell: Sidebar, Topbar, DataTable */
 

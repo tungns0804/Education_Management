@@ -1,32 +1,9 @@
-import React, { useState, useEffect, useMemo, useContext, useCallback, createContext } from 'react';
-import { DB } from './db';
+import React, { useState, useEffect, useMemo, useCallback, createContext, useContext } from 'react';
 import { I } from './icons';
-import {
-  LS_THEME,
-  LS_LANG,
-  DEFAULT_THEME,
-  DEFAULT_LANG,
-  TOAST_AUTO_DISMISS_MS,
-} from '../constants/storage.constants';
+import { useApp } from '../context/AppContext';
+import { TOAST_AUTO_DISMISS_MS } from '../constants/storage.constants';
 
-/* EduManage — Shared UI: context, primitives, charts */
-
-// ---------------- App context (theme + language) ----------------
-const AppCtx = createContext(null);
-const useApp = () => useContext(AppCtx);
-
-function AppProvider({ children }) {
-  const [theme, setTheme] = useState(() => localStorage.getItem(LS_THEME) || DEFAULT_THEME);
-  const [lang, setLang] = useState(() => localStorage.getItem(LS_LANG)  || DEFAULT_LANG);
-  useEffect(() => { document.documentElement.setAttribute('data-theme', theme); localStorage.setItem(LS_THEME, theme); }, [theme]);
-  useEffect(() => { localStorage.setItem(LS_LANG, lang); }, [lang]);
-  const t = useCallback((k) => (DB.I18N[lang][k] ?? k), [lang]);
-  const tn = useCallback((o) => o ? (o['name_' + lang] ?? o.name ?? '') : '', [lang]);
-  const val = { theme, setTheme, lang, setLang, t, tn,
-    toggleTheme: () => setTheme(x => x === 'light' ? 'dark' : 'light'),
-    toggleLang: () => setLang(x => x === 'vi' ? 'en' : 'vi') };
-  return <AppCtx.Provider value={val}>{children}</AppCtx.Provider>;
-}
+/* EduManage — Shared UI primitives: Avatar, Badge, Modal, Drawer, Toast, Form */
 
 // ---------------- Avatar ----------------
 function Avatar({ name, hue = 210, size = 38, code }) {
@@ -280,4 +257,4 @@ function FormField({ label, error, hint, optional, children, optionalLabel }) {
 // input/select className helper for error state
 function fieldCls(error) { return error ? 'input input-error' : 'input'; }
 
-export { AppCtx, useApp, AppProvider, Avatar, StatusBadge, Segmented, StatCard, Pagination, Drawer, Modal, ToastHost, useToast, EmptyRow, useForm, validate, FormField, fieldCls };
+export { Avatar, StatusBadge, Segmented, StatCard, Pagination, Drawer, Modal, ToastHost, useToast, EmptyRow, useForm, validate, FormField, fieldCls };
