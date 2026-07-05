@@ -33,6 +33,7 @@ export const API_ENDPOINTS = {
 
   // ---- Dashboard ----
   DASHBOARD:         '/api/dashboard',
+  STUDENTS_BY_DEPARTMENT: '/api/dashboard/students-by-department',
   TEACHER_DASHBOARD: '/api/dashboard/teacher',
   STUDENT_DASHBOARD: '/api/dashboard/student',
 

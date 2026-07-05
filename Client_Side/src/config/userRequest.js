@@ -17,6 +17,7 @@ export const requestChangePassword = (data) => apiClient.put(API_ENDPOINTS.CHANG
 
 // ── Dashboard ────────────────────────────────────────────────────────────────
 export const requestDashboard        = ()  => apiClient.get(API_ENDPOINTS.DASHBOARD).then((r) => r.data);
+export const requestStudentsByDepartment = (year) => apiClient.get(API_ENDPOINTS.STUDENTS_BY_DEPARTMENT, { params: year ? { year } : {} }).then((r) => r.data);
 export const requestTeacherDashboard = ()  => apiClient.get(API_ENDPOINTS.TEACHER_DASHBOARD).then((r) => r.data);
 export const requestStudentDashboard = ()  => apiClient.get(API_ENDPOINTS.STUDENT_DASHBOARD).then((r) => r.data);
 

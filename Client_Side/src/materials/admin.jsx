@@ -5,12 +5,11 @@ import { BarChart, DonutChart } from './charts';
 import { BulkImportDrawer, downloadCSV } from './tools';
 import { DataTable, MenuRow, Page, SectionHead } from './shell';
 import {
-  requestDashboard,
+  requestDashboard, requestStudentsByDepartment,
   requestStudents, requestCreateStudent, requestBulkImport,
   requestNextStudentId,
   requestClasses,
   requestUpdateUser, requestToggleUserStatus, requestDeleteUser,
-  requestDepartments,
 } from '../config/userRequest';
 
 /* EduManage — Admin screens */
@@ -94,33 +93,51 @@ function RowAction({ onEdit, onToggle, active, onDelete }) {
 function AdminDashboard() {
   const { t, lang } = useApp();
   const [stats, setStats] = useState(null);
-  const [depts, setDepts] = useState([]);
+  const [deptDist, setDeptDist] = useState({ years: [], total: 0, data: [] });
+  const [year, setYear] = useState('');
 
   useEffect(() => {
-    requestDashboard()   .then(r => setStats(r.metadata))    .catch(() => {});
-    requestDepartments() .then(r => setDepts(r.metadata ?? [])).catch(() => {});
+    requestDashboard().then(r => setStats(r.metadata)).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    requestStudentsByDepartment(year)
+      .then(r => setDeptDist(r.metadata ?? { years: [], total: 0, data: [] }))
+      .catch(() => {});
+  }, [year]);
 
   const s = stats ?? { students: 0, teachers: 0, sections: 0, subjects: 0, gender: { male: 0, female: 0 } };
 
-  const deptChart = depts.slice(0, 4).map((d, i) => ({
-    label: d.nameDepartment,
-    value: 0,
-    color: ['#2F6FED', '#1F8A5B', '#C9821A', '#8B5CF6'][i],
+  const DEPT_PALETTE = ['#2F6FED', '#1F8A5B', '#C9821A', '#8B5CF6', '#EC6A9C', '#0EA5E9', '#14B8A6', '#F97316'];
+  const deptChart = (deptDist.data ?? []).map((d, i) => ({
+    label: d.code,
+    value: d.value,
+    color: DEPT_PALETTE[i % DEPT_PALETTE.length],
   }));
+  const deptDesc = lang === 'vi'
+    ? (year ? `Phân bổ sinh viên khóa ${year} · ${deptDist.total ?? 0} SV` : `Phân bổ toàn trường · ${deptDist.total ?? 0} sinh viên`)
+    : (year ? `Distribution · cohort ${year} · ${deptDist.total ?? 0} students` : `Distribution across faculties · ${deptDist.total ?? 0} students`);
 
   return (
     <Page>
       <div className="grid-stats">
-        <StatCard icon={<I.users size={22}/>}   label={t('students')} value={s.students} delta="+12" deltaUp accent="#2F6FED"/>
-        <StatCard icon={<I.teacher size={22}/>}  label={t('teachers')} value={s.teachers} delta="+3" deltaUp accent="#1F8A5B"/>
+        <StatCard icon={<I.users size={22}/>}   label={t('students')} value={s.students} accent="#2F6FED"/>
+        <StatCard icon={<I.teacher size={22}/>}  label={t('teachers')} value={s.teachers} accent="#1F8A5B"/>
         <StatCard icon={<I.layers size={22}/>}   label={t('sections')} value={s.sections} accent="#8B5CF6"/>
-        <StatCard icon={<I.book size={22}/>}     label={t('subjects')} value={s.subjects} delta="+1" deltaUp accent="#C9821A"/>
+        <StatCard icon={<I.book size={22}/>}     label={t('subjects')} value={s.subjects} accent="#C9821A"/>
       </div>
 
       <div className="grid-2-1">
         <div className="card" style={{ padding: 22 }}>
-          <SectionHead title={lang==='vi'?'Sinh viên theo khoa':'Students by faculty'} desc={lang==='vi'?'Phân bổ toàn trường năm học 2024–2025':'Distribution across faculties · 2024–2025'}/>
+          <SectionHead title={lang==='vi'?'Sinh viên theo khoa':'Students by faculty'} desc={deptDesc}
+            right={
+              <select className="select" style={{ height: 38, width: 'auto', minWidth: 140, paddingRight: 30 }} value={year} onChange={e => setYear(e.target.value)}>
+                <option value="">{lang === 'vi' ? 'Mọi khóa' : 'All cohorts'}</option>
+                {(deptDist.years ?? []).map(y => (
+                  <option key={y} value={y}>{lang === 'vi' ? `Khóa ${y}` : `Cohort ${y}`}</option>
+                ))}
+              </select>
+            }/>
           <div style={{ marginTop: 18 }}><BarChart data={deptChart} height={230}/></div>
         </div>
         <div className="card" style={{ padding: 22 }}>

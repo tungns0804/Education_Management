@@ -83,8 +83,14 @@ export class AuthService {
   // ----------------------------------------------------------------
 
   private async findUserByIdentifier(identifier: string) {
+    const normalized = identifier.trim().toLowerCase();
+    if (normalized.includes('@')) {
+      return this.prisma.user.findFirst({
+        where: { email: { equals: normalized, mode: 'insensitive' } },
+      });
+    }
     return this.prisma.user.findFirst({
-      where: { email: { startsWith: identifier.toLowerCase() + '@' } },
+      where: { email: { startsWith: normalized + '@', mode: 'insensitive' } },
     });
   }
 

@@ -139,7 +139,7 @@ export class UsersService {
   // ----------------------------------------------------------------
 
   private generateSchoolEmail(idStudent: string): string {
-    return `${idStudent}@student.school.edu.vn`;
+    return `${idStudent.toLowerCase()}@student.school.edu.vn`;
   }
 
   private generateTempPassword(): string {

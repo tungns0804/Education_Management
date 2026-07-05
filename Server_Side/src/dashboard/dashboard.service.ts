@@ -53,6 +53,50 @@ export class DashboardService {
     };
   }
 
+  // Derive the enrolment year (khóa) from a student's idStudent, falling back
+  // to a 4-digit year embedded in the class code (e.g. "KTPM2021A" → "2021").
+  private studentYear(s: { idStudent: string | null; class: string | null }): string | null {
+    const fromId = s.idStudent?.match(/^(?:19|20)\d{2}/)?.[0];
+    if (fromId) return fromId;
+    return s.class?.match(/(?:19|20)\d{2}/)?.[0] ?? null;
+  }
+
+  // Students grouped by department (khoa), optionally filtered by enrolment year.
+  async getStudentsByDepartment(year?: string) {
+    const [departments, students] = await Promise.all([
+      this.prisma.department.findMany({
+        select: { code: true, nameDepartment: true },
+        orderBy: { code: 'asc' },
+      }),
+      this.prisma.user.findMany({
+        where: { role: Role.student },
+        select: { department: true, idStudent: true, class: true },
+      }),
+    ]);
+
+    const years = Array.from(
+      new Set(students.map(s => this.studentYear(s)).filter((y): y is string => !!y)),
+    ).sort((a, b) => b.localeCompare(a));
+
+    const filtered = year ? students.filter(s => this.studentYear(s) === year) : students;
+
+    const counts: Record<string, number> = {};
+    for (const s of filtered) {
+      if (!s.department) continue;
+      counts[s.department] = (counts[s.department] ?? 0) + 1;
+    }
+
+    const data = departments.map(d => ({
+      code: d.code,
+      name: d.nameDepartment,
+      value: counts[d.code] ?? 0,
+    }));
+
+    const total = data.reduce((sum, d) => sum + d.value, 0);
+
+    return { year: year ?? null, years, total, data };
+  }
+
   private async getActiveSemesterFilter(): Promise<{ semester?: { in: string[] } }> {
     const active = await this.prisma.semester.findMany({ where: { isActive: true }, select: { name: true } });
     if (active.length === 0) return {};
