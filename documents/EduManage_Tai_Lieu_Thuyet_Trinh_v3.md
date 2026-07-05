@@ -303,9 +303,7 @@ Vì vậy, email cá nhân là thông tin bắt buộc khi tạo tài khoản �
 
 Cả ba vai trò đã đăng nhập đều dùng chung các chức năng: đăng xuất, đổi mật khẩu, cập nhật hồ sơ cá nhân.
 
-## 3.3. Biểu đồ Use Case tổng quát
-
-![Hình 3.1. Biểu đồ Use Case tổng quát của hệ thống EduManage](assets/diag_03_usecase.png)
+## 3.3. Biểu đồ Use Case
 
 Danh mục 21 ca sử dụng của hệ thống:
 
@@ -333,20 +331,45 @@ Danh mục 21 ca sử dụng của hệ thống:
 | UC#20 | Xem bảng điểm và GPA | Sinh viên | Học vụ |
 | UC#21 | Xem thống kê Dashboard | Mọi vai trò | Thống kê |
 
+### 3.3.1. Biểu đồ Use Case tổng quát
+
+![Hình 3.1. Biểu đồ Use Case tổng quát của hệ thống EduManage](assets/uml_usecase_overview.png)
+
+### 3.3.2. Biểu đồ phân rã Use Case — Xác thực và tài khoản cá nhân
+
+![Hình 3.2. Biểu đồ phân rã Use Case nhóm Xác thực và tài khoản cá nhân](assets/uml_usecase_auth.png)
+
+### 3.3.3. Biểu đồ phân rã Use Case — Quản lý tài khoản
+
+![Hình 3.3. Biểu đồ phân rã Use Case nhóm Quản lý tài khoản (Admin)](assets/uml_usecase_account.png)
+
+### 3.3.4. Biểu đồ phân rã Use Case — Quản lý danh mục đào tạo
+
+![Hình 3.4. Biểu đồ phân rã Use Case nhóm Quản lý danh mục đào tạo (Admin)](assets/uml_usecase_catalog.png)
+
+### 3.3.5. Biểu đồ phân rã Use Case — Nghiệp vụ Giảng viên
+
+![Hình 3.5. Biểu đồ phân rã Use Case nhóm nghiệp vụ Giảng viên](assets/uml_usecase_teacher.png)
+
+### 3.3.6. Biểu đồ phân rã Use Case — Nghiệp vụ Sinh viên
+
+![Hình 3.6. Biểu đồ phân rã Use Case nhóm nghiệp vụ Sinh viên](assets/uml_usecase_student.png)
+
 ## 3.4. Đặc tả chi tiết các Use Case
 
 ### UC#01: Đăng nhập (theo vai trò)
 
-| Mục | Nội dung |
-| --- | --- |
-| Độ phức tạp | Cao |
-| Mô tả | Người dùng chọn tab vai trò (Admin / Giảng viên / Sinh viên) và đăng nhập bằng mã định danh + mật khẩu. |
-| Tác nhân | Khách |
-| Tiền điều kiện | Tài khoản đã được Admin tạo trước đó. |
-| Hậu điều kiện — Thành công | Ba cookie được thiết lập; người dùng vào giao diện đúng theo vai trò. |
-| Hậu điều kiện — Lỗi | Không đăng nhập được; không cookie nào được thiết lập. |
+| UC#01 | Đăng nhập (theo vai trò) | Độ phức tạp: Cao |
+| --- | --- | --- |
+| Mô tả | Người dùng chọn tab vai trò (Admin / Giảng viên / Sinh viên) và đăng nhập bằng mã định danh + mật khẩu. | |
+| Tác nhân | Khách | |
+| Tiền điều kiện | Tài khoản đã được Admin tạo trước đó. | |
+| Hậu điều kiện — Thành công | Ba cookie được thiết lập; người dùng vào giao diện đúng theo vai trò. | |
+| Hậu điều kiện — Lỗi | Không đăng nhập được; không cookie nào được thiết lập. | |
 
-**Luồng sự kiện chính:**
+**ĐẶC TẢ CHỨC NĂNG**
+
+**Luồng nghiệp vụ tiêu chuẩn**
 
 1. Người dùng chọn tab vai trò trên màn hình đăng nhập, nhập mã định danh và mật khẩu. Giao diện kiểm tra định dạng mã theo vai trò đang chọn: Admin phải là `admin`, Giảng viên dạng `GV` kèm số (ví dụ GV1001), Sinh viên là dãy số (ví dụ 20216001) — sai định dạng thì thực hiện Luồng A.
 
@@ -356,7 +379,7 @@ Danh mục 21 ca sử dụng của hệ thống:
 
 4. Giao diện lưu người dùng vào phiên làm việc và mở phân hệ tương ứng với vai trò.
 
-**Luồng sự kiện phát sinh:**
+**Luồng sự kiện phát sinh / Kịch bản phát sinh**
 
 - Luồng A — Mã không khớp định dạng vai trò: hiển thị lỗi ngay tại ô nhập, không gửi yêu cầu lên server.
 
@@ -366,16 +389,17 @@ Danh mục 21 ca sử dụng của hệ thống:
 
 ### UC#02: Quên mật khẩu (OTP qua email)
 
-| Mục | Nội dung |
-| --- | --- |
-| Độ phức tạp | Cao |
-| Mô tả | Đặt lại mật khẩu khi quên, thông qua mã OTP 6 chữ số gửi tới email cá nhân. |
-| Tác nhân | Khách |
-| Tiền điều kiện | Tài khoản đã có email cá nhân được thiết lập. |
-| Hậu điều kiện — Thành công | Mật khẩu mới được lưu (băm bcrypt); mọi phiên đăng nhập cũ bị vô hiệu. |
-| Hậu điều kiện — Lỗi | Mật khẩu không thay đổi. |
+| UC#02 | Quên mật khẩu (OTP qua email) | Độ phức tạp: Cao |
+| --- | --- | --- |
+| Mô tả | Đặt lại mật khẩu khi quên, thông qua mã OTP 6 chữ số gửi tới email cá nhân. | |
+| Tác nhân | Khách | |
+| Tiền điều kiện | Tài khoản đã có email cá nhân được thiết lập. | |
+| Hậu điều kiện — Thành công | Mật khẩu mới được lưu (băm bcrypt); mọi phiên đăng nhập cũ bị vô hiệu. | |
+| Hậu điều kiện — Lỗi | Mật khẩu không thay đổi. | |
 
-**Luồng sự kiện chính:**
+**ĐẶC TẢ CHỨC NĂNG**
+
+**Luồng nghiệp vụ tiêu chuẩn**
 
 1. Người dùng nhập mã định danh, chọn "Quên mật khẩu". Nếu tài khoản chưa có email cá nhân → Luồng A.
 
@@ -387,7 +411,7 @@ Danh mục 21 ca sử dụng của hệ thống:
 
 5. Hệ thống xác thực lại OTP, cập nhật mật khẩu, xóa OTP và toàn bộ khóa phiên → người dùng đăng nhập lại bằng mật khẩu mới.
 
-**Luồng sự kiện phát sinh:**
+**Luồng sự kiện phát sinh / Kịch bản phát sinh**
 
 - Luồng A — Chưa có email cá nhân: báo lỗi, người dùng cần liên hệ Admin.
 
@@ -399,15 +423,16 @@ Danh mục 21 ca sử dụng của hệ thống:
 
 ### UC#03: Đổi mật khẩu
 
-| Mục | Nội dung |
-| --- | --- |
-| Độ phức tạp | Trung bình |
-| Mô tả | Người dùng đã đăng nhập tự đổi mật khẩu của mình. |
-| Tác nhân | Admin, Giảng viên, Sinh viên |
-| Tiền điều kiện | Đã đăng nhập. |
-| Hậu điều kiện — Thành công | Mật khẩu được cập nhật; mọi thiết bị đang đăng nhập đều bị đăng xuất. |
+| UC#03 | Đổi mật khẩu | Độ phức tạp: Trung bình |
+| --- | --- | --- |
+| Mô tả | Người dùng đã đăng nhập tự đổi mật khẩu của mình. | |
+| Tác nhân | Admin, Giảng viên, Sinh viên | |
+| Tiền điều kiện | Đã đăng nhập. | |
+| Hậu điều kiện — Thành công | Mật khẩu được cập nhật; mọi thiết bị đang đăng nhập đều bị đăng xuất. | |
 
-**Luồng sự kiện chính:**
+**ĐẶC TẢ CHỨC NĂNG**
+
+**Luồng nghiệp vụ tiêu chuẩn**
 
 1. Tại trang Hồ sơ cá nhân, người dùng nhập mật khẩu hiện tại, mật khẩu mới và xác nhận mật khẩu.
 
@@ -415,7 +440,7 @@ Danh mục 21 ca sử dụng của hệ thống:
 
 3. Hệ thống lưu mật khẩu mới (băm bcrypt) và xóa toàn bộ khóa phiên; giao diện thông báo "Đổi mật khẩu thành công! Hệ thống sẽ tự động đăng xuất..." rồi đưa về màn hình đăng nhập.
 
-**Luồng sự kiện phát sinh:**
+**Luồng sự kiện phát sinh / Kịch bản phát sinh**
 
 - Luồng A — Mật khẩu hiện tại sai: hiển thị lỗi.
 
@@ -423,14 +448,15 @@ Danh mục 21 ca sử dụng của hệ thống:
 
 ### UC#04: Đăng xuất
 
-| Mục | Nội dung |
-| --- | --- |
-| Độ phức tạp | Thấp |
-| Mô tả | Kết thúc phiên làm việc hiện tại. |
-| Tác nhân | Admin, Giảng viên, Sinh viên |
-| Hậu điều kiện — Thành công | Khóa phiên bị xóa khỏi CSDL; ba cookie bị xóa; quay về màn hình đăng nhập. |
+| UC#04 | Đăng xuất | Độ phức tạp: Thấp |
+| --- | --- | --- |
+| Mô tả | Kết thúc phiên làm việc hiện tại. | |
+| Tác nhân | Admin, Giảng viên, Sinh viên | |
+| Hậu điều kiện — Thành công | Khóa phiên bị xóa khỏi CSDL; ba cookie bị xóa; quay về màn hình đăng nhập. | |
 
-**Luồng sự kiện chính:**
+**ĐẶC TẢ CHỨC NĂNG**
+
+**Luồng nghiệp vụ tiêu chuẩn**
 
 1. Người dùng chọn "Đăng xuất"; giao diện lập tức quay về màn hình đăng nhập, đồng thời gọi API đăng xuất.
 
@@ -438,15 +464,16 @@ Danh mục 21 ca sử dụng của hệ thống:
 
 ### UC#05: Cập nhật hồ sơ cá nhân
 
-| Mục | Nội dung |
-| --- | --- |
-| Độ phức tạp | Trung bình |
-| Mô tả | Người dùng tự cập nhật thông tin cá nhân (họ tên, số điện thoại, địa chỉ, ngày sinh…). |
-| Tác nhân | Admin, Giảng viên, Sinh viên |
-| Tiền điều kiện | Đã đăng nhập. |
-| Hậu điều kiện — Thành công | Hồ sơ được cập nhật; các trường nhạy cảm không bị thay đổi. |
+| UC#05 | Cập nhật hồ sơ cá nhân | Độ phức tạp: Trung bình |
+| --- | --- | --- |
+| Mô tả | Người dùng tự cập nhật thông tin cá nhân (họ tên, số điện thoại, địa chỉ, ngày sinh…). | |
+| Tác nhân | Admin, Giảng viên, Sinh viên | |
+| Tiền điều kiện | Đã đăng nhập. | |
+| Hậu điều kiện — Thành công | Hồ sơ được cập nhật; các trường nhạy cảm không bị thay đổi. | |
 
-**Luồng sự kiện chính:**
+**ĐẶC TẢ CHỨC NĂNG**
+
+**Luồng nghiệp vụ tiêu chuẩn**
 
 1. Người dùng vào trang Hồ sơ cá nhân, chỉnh sửa các trường được phép và lưu.
 
@@ -454,20 +481,21 @@ Danh mục 21 ca sử dụng của hệ thống:
 
 3. Hệ thống tự loại bỏ ba trường mật khẩu / email trường / vai trò khỏi dữ liệu gửi lên — các trường này không thể thay đổi qua chức năng cập nhật hồ sơ.
 
-**Luồng sự kiện phát sinh:**
+**Luồng sự kiện phát sinh / Kịch bản phát sinh**
 
 - Luồng A — Cố sửa hồ sơ người khác khi không phải Admin: hệ thống từ chối (403).
 
 ### UC#06: Tạo tài khoản Sinh viên / Giảng viên
 
-| Mục | Nội dung |
-| --- | --- |
-| Độ phức tạp | Cao |
-| Mô tả | Admin tạo tài khoản mới; hệ thống tự sinh mã định danh, email trường, mật khẩu tạm và gửi qua email cá nhân. |
-| Tác nhân | Admin |
-| Hậu điều kiện — Thành công | Tài khoản mới ở trạng thái mặc định (đang học / đang giảng dạy); email thông tin đăng nhập được gửi tới email cá nhân. |
+| UC#06 | Tạo tài khoản Sinh viên / Giảng viên | Độ phức tạp: Cao |
+| --- | --- | --- |
+| Mô tả | Admin tạo tài khoản mới; hệ thống tự sinh mã định danh, email trường, mật khẩu tạm và gửi qua email cá nhân. | |
+| Tác nhân | Admin | |
+| Hậu điều kiện — Thành công | Tài khoản mới ở trạng thái mặc định (đang học / đang giảng dạy); email thông tin đăng nhập được gửi tới email cá nhân. | |
 
-**Luồng sự kiện chính:**
+**ĐẶC TẢ CHỨC NĂNG**
+
+**Luồng nghiệp vụ tiêu chuẩn**
 
 1. Admin mở màn hình "Sinh viên" hoặc "Giảng viên", chọn "Thêm mới" và nhập thông tin — email cá nhân là bắt buộc (thiếu → Luồng A).
 
@@ -477,7 +505,7 @@ Danh mục 21 ca sử dụng của hệ thống:
 
 4. Hệ thống gửi email trường + mật khẩu tạm về email cá nhân (gửi thất bại → Luồng C).
 
-**Luồng sự kiện phát sinh:**
+**Luồng sự kiện phát sinh / Kịch bản phát sinh**
 
 - Luồng A — Thiếu email cá nhân: từ chối tạo, báo lỗi.
 
@@ -487,14 +515,15 @@ Danh mục 21 ca sử dụng của hệ thống:
 
 ### UC#07: Nhập danh sách hàng loạt (Bulk Import)
 
-| Mục | Nội dung |
-| --- | --- |
-| Độ phức tạp | Cao |
-| Mô tả | Admin nhập nhiều sinh viên / giảng viên cùng lúc từ file CSV hoặc Excel. |
-| Tác nhân | Admin |
-| Hậu điều kiện — Thành công | Toàn bộ tài khoản hợp lệ được tạo trong một transaction (tất cả hoặc không gì cả); email được gửi lần lượt sau đó. |
+| UC#07 | Nhập danh sách hàng loạt (Bulk Import) | Độ phức tạp: Cao |
+| --- | --- | --- |
+| Mô tả | Admin nhập nhiều sinh viên / giảng viên cùng lúc từ file CSV hoặc Excel. | |
+| Tác nhân | Admin | |
+| Hậu điều kiện — Thành công | Toàn bộ tài khoản hợp lệ được tạo trong một transaction (tất cả hoặc không gì cả); email được gửi lần lượt sau đó. | |
 
-**Luồng sự kiện chính:**
+**ĐẶC TẢ CHỨC NĂNG**
+
+**Luồng nghiệp vụ tiêu chuẩn**
 
 1. Admin tải lên file `.csv` / `.xlsx` / `.xls` hoặc dán trực tiếp nội dung; có thể tải file mẫu Excel có sẵn.
 
@@ -504,7 +533,7 @@ Danh mục 21 ca sử dụng của hệ thống:
 
 4. Hợp lệ: hệ thống sinh dãy mã tuần tự, tạo toàn bộ tài khoản trong một transaction, sau đó gửi email thông tin đăng nhập cho từng người (không chặn kết quả trả về).
 
-**Luồng sự kiện phát sinh:**
+**Luồng sự kiện phát sinh / Kịch bản phát sinh**
 
 - Luồng A — Có dòng không hợp lệ: trả danh sách lỗi theo từng dòng, không tạo tài khoản nào.
 
@@ -512,14 +541,15 @@ Danh mục 21 ca sử dụng của hệ thống:
 
 ### UC#08: Xem chi tiết và cập nhật thông tin người dùng
 
-| Mục | Nội dung |
-| --- | --- |
-| Độ phức tạp | Trung bình |
-| Mô tả | Admin xem trang hồ sơ chi tiết của một người dùng và chỉnh sửa thông tin của bất kỳ ai. |
-| Tác nhân | Admin |
-| Hậu điều kiện — Thành công | Thông tin được cập nhật (trừ mật khẩu / email trường / vai trò). |
+| UC#08 | Xem chi tiết và cập nhật thông tin người dùng | Độ phức tạp: Trung bình |
+| --- | --- | --- |
+| Mô tả | Admin xem trang hồ sơ chi tiết của một người dùng và chỉnh sửa thông tin của bất kỳ ai. | |
+| Tác nhân | Admin | |
+| Hậu điều kiện — Thành công | Thông tin được cập nhật (trừ mật khẩu / email trường / vai trò). | |
 
-**Luồng sự kiện chính:**
+**ĐẶC TẢ CHỨC NĂNG**
+
+**Luồng nghiệp vụ tiêu chuẩn**
 
 1. Từ danh sách, Admin bấm vào một người dùng → hệ thống mở trang hồ sơ chi tiết (thông tin cá nhân, trạng thái, thống kê học tập).
 
@@ -529,14 +559,15 @@ Danh mục 21 ca sử dụng của hệ thống:
 
 ### UC#09: Khóa / mở khóa tài khoản
 
-| Mục | Nội dung |
-| --- | --- |
-| Độ phức tạp | Trung bình |
-| Mô tả | Admin tạm ngưng (khóa) hoặc kích hoạt lại một tài khoản mà không xóa dữ liệu. |
-| Tác nhân | Admin |
-| Hậu điều kiện — Thành công | Trạng thái tài khoản chuyển hoạt động ⇄ bị khóa; tài khoản bị khóa không thể đăng nhập, phiên đang mở bị chặn ngay ở thao tác kế tiếp. |
+| UC#09 | Khóa / mở khóa tài khoản | Độ phức tạp: Trung bình |
+| --- | --- | --- |
+| Mô tả | Admin tạm ngưng (khóa) hoặc kích hoạt lại một tài khoản mà không xóa dữ liệu. | |
+| Tác nhân | Admin | |
+| Hậu điều kiện — Thành công | Trạng thái tài khoản chuyển hoạt động ⇄ bị khóa; tài khoản bị khóa không thể đăng nhập, phiên đang mở bị chặn ngay ở thao tác kế tiếp. | |
 
-**Luồng sự kiện chính:**
+**ĐẶC TẢ CHỨC NĂNG**
+
+**Luồng nghiệp vụ tiêu chuẩn**
 
 1. Admin bấm nút khóa / mở khóa trên dòng người dùng; hệ thống cập nhật trạng thái.
 
@@ -544,33 +575,35 @@ Danh mục 21 ca sử dụng của hệ thống:
 
 ### UC#10: Xóa tài khoản
 
-| Mục | Nội dung |
-| --- | --- |
-| Độ phức tạp | Thấp |
-| Mô tả | Admin xóa vĩnh viễn một tài khoản khỏi hệ thống. |
-| Tác nhân | Admin |
-| Hậu điều kiện — Thành công | Bản ghi người dùng bị xóa; khóa phiên và OTP của người đó tự xóa theo (cascade). |
+| UC#10 | Xóa tài khoản | Độ phức tạp: Thấp |
+| --- | --- | --- |
+| Mô tả | Admin xóa vĩnh viễn một tài khoản khỏi hệ thống. | |
+| Tác nhân | Admin | |
+| Hậu điều kiện — Thành công | Bản ghi người dùng bị xóa; khóa phiên và OTP của người đó tự xóa theo (cascade). | |
 
-**Luồng sự kiện chính:**
+**ĐẶC TẢ CHỨC NĂNG**
+
+**Luồng nghiệp vụ tiêu chuẩn**
 
 1. Admin chọn "Xóa" trên dòng người dùng và xác nhận qua hộp thoại.
 
 2. Hệ thống xóa bản ghi. Nếu người dùng còn dữ liệu ràng buộc (đang chủ nhiệm lớp, phụ trách lớp học phần, có bản ghi đăng ký / điểm danh) → Luồng A.
 
-**Luồng sự kiện phát sinh:**
+**Luồng sự kiện phát sinh / Kịch bản phát sinh**
 
 - Luồng A — Còn ràng buộc dữ liệu: CSDL từ chối xóa để bảo toàn dữ liệu; hệ thống báo cần xử lý dữ liệu liên quan trước.
 
 ### UC#11: Quản lý danh mục (Khoa / Ngành / Lớp / Môn học)
 
-| Mục | Nội dung |
-| --- | --- |
-| Độ phức tạp | Trung bình |
-| Mô tả | Thêm, sửa, xóa danh mục nền tảng theo phân cấp Khoa → Ngành → Lớp / Môn học. |
-| Tác nhân | Admin |
-| Hậu điều kiện — Thành công | Danh mục được cập nhật; các màn hình khác dùng dữ liệu mới ngay. |
+| UC#11 | Quản lý danh mục (Khoa / Ngành / Lớp / Môn học) | Độ phức tạp: Trung bình |
+| --- | --- | --- |
+| Mô tả | Thêm, sửa, xóa danh mục nền tảng theo phân cấp Khoa → Ngành → Lớp / Môn học. | |
+| Tác nhân | Admin | |
+| Hậu điều kiện — Thành công | Danh mục được cập nhật; các màn hình khác dùng dữ liệu mới ngay. | |
 
-**Luồng sự kiện chính:**
+**ĐẶC TẢ CHỨC NĂNG**
+
+**Luồng nghiệp vụ tiêu chuẩn**
 
 1. Admin vào màn hình danh mục tương ứng, xem danh sách hiện có.
 
@@ -578,7 +611,7 @@ Danh mục 21 ca sử dụng của hệ thống:
 
 3. Xóa: nếu còn dữ liệu con tham chiếu → Luồng A; trùng mã → Luồng B.
 
-**Luồng sự kiện phát sinh:**
+**Luồng sự kiện phát sinh / Kịch bản phát sinh**
 
 - Luồng A — Xóa khi còn ràng buộc (Khoa còn Ngành; Ngành còn Lớp / Môn học): CSDL từ chối, hệ thống báo lỗi rõ ràng.
 
@@ -586,14 +619,15 @@ Danh mục 21 ca sử dụng của hệ thống:
 
 ### UC#12: Quản lý Lớp học phần và Học kỳ
 
-| Mục | Nội dung |
-| --- | --- |
-| Độ phức tạp | Cao |
-| Mô tả | Admin mở lớp học phần (gắn Môn học + Giảng viên + tên học kỳ) và quản lý danh sách Học kỳ, đánh dấu học kỳ đang hoạt động. |
-| Tác nhân | Admin |
-| Hậu điều kiện — Thành công | Lớp học phần sẵn sàng cho sinh viên đăng ký khi ở trạng thái hoạt động và thuộc học kỳ đang hoạt động. |
+| UC#12 | Quản lý Lớp học phần và Học kỳ | Độ phức tạp: Cao |
+| --- | --- | --- |
+| Mô tả | Admin mở lớp học phần (gắn Môn học + Giảng viên + tên học kỳ) và quản lý danh sách Học kỳ, đánh dấu học kỳ đang hoạt động. | |
+| Tác nhân | Admin | |
+| Hậu điều kiện — Thành công | Lớp học phần sẵn sàng cho sinh viên đăng ký khi ở trạng thái hoạt động và thuộc học kỳ đang hoạt động. | |
 
-**Luồng sự kiện chính:**
+**ĐẶC TẢ CHỨC NĂNG**
+
+**Luồng nghiệp vụ tiêu chuẩn**
 
 1. Màn hình "Học kỳ": Admin tạo học kỳ mới, bật / tắt trạng thái hoạt động, sửa hoặc xóa.
 
@@ -601,20 +635,21 @@ Danh mục 21 ca sử dụng của hệ thống:
 
 3. Các chức năng khác (đăng ký học phần, thống kê) tự lọc theo các lớp học phần có tên học kỳ khớp với học kỳ đang hoạt động.
 
-**Luồng sự kiện phát sinh:**
+**Luồng sự kiện phát sinh / Kịch bản phát sinh**
 
 - Luồng A — Tên học kỳ trên lớp học phần gõ sai / khác chính tả so với danh sách Học kỳ: lớp đó không xuất hiện trong bộ lọc "học kỳ hiện hành" (hai bảng liên kết bằng so khớp tên — xem mục 3.5.4).
 
 ### UC#13: Xuất danh sách (CSV / Excel)
 
-| Mục | Nội dung |
-| --- | --- |
-| Độ phức tạp | Thấp |
-| Mô tả | Admin xuất danh sách hiện có ra file để dùng ngoài hệ thống (báo cáo, in ấn). |
-| Tác nhân | Admin |
-| Hậu điều kiện — Thành công | File được tải xuống trình duyệt. |
+| UC#13 | Xuất danh sách (CSV / Excel) | Độ phức tạp: Thấp |
+| --- | --- | --- |
+| Mô tả | Admin xuất danh sách hiện có ra file để dùng ngoài hệ thống (báo cáo, in ấn). | |
+| Tác nhân | Admin | |
+| Hậu điều kiện — Thành công | File được tải xuống trình duyệt. | |
 
-**Luồng sự kiện chính:**
+**ĐẶC TẢ CHỨC NĂNG**
+
+**Luồng nghiệp vụ tiêu chuẩn**
 
 1. Trên màn hình danh sách (Sinh viên / Giảng viên / Môn học), Admin bấm nút "Xuất".
 
@@ -624,14 +659,15 @@ Danh mục 21 ca sử dụng của hệ thống:
 
 ### UC#14: Xem lớp phụ trách và danh sách sinh viên
 
-| Mục | Nội dung |
-| --- | --- |
-| Độ phức tạp | Trung bình |
-| Mô tả | Giảng viên xem các lớp học phần mình được phân công và danh sách sinh viên đã đăng ký từng lớp. |
-| Tác nhân | Giảng viên |
-| Tiền điều kiện | Đã được Admin phân công ít nhất một lớp học phần. |
+| UC#14 | Xem lớp phụ trách và danh sách sinh viên | Độ phức tạp: Trung bình |
+| --- | --- | --- |
+| Mô tả | Giảng viên xem các lớp học phần mình được phân công và danh sách sinh viên đã đăng ký từng lớp. | |
+| Tác nhân | Giảng viên | |
+| Tiền điều kiện | Đã được Admin phân công ít nhất một lớp học phần. | |
 
-**Luồng sự kiện chính:**
+**ĐẶC TẢ CHỨC NĂNG**
+
+**Luồng nghiệp vụ tiêu chuẩn**
 
 1. Giảng viên vào "Lớp của tôi": hệ thống chỉ trả về các lớp học phần do chính giảng viên đó phụ trách, trong học kỳ hiện hành.
 
@@ -641,15 +677,16 @@ Danh mục 21 ca sử dụng của hệ thống:
 
 ### UC#15: Điểm danh sinh viên
 
-| Mục | Nội dung |
-| --- | --- |
-| Độ phức tạp | Cao |
-| Mô tả | Giảng viên điểm danh cả lớp theo từng buổi học; điểm danh lại trong cùng ngày sẽ cập nhật, không tạo bản ghi trùng. |
-| Tác nhân | Giảng viên |
-| Tiền điều kiện | Lớp học phần thuộc quyền phụ trách của giảng viên. |
-| Hậu điều kiện — Thành công | Mỗi sinh viên có đúng một bản ghi điểm danh cho ngày đó. |
+| UC#15 | Điểm danh sinh viên | Độ phức tạp: Cao |
+| --- | --- | --- |
+| Mô tả | Giảng viên điểm danh cả lớp theo từng buổi học; điểm danh lại trong cùng ngày sẽ cập nhật, không tạo bản ghi trùng. | |
+| Tác nhân | Giảng viên | |
+| Tiền điều kiện | Lớp học phần thuộc quyền phụ trách của giảng viên. | |
+| Hậu điều kiện — Thành công | Mỗi sinh viên có đúng một bản ghi điểm danh cho ngày đó. | |
 
-**Luồng sự kiện chính:**
+**ĐẶC TẢ CHỨC NĂNG**
+
+**Luồng nghiệp vụ tiêu chuẩn**
 
 1. Giảng viên chọn lớp và ngày điểm danh, đánh dấu trạng thái từng sinh viên (có mặt / vắng / muộn / có phép) kèm ghi chú nếu cần.
 
@@ -657,7 +694,7 @@ Danh mục 21 ca sử dụng của hệ thống:
 
 3. Hệ thống ghi nhận từng sinh viên theo khóa duy nhất (lớp học phần, sinh viên, ngày): đã có bản ghi thì cập nhật, chưa có thì tạo mới; trả về số dòng thành công / thất bại — một dòng lỗi không làm hỏng cả buổi điểm danh.
 
-**Luồng sự kiện phát sinh:**
+**Luồng sự kiện phát sinh / Kịch bản phát sinh**
 
 - Luồng A — Không phải giảng viên phụ trách: hệ thống từ chối toàn bộ (403).
 
@@ -665,14 +702,15 @@ Danh mục 21 ca sử dụng của hệ thống:
 
 ### UC#16: Nhập điểm và Khóa điểm
 
-| Mục | Nội dung |
-| --- | --- |
-| Độ phức tạp | Cao |
-| Mô tả | Giảng viên nhập điểm chuyên cần / giữa kỳ / cuối kỳ; hệ thống tự tính điểm tổng kết và xếp loại; sau đó khóa điểm để chống chỉnh sửa. |
-| Tác nhân | Giảng viên (nhập điểm); Giảng viên hoặc Admin (khóa / mở khóa) |
-| Hậu điều kiện — Thành công | Điểm tổng kết và xếp loại chữ được tính tự động; môn học chuyển trạng thái hoàn thành; điểm có thể bị khóa. |
+| UC#16 | Nhập điểm và Khóa điểm | Độ phức tạp: Cao |
+| --- | --- | --- |
+| Mô tả | Giảng viên nhập điểm chuyên cần / giữa kỳ / cuối kỳ; hệ thống tự tính điểm tổng kết và xếp loại; sau đó khóa điểm để chống chỉnh sửa. | |
+| Tác nhân | Giảng viên (nhập điểm); Giảng viên hoặc Admin (khóa / mở khóa) | |
+| Hậu điều kiện — Thành công | Điểm tổng kết và xếp loại chữ được tính tự động; môn học chuyển trạng thái hoàn thành; điểm có thể bị khóa. | |
 
-**Luồng sự kiện chính:**
+**ĐẶC TẢ CHỨC NĂNG**
+
+**Luồng nghiệp vụ tiêu chuẩn**
 
 1. Giảng viên chọn lớp phụ trách, hệ thống hiển thị danh sách sinh viên kèm điểm hiện có.
 
@@ -682,7 +720,7 @@ Danh mục 21 ca sử dụng của hệ thống:
 
 4. Sau khi nhập xong toàn bộ, giảng viên bấm "Khóa điểm" — điểm đã khóa không thể sửa và sinh viên không thể hủy đăng ký môn đó.
 
-**Luồng sự kiện phát sinh:**
+**Luồng sự kiện phát sinh / Kịch bản phát sinh**
 
 - Luồng A — Không phụ trách lớp: từ chối nhập điểm (403).
 
@@ -692,14 +730,15 @@ Danh mục 21 ca sử dụng của hệ thống:
 
 ### UC#17: Đăng ký học phần
 
-| Mục | Nội dung |
-| --- | --- |
-| Độ phức tạp | Cao |
-| Mô tả | Sinh viên xem danh sách lớp học phần đang mở (thuộc học kỳ hoạt động) và đăng ký. |
-| Tác nhân | Sinh viên |
-| Hậu điều kiện — Thành công | Bản ghi đăng ký mới ở trạng thái "đã đăng ký". |
+| UC#17 | Đăng ký học phần | Độ phức tạp: Cao |
+| --- | --- | --- |
+| Mô tả | Sinh viên xem danh sách lớp học phần đang mở (thuộc học kỳ hoạt động) và đăng ký. | |
+| Tác nhân | Sinh viên | |
+| Hậu điều kiện — Thành công | Bản ghi đăng ký mới ở trạng thái "đã đăng ký". | |
 
-**Luồng sự kiện chính:**
+**ĐẶC TẢ CHỨC NĂNG**
+
+**Luồng nghiệp vụ tiêu chuẩn**
 
 1. Sinh viên vào "Đăng ký học phần": hệ thống chỉ hiển thị các lớp đang mở thuộc học kỳ hoạt động.
 
@@ -709,38 +748,46 @@ Danh mục 21 ca sử dụng của hệ thống:
 
 4. Hợp lệ: tạo bản ghi đăng ký và thông báo "Đăng ký thành công".
 
-**Luồng sự kiện phát sinh:**
+**Luồng sự kiện phát sinh / Kịch bản phát sinh**
 
-- Luồng A — Lớp không mở: từ chối. — Luồng B — Lớp đầy: báo "Lớp học phần đã đầy". — Luồng C — Đã đăng ký: báo lỗi trùng.
+- Luồng A — Lớp không mở: từ chối đăng ký.
+
+- Luồng B — Lớp đầy: báo "Lớp học phần đã đầy".
+
+- Luồng C — Đã đăng ký: báo lỗi trùng.
 
 ### UC#18: Hủy đăng ký học phần
 
-| Mục | Nội dung |
-| --- | --- |
-| Độ phức tạp | Trung bình |
-| Mô tả | Sinh viên hủy một môn đã đăng ký khi điểm chưa bị khóa. |
-| Tác nhân | Sinh viên |
-| Hậu điều kiện — Thành công | Bản ghi đăng ký bị xóa. |
+| UC#18 | Hủy đăng ký học phần | Độ phức tạp: Trung bình |
+| --- | --- | --- |
+| Mô tả | Sinh viên hủy một môn đã đăng ký khi điểm chưa bị khóa. | |
+| Tác nhân | Sinh viên | |
+| Hậu điều kiện — Thành công | Bản ghi đăng ký bị xóa. | |
 
-**Luồng sự kiện chính:**
+**ĐẶC TẢ CHỨC NĂNG**
+
+**Luồng nghiệp vụ tiêu chuẩn**
 
 1. Sinh viên chọn "Hủy đăng ký" trên môn đã đăng ký.
 
 2. Hệ thống kiểm tra đúng chủ sở hữu bản ghi (sai → Luồng A) và điểm chưa bị khóa (đã khóa → Luồng B), sau đó xóa bản ghi và cập nhật lại danh sách.
 
-**Luồng sự kiện phát sinh:**
+**Luồng sự kiện phát sinh / Kịch bản phát sinh**
 
-- Luồng A — Không phải chủ sở hữu: từ chối (403). — Luồng B — Điểm đã khóa: từ chối hủy.
+- Luồng A — Không phải chủ sở hữu: từ chối (403).
+
+- Luồng B — Điểm đã khóa: từ chối hủy.
 
 ### UC#19: Xem môn đã đăng ký và lịch học / lịch dạy
 
-| Mục | Nội dung |
-| --- | --- |
-| Độ phức tạp | Thấp |
-| Mô tả | Xem danh sách môn học nhóm theo học kỳ: sinh viên xem môn đã đăng ký (lịch học); giảng viên xem lớp được phân công (lịch dạy). |
-| Tác nhân | Sinh viên, Giảng viên |
+| UC#19 | Xem môn đã đăng ký và lịch học / lịch dạy | Độ phức tạp: Thấp |
+| --- | --- | --- |
+| Mô tả | Xem danh sách môn học nhóm theo học kỳ: sinh viên xem môn đã đăng ký (lịch học); giảng viên xem lớp được phân công (lịch dạy). | |
+| Tác nhân | Sinh viên, Giảng viên | |
 
-**Luồng sự kiện chính:**
+**ĐẶC TẢ CHỨC NĂNG**
+
+**Luồng nghiệp vụ tiêu chuẩn**
 
 1. Người dùng vào màn hình "Lịch học" (sinh viên) hoặc "Lịch dạy" (giảng viên) — hai màn hình dùng chung một giao diện.
 
@@ -750,14 +797,15 @@ Danh mục 21 ca sử dụng của hệ thống:
 
 ### UC#20: Xem bảng điểm và GPA
 
-| Mục | Nội dung |
-| --- | --- |
-| Độ phức tạp | Trung bình |
-| Mô tả | Sinh viên xem bảng điểm tích lũy toàn khóa, GPA và xu hướng GPA theo học kỳ. |
-| Tác nhân | Sinh viên |
-| Tiền điều kiện | Có ít nhất một môn đã hoàn thành (đã có điểm). |
+| UC#20 | Xem bảng điểm và GPA | Độ phức tạp: Trung bình |
+| --- | --- | --- |
+| Mô tả | Sinh viên xem bảng điểm tích lũy toàn khóa, GPA và xu hướng GPA theo học kỳ. | |
+| Tác nhân | Sinh viên | |
+| Tiền điều kiện | Có ít nhất một môn đã hoàn thành (đã có điểm). | |
 
-**Luồng sự kiện chính:**
+**ĐẶC TẢ CHỨC NĂNG**
+
+**Luồng nghiệp vụ tiêu chuẩn**
 
 1. Sinh viên vào "Bảng điểm": hệ thống liệt kê toàn bộ môn đã hoàn thành kèm điểm thành phần, điểm tổng kết, xếp loại chữ.
 
@@ -767,13 +815,14 @@ Danh mục 21 ca sử dụng của hệ thống:
 
 ### UC#21: Xem thống kê Dashboard
 
-| Mục | Nội dung |
-| --- | --- |
-| Độ phức tạp | Trung bình |
-| Mô tả | Mỗi vai trò thấy một bộ thống kê riêng ngay khi đăng nhập. |
-| Tác nhân | Admin, Giảng viên, Sinh viên |
+| UC#21 | Xem thống kê Dashboard | Độ phức tạp: Trung bình |
+| --- | --- | --- |
+| Mô tả | Mỗi vai trò thấy một bộ thống kê riêng ngay khi đăng nhập. | |
+| Tác nhân | Admin, Giảng viên, Sinh viên | |
 
-**Luồng sự kiện chính:**
+**ĐẶC TẢ CHỨC NĂNG**
+
+**Luồng nghiệp vụ tiêu chuẩn**
 
 1. **Admin**: tổng số sinh viên / giảng viên / lớp học phần / môn học / khoa; số lớp đang hoạt động; phân bố giới tính; phân bố xếp loại điểm toàn hệ thống; số đăng ký mới 7 ngày gần nhất.
 
@@ -789,7 +838,7 @@ Danh mục 21 ca sử dụng của hệ thống:
 
 Cơ sở dữ liệu PostgreSQL của hệ thống EduManage gồm 12 bảng. Danh mục đào tạo phân cấp theo chiều **Khoa → Ngành → Lớp hành chính / Môn học**; chuỗi nghiệp vụ học tập đi theo chiều **Người dùng → Đăng ký học phần → Lớp học phần → Môn học**.
 
-![Hình 3.2. Mô hình quan hệ (ERD) của hệ thống EduManage](assets/diag_02_erd.png)
+![Hình 3.7. Mô hình quan hệ (ERD) của hệ thống EduManage](assets/diag_02_erd.png)
 
 ### 3.5.2. Mô tả cấu trúc các bảng
 
@@ -958,59 +1007,59 @@ Do liên kết bằng so khớp tên, việc đổi tên một Học kỳ sẽ k
 
 ## 3.6. Sơ đồ tuần tự các nghiệp vụ
 
-Mỗi ca sử dụng ở mục 3.4 có một sơ đồ tuần tự tương ứng, thể hiện luồng tương tác Người dùng → Giao diện (React) → Server (NestJS) → Cơ sở dữ liệu.
+Mỗi ca sử dụng ở mục 3.4 có một sơ đồ tuần tự tương ứng, vẽ theo chuẩn UML với bốn thành phần: Người dùng (tác nhân) → Front-End → Back-End → Database. Mũi tên nét liền là yêu cầu gửi đi, mũi tên nét đứt là phản hồi trả về; khung Alt thể hiện hai nhánh kết quả [Thành công] / [Thất bại].
 
 ### 3.6.1. Nhóm Xác thực và Tài khoản cá nhân
 
-![Hình 3.3. Sơ đồ tuần tự UC#01 — Đăng nhập theo vai trò](assets/diag_seq_01_login.png)
+![Hình 3.8. Sơ đồ tuần tự UC#01 — Đăng nhập theo vai trò](assets/uml_seq_uc01.png)
 
-![Hình 3.4. Sơ đồ tuần tự UC#02 — Quên mật khẩu bằng OTP qua email](assets/diag_seq_02_forgotpw.png)
+![Hình 3.9. Sơ đồ tuần tự UC#02 — Quên mật khẩu bằng OTP qua email](assets/uml_seq_uc02.png)
 
-![Hình 3.5. Sơ đồ tuần tự UC#03 — Đổi mật khẩu](assets/diag_seq_04_changepw.png)
+![Hình 3.10. Sơ đồ tuần tự UC#03 — Đổi mật khẩu](assets/uml_seq_uc03.png)
 
-![Hình 3.6. Sơ đồ tuần tự UC#04 — Đăng xuất](assets/diag_seq_05_logout.png)
+![Hình 3.11. Sơ đồ tuần tự UC#04 — Đăng xuất](assets/uml_seq_uc04.png)
 
-![Hình 3.7. Sơ đồ tuần tự UC#05 — Cập nhật hồ sơ cá nhân](assets/diag_seq_06_profile.png)
+![Hình 3.12. Sơ đồ tuần tự UC#05 — Cập nhật hồ sơ cá nhân](assets/uml_seq_uc05.png)
 
 ### 3.6.2. Nhóm Quản trị tài khoản (Admin)
 
-![Hình 3.8. Sơ đồ tuần tự UC#06 — Tạo tài khoản Sinh viên / Giảng viên](assets/diag_seq_06_createaccount.png)
+![Hình 3.13. Sơ đồ tuần tự UC#06 — Tạo tài khoản Sinh viên / Giảng viên](assets/uml_seq_uc06.png)
 
-![Hình 3.9. Sơ đồ tuần tự UC#07 — Nhập danh sách hàng loạt](assets/diag_seq_07_bulkimport.png)
+![Hình 3.14. Sơ đồ tuần tự UC#07 — Nhập danh sách hàng loạt](assets/uml_seq_uc07.png)
 
-![Hình 3.10. Sơ đồ tuần tự UC#08 — Xem chi tiết và cập nhật người dùng](assets/diag_seq_07_userdetail.png)
+![Hình 3.15. Sơ đồ tuần tự UC#08 — Xem chi tiết và cập nhật người dùng](assets/uml_seq_uc08.png)
 
-![Hình 3.11. Sơ đồ tuần tự UC#09 — Khóa / mở khóa tài khoản](assets/diag_seq_08_lockuser.png)
+![Hình 3.16. Sơ đồ tuần tự UC#09 — Khóa / mở khóa tài khoản](assets/uml_seq_uc09.png)
 
-![Hình 3.12. Sơ đồ tuần tự UC#10 — Xóa tài khoản](assets/diag_seq_09_deleteuser.png)
+![Hình 3.17. Sơ đồ tuần tự UC#10 — Xóa tài khoản](assets/uml_seq_uc10.png)
 
 ### 3.6.3. Nhóm Danh mục đào tạo (Admin)
 
-![Hình 3.13. Sơ đồ tuần tự UC#11 — Quản lý danh mục Khoa / Ngành / Lớp / Môn học](assets/diag_seq_10_catalog.png)
+![Hình 3.18. Sơ đồ tuần tự UC#11 — Quản lý danh mục Khoa / Ngành / Lớp / Môn học](assets/uml_seq_uc11.png)
 
-![Hình 3.14. Sơ đồ tuần tự UC#12 — Quản lý Lớp học phần và Học kỳ](assets/diag_seq_11_semester.png)
+![Hình 3.19. Sơ đồ tuần tự UC#12 — Quản lý Lớp học phần và Học kỳ](assets/uml_seq_uc12.png)
 
-![Hình 3.15. Sơ đồ tuần tự UC#13 — Xuất danh sách CSV / Excel](assets/diag_seq_12_export.png)
+![Hình 3.20. Sơ đồ tuần tự UC#13 — Xuất danh sách CSV / Excel](assets/uml_seq_uc13.png)
 
 ### 3.6.4. Nhóm Học vụ (Giảng viên / Sinh viên)
 
-![Hình 3.16. Sơ đồ tuần tự UC#14 — Xem lớp phụ trách và danh sách sinh viên](assets/diag_seq_13_mysections.png)
+![Hình 3.21. Sơ đồ tuần tự UC#14 — Xem lớp phụ trách và danh sách sinh viên](assets/uml_seq_uc14.png)
 
-![Hình 3.17. Sơ đồ tuần tự UC#15 — Điểm danh sinh viên](assets/diag_seq_15_attendance.png)
+![Hình 3.22. Sơ đồ tuần tự UC#15 — Điểm danh sinh viên](assets/uml_seq_uc15.png)
 
-![Hình 3.18. Sơ đồ tuần tự UC#16 — Nhập điểm và Khóa điểm](assets/diag_seq_03_grade.png)
+![Hình 3.23. Sơ đồ tuần tự UC#16 — Nhập điểm và Khóa điểm](assets/uml_seq_uc16.png)
 
-![Hình 3.19. Sơ đồ tuần tự UC#17 — Đăng ký học phần](assets/diag_seq_02_enroll.png)
+![Hình 3.24. Sơ đồ tuần tự UC#17 — Đăng ký học phần](assets/uml_seq_uc17.png)
 
-![Hình 3.20. Sơ đồ tuần tự UC#18 — Hủy đăng ký học phần](assets/diag_seq_14_dropenroll.png)
+![Hình 3.25. Sơ đồ tuần tự UC#18 — Hủy đăng ký học phần](assets/uml_seq_uc18.png)
 
-![Hình 3.21. Sơ đồ tuần tự UC#19 — Xem môn đã đăng ký và lịch học / lịch dạy](assets/diag_seq_15_schedule.png)
+![Hình 3.26. Sơ đồ tuần tự UC#19 — Xem môn đã đăng ký và lịch học / lịch dạy](assets/uml_seq_uc19.png)
 
-![Hình 3.22. Sơ đồ tuần tự UC#20 — Xem bảng điểm và GPA](assets/diag_seq_16_transcript.png)
+![Hình 3.27. Sơ đồ tuần tự UC#20 — Xem bảng điểm và GPA](assets/uml_seq_uc20.png)
 
 ### 3.6.5. Nhóm Thống kê
 
-![Hình 3.23. Sơ đồ tuần tự UC#21 — Xem thống kê Dashboard theo vai trò](assets/diag_seq_21_dashboard.png)
+![Hình 3.28. Sơ đồ tuần tự UC#21 — Xem thống kê Dashboard theo vai trò](assets/uml_seq_uc21.png)
 
 # CHƯƠNG 4. TRIỂN KHAI HỆ THỐNG
 

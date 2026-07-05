@@ -47,19 +47,22 @@ Chia rõ **chức năng theo phân hệ** (phân hệ quản trị vs. phân h�
 Bảng tác nhân gồm: **STT | Tác nhân | Mô tả**. Sau đó là một biểu đồ Use Case tổng quát, rồi các biểu đồ **phân rã** (decomposition) riêng cho từng nhóm nghiệp vụ lớn (đăng nhập, đăng ký học phần, quản lý điểm, quản lý tài khoản, quản lý lớp, quản lý môn học, điểm danh).
 
 ### 3.3 Đặc tả chi tiết Use Case (khuôn mẫu quan trọng nhất)
-Mỗi use case được đặc tả theo đúng khuôn:
+Mỗi use case được đặc tả bằng một bảng theo đúng khuôn (ví dụ thực tế: `UC#02: Đăng ký`, mục 3.5 trang 49 của file mẫu):
 
 | Trường | Nội dung |
 |---|---|
-| Mã & Tên | `UC#xx: <Tên chức năng>` |
-| Độ phức tạp | Cao / Trung bình / Thấp |
+| Hàng tiêu đề | 3 ô: `UC#xx` \| `<Tên chức năng>` \| `Độ phức tạp: Cao/Trung bình/Thấp` |
 | Mô tả | 1–2 câu tóm tắt mục đích |
 | Tác nhân | Vai trò thực hiện |
 | Tiền điều kiện | Trạng thái bắt buộc phải có trước khi use case chạy |
 | Hậu điều kiện — Thành công | Kết quả khi hoàn tất đúng |
 | Hậu điều kiện — Lỗi | Kết quả khi thất bại |
-| Luồng sự kiện chính | Các bước đánh số, mô tả tương tác người dùng ⇄ hệ thống |
-| Luồng sự kiện phát sinh | `Luồng A`, `Luồng B`... — các nhánh rẽ khi có lỗi/validate ở luồng chính |
+
+Sau bảng metadata trên là một dòng phân tách toàn chiều rộng **"ĐẶC TẢ CHỨC NĂNG"**, rồi đến sub-heading **"Luồng nghiệp vụ tiêu chuẩn"** (tương đương "luồng sự kiện chính"), gồm:
+- 1 câu mở đầu dạng "Use case bắt đầu khi người dùng muốn...".
+- Các bước đánh số 1, 2, 3... mô tả tương tác người dùng ⇄ hệ thống; bước nào cần nhập liệu thì liệt kê danh sách con đánh số phụ (1.1, 1.2...) ghi rõ từng trường + `(bắt buộc)`/`(tùy chọn)`.
+
+Ngoài luồng chính còn có **luồng sự kiện phát sinh** — `Luồng A`, `Luồng B`... — các nhánh rẽ khi có lỗi/validate ở luồng chính.
 
 Ví dụ áp dụng trong file mẫu: `UC#01 Đăng nhập`, `UC#02 Đăng ký`, `UC#03 Đăng xuất`, `UC#05 Đăng ký môn`, `UC#08 Thống kê`, `UC#09 Quản lý sinh viên`...
 
