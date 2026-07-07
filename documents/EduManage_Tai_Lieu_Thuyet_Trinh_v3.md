@@ -81,7 +81,9 @@ Hệ thống không có chức năng tự đăng ký tài khoản: mọi tài kh
 
 - **Chương 4 — Triển khai hệ thống**: các màn hình đã hoàn thiện theo từng phân hệ và môi trường vận hành.
 
-- **Kết luận và hướng phát triển**.
+- **Chương 5 — Tổng kết và đánh giá**: kết quả đạt được so với mục tiêu, hạn chế và hướng phát triển, bài học kinh nghiệm, bảng phân công công việc và đánh giá mức độ hoàn thành của từng thành viên.
+
+- **Phụ lục — Báo cáo tóm tắt cá nhân**: báo cáo riêng của từng thành viên về phần việc trực tiếp thực hiện, khó khăn đã gặp và cách khắc phục, kèm minh chứng cá nhân.
 
 # CHƯƠNG 1. TỔNG QUAN KIẾN TRÚC HỆ THỐNG
 
@@ -1167,9 +1169,13 @@ Toàn bộ tham số nhạy cảm (chuỗi kết nối CSDL, tài khoản SMTP, 
 
 - Ràng buộc dữ liệu được kiểm chứng ở tầng CSDL: đăng ký trùng và điểm danh trùng đều bị chặn bởi ràng buộc duy nhất ngay cả khi thao tác đồng thời.
 
-# KẾT LUẬN VÀ HƯỚNG PHÁT TRIỂN
+# CHƯƠNG 5. TỔNG KẾT VÀ ĐÁNH GIÁ
 
-## Kết quả đạt được
+## 5.1. Kết quả đạt được của nhóm
+
+So với mục tiêu đặt ra ở phần Mở đầu (tập trung hóa dữ liệu đào tạo, tự động hóa nghiệp vụ, phân quyền theo vai trò, bảo mật cao hơn mặt bằng chung, giao diện hiện đại hai ngôn ngữ / hai chế độ giao diện), nhóm tự đánh giá đã hoàn thành **100% phạm vi cam kết**: toàn bộ 21 ca sử dụng đặc tả ở Chương 3 đều đã được lập trình, chạy được từ đầu đến cuối trên cả ba vai trò và được kiểm thử như trình bày ở mục 4.6. Các kết quả nổi bật, hạn chế còn lại và hướng phát triển tiếp theo được trình bày dưới đây.
+
+### 5.1.1. Kết quả đạt được
 
 - Hoàn thiện hệ thống EduManage với đầy đủ 21 ca sử dụng cho ba vai trò: quản trị tài khoản và danh mục đào tạo (Admin), điểm danh và nhập điểm (Giảng viên), đăng ký học phần và theo dõi kết quả học tập (Sinh viên).
 
@@ -1181,7 +1187,7 @@ Toàn bộ tham số nhạy cảm (chuỗi kết nối CSDL, tài khoản SMTP, 
 
 - Giao diện hiện đại, thống nhất, hai ngôn ngữ, hai chế độ sáng / tối, có biểu đồ thống kê trực quan cho từng vai trò.
 
-## Hạn chế hiện tại
+### 5.1.2. Hạn chế hiện tại
 
 - Bảng nhật ký hoạt động (activity_logs) đã thiết kế trong CSDL nhưng chưa có nghiệp vụ ghi dữ liệu — chưa có vết kiểm toán (audit trail) cho các thao tác quản trị.
 
@@ -1193,7 +1199,7 @@ Toàn bộ tham số nhạy cảm (chuỗi kết nối CSDL, tài khoản SMTP, 
 
 - Sinh viên mới xem được tỷ lệ điểm danh tổng trên Dashboard, chưa có màn hình xem chi tiết điểm danh từng buổi (API phía server đã sẵn sàng).
 
-## Hướng phát triển
+### 5.1.3. Hướng phát triển tiếp theo
 
 - Kích hoạt nhật ký hoạt động cho các thao tác quản trị quan trọng (tạo / xóa tài khoản, khóa điểm, đổi trạng thái học kỳ) và bổ sung màn hình tra cứu nhật ký.
 
@@ -1204,3 +1210,125 @@ Toàn bộ tham số nhạy cảm (chuỗi kết nối CSDL, tài khoản SMTP, 
 - Bổ sung màn hình chi tiết điểm danh cho sinh viên, thông báo trong ứng dụng, và báo cáo thống kê nâng cao (xuất bảng điểm có chữ ký số, cảnh báo học vụ tự động).
 
 - Mở rộng lịch học trong tuần hiện có (ngày học + khung giờ) theo tiết học chuẩn / phòng học, hiển thị dạng thời khóa biểu lưới tuần và tích hợp lịch (iCal) cho sinh viên, giảng viên.
+
+## 5.2. Bài học kinh nghiệm
+
+**Kiến thức chuyên môn mới tiếp thu được:**
+
+- Kiến trúc backend module hóa với NestJS: tổ chức mỗi nghiệp vụ thành bộ ba module – controller – service, tiêm phụ thuộc (Dependency Injection) và dùng Guard làm lớp chắn xác thực / phân quyền tập trung thay vì kiểm tra rải rác trong từng hàm.
+
+- Làm chủ ORM Prisma trên PostgreSQL: khai báo schema một nơi duy nhất, quản lý thay đổi cấu trúc bằng migration, và tận dụng ràng buộc duy nhất (unique constraint) + transaction để chống ghi trùng dữ liệu ngay cả khi nhiều người thao tác đồng thời.
+
+- Thiết kế cơ chế xác thực nâng cao: JWT ký RS256 bằng cặp khóa RSA-2048 riêng cho từng người dùng, token đặt trong cookie httpOnly, tự làm mới token, thu hồi phiên tức thời bằng cách xóa cặp khóa — một mô hình vượt ra ngoài cách dùng JWT khóa chung thường gặp.
+
+- Xây dựng SPA ReactJS quy mô nhiều phân hệ: quản lý trạng thái đăng nhập / ngôn ngữ / giao diện bằng Context, bộ chặn (interceptor) axios tự làm mới token khi hết hạn, tự viết biểu đồ thống kê bằng SVG thuần không phụ thuộc thư viện, xử lý nhập / xuất dữ liệu CSV và Excel có kiểm tra lỗi từng dòng.
+
+- Quy trình phân tích – thiết kế bài bản: đi từ yêu cầu chức năng → biểu đồ và đặc tả use case → sơ đồ tuần tự → ERD → lập trình, nhờ đó hai phía frontend và backend làm việc song song trên cùng một "hợp đồng API" đã thống nhất trước.
+
+**Kỹ năng mềm rèn luyện được:**
+
+- Làm việc nhóm theo phân công rõ ràng (một thành viên phụ trách toàn bộ backend, hai thành viên phụ trách frontend), phối hợp qua kho mã nguồn Git chung và thống nhất giao diện API trước khi lập trình để giảm tối đa thời gian chờ lẫn nhau.
+
+- Giao tiếp và phản biện kỹ thuật: trao đổi khi thay đổi thiết kế (ví dụ bổ sung lịch học trong tuần kéo theo thay đổi cả CSDL, API lẫn giao diện), báo cáo tiến độ định kỳ với người hướng dẫn.
+
+- Tuân thủ kỷ luật làm việc kiểu doanh nghiệp: quy ước đặt tên thống nhất, tách toàn bộ hằng số / tham số nhạy cảm khỏi mã nguồn, không nộp sản phẩm khi chưa qua kiểm thử, viết tài liệu cho cả người đọc không chuyên kỹ thuật.
+
+## 5.3. Bảng phân công và đánh giá mức độ hoàn thành
+
+Để Hội đồng có cơ sở chấm điểm cá nhân, nhóm cung cấp bảng phân công công việc và mức độ hoàn thành của từng thành viên như sau:
+
+| STT | Họ và tên SV | Vai trò | Nhiệm vụ chi tiết (Chương 3 & 4) | Tỷ lệ hoàn thành (%) | Minh chứng |
+| --- | --- | --- | --- | --- | --- |
+| 1 | Lê Anh Duy | Nhóm trưởng / Lập trình Backend | Thiết kế ERD và toàn bộ lược đồ CSDL (mục 3.5); thiết kế API và sơ đồ tuần tự (mục 3.6); lập trình toàn bộ backend NestJS: xác thực JWT–RSA riêng từng người dùng, quên mật khẩu OTP, quản lý tài khoản + nhập hàng loạt, danh mục đào tạo, lớp học phần – học kỳ kèm lịch học và chống trùng lịch, đăng ký học phần, điểm danh, nhập / khóa điểm, thống kê dashboard, gửi email SMTP, dữ liệu mẫu (seed); kiểm thử đơn vị Jest và kiểm thử API đầu-cuối (mục 4.6) | 100% | Mã nguồn `server_side/src/` (auth, users, enrollments, attendance, subject-classes, semesters, dashboard…); `server_side/prisma/schema.prisma`; bộ kiểm thử `npm test` |
+| 2 | Nguyễn Tuấn Anh | Thành viên / Lập trình Frontend | Đặc tả use case nhóm xác thực và quản trị tài khoản, danh mục (UC#01–UC#13, mục 3.4); lập trình phân hệ dùng chung: màn hình đăng nhập tích hợp quên mật khẩu OTP, trang hồ sơ cá nhân, khung giao diện chung Sidebar / Topbar (mục 4.1); toàn bộ phân hệ Quản trị viên: dashboard thống kê, quản lý Sinh viên / Giảng viên, nhập hàng loạt CSV / Excel có bản xem trước, quản lý danh mục, lớp học phần – học kỳ, xuất danh sách (mục 4.2); bộ chặn axios tự làm mới token | 100% | Mã nguồn `client_side/src/pages/admin/`, `pages/login/`, `components/BulkImportDrawer.jsx`, `config/axiosClient.js`; ảnh màn hình mục 4.1 – 4.2 |
+| 3 | Nguyễn Lê Minh Quân | Thành viên / Lập trình Frontend | Đặc tả use case nhóm nghiệp vụ Giảng viên / Sinh viên (UC#14–UC#21, mục 3.4); lập trình toàn bộ phân hệ Giảng viên: dashboard, lớp của tôi, điểm danh, nhập điểm / khóa điểm, lịch dạy (mục 4.3); toàn bộ phân hệ Sinh viên: dashboard GPA, đăng ký học phần có cảnh báo trùng lịch, môn của tôi / lịch học, bảng điểm (mục 4.4); bộ biểu đồ thống kê SVG thuần dùng chung; hỗ trợ hai ngôn ngữ và hai chế độ giao diện; kịch bản kiểm thử hồi quy đầu-cuối phía client | 100% | Mã nguồn `client_side/src/pages/teacher/`, `pages/student/`, `components/charts.jsx`, `utils/schedule.js`; ảnh màn hình mục 4.3 – 4.4; bộ kiểm thử `tests/e2e.regression.mjs` |
+
+# PHỤ LỤC. BÁO CÁO TÓM TẮT CÁ NHÂN
+
+Để đảm bảo công bằng trong việc đánh giá và chấm điểm, mỗi thành viên trong nhóm viết riêng một báo cáo tóm tắt cá nhân dưới đây, trình bày phần việc bản thân trực tiếp thực hiện, các khó khăn kỹ thuật đã gặp cùng phương pháp tự khắc phục, và minh chứng cá nhân kèm theo.
+
+## Phụ lục A. Báo cáo cá nhân — Lê Anh Duy
+
+**Họ tên sinh viên:** Lê Anh Duy — **Mã SV:** ................ — **Lớp:** ................
+
+**1. Tự đánh giá (phần việc trực tiếp thực hiện):**
+
+Tôi phụ trách **toàn bộ phần backend** của hệ thống, cụ thể:
+
+- Thiết kế lược đồ cơ sở dữ liệu PostgreSQL bằng Prisma (mục 3.5): các bảng người dùng, cặp khóa RSA, OTP, danh mục Khoa / Ngành / Lớp / Môn học, lớp học phần, học kỳ, đăng ký, điểm danh, cùng các ràng buộc duy nhất chống ghi trùng.
+
+- Lập trình toàn bộ các module NestJS: `auth` (đăng nhập, làm mới token, quên mật khẩu OTP), `users` (tạo tài khoản tự sinh mã, nhập hàng loạt, khóa / mở khóa, xóa), `departments` / `branches` / `classes` / `subjects` (danh mục), `subject-classes` / `semesters` (mở lớp kèm lịch học trong tuần, kiểm tra trùng lịch dạy), `enrollments` (đăng ký có kiểm soát sĩ số và chống trùng lịch học), `attendance` (điểm danh), nhập điểm – khóa điểm – tính GPA, `dashboard` (thống kê ba vai trò) và `email` (gửi thông tin tài khoản, OTP qua SMTP).
+
+- Xây dựng cơ chế xác thực JWT RS256 với cặp khóa RSA-2048 riêng cho từng người dùng, token đặt trong cookie httpOnly, thu hồi phiên tức thời khi đổi mật khẩu / khóa tài khoản.
+
+- Viết dữ liệu mẫu (seed), bộ kiểm thử đơn vị Jest cho tầng service và kịch bản kiểm thử API đầu-cuối cho nghiệp vụ lịch học (mục 4.6).
+
+**2. Khó khăn và giải quyết vấn đề:**
+
+- *Khó khăn 1 — xác thực bằng khóa RSA riêng từng người dùng:* khác với JWT khóa chung, mỗi request phải tìm đúng khóa công khai trong CSDL để xác minh chữ ký, đồng thời phải thu hồi được phiên ngay lập tức khi người dùng đổi mật khẩu hoặc bị khóa tài khoản. Ban đầu tôi gặp lỗi token vẫn hợp lệ sau khi đổi mật khẩu. **Cách khắc phục:** thiết kế bảng `api_keys` quan hệ 1-1 với người dùng; mọi lần đăng nhập đều xóa cặp khóa cũ và sinh cặp khóa mới, nhờ đó chỉ cần xóa bản ghi `api_keys` là toàn bộ token cũ (kể cả refresh token) mất hiệu lực tức thời; các luồng đăng xuất, đổi mật khẩu, đặt lại mật khẩu đều gọi chung thao tác xóa này.
+
+- *Khó khăn 2 — chống ghi trùng khi thao tác đồng thời:* khi hai sinh viên cùng bấm đăng ký chỗ cuối của một lớp, hoặc giảng viên điểm danh lại cùng một buổi, kiểm tra bằng câu lệnh đọc-rồi-ghi thông thường vẫn tạo bản ghi trùng. **Cách khắc phục:** đặt ràng buộc duy nhất ngay ở tầng CSDL (cặp sinh viên – lớp học phần, cặp buổi – sinh viên), gói thao tác kiểm tra sĩ số và ghi đăng ký trong transaction, bắt mã lỗi vi phạm ràng buộc của Prisma để trả về thông báo nghiệp vụ rõ ràng (409) thay vì lỗi hệ thống.
+
+**3. Minh chứng cá nhân** *(chèn ảnh chụp màn hình các đoạn mã sau khi in báo cáo)*:
+
+- Đoạn mã sinh cặp khóa RSA và ký token khi đăng nhập, thu hồi phiên khi đặt lại mật khẩu: `server_side/src/auth/auth.service.ts`.
+
+- Lược đồ CSDL với các ràng buộc duy nhất: `server_side/prisma/schema.prisma`.
+
+- Kết quả chạy bộ kiểm thử đơn vị (`npm test`) và kiểm thử API đầu-cuối nghiệp vụ lịch học.
+
+## Phụ lục B. Báo cáo cá nhân — Nguyễn Tuấn Anh
+
+**Họ tên sinh viên:** Nguyễn Tuấn Anh — **Mã SV:** ................ — **Lớp:** ................
+
+**1. Tự đánh giá (phần việc trực tiếp thực hiện):**
+
+Tôi phụ trách phần frontend gồm **phân hệ dùng chung và toàn bộ phân hệ Quản trị viên**, cụ thể:
+
+- Màn hình đăng nhập tích hợp trọn luồng quên mật khẩu ba bước (nhập mã tài khoản → xác minh OTP → đặt mật khẩu mới), kiểm tra điều kiện mật khẩu hiển thị trực quan theo bộ quy tắc dùng chung; trang hồ sơ cá nhân và đổi mật khẩu (mục 4.1).
+
+- Khung giao diện chung của toàn hệ thống: Sidebar / Topbar, điều hướng theo vai trò, phiên đăng nhập tự khôi phục khi tải lại trang (AuthContext) và bộ chặn axios tự làm mới token khi hết hạn.
+
+- Toàn bộ phân hệ Quản trị viên (mục 4.2): dashboard thống kê; quản lý Sinh viên / Giảng viên với tự sinh mã kế tiếp; nhập hàng loạt từ CSV / Excel có bản xem trước phân biệt dòng hợp lệ / dòng lỗi; quản lý danh mục Khoa → Ngành → Lớp / Môn học; quản lý lớp học phần – học kỳ với nút chọn ngày học trong tuần (T2 → CN) và khung giờ; xuất danh sách ra CSV / Excel.
+
+**2. Khó khăn và giải quyết vấn đề:**
+
+- *Khó khăn 1 — vòng lặp vô hạn khi tự làm mới token:* bộ chặn axios bắt lỗi 401 để gọi làm mới token rồi gửi lại request, nhưng khi chính refresh token cũng hết hạn thì request làm mới lại trả 401 và bị chính bộ chặn bắt tiếp, tạo vòng lặp gọi API vô hạn làm treo trình duyệt. **Cách khắc phục:** đánh dấu mỗi request chỉ được thử lại một lần, tách lời gọi làm mới token sang một client axios riêng không gắn bộ chặn, và khi làm mới thất bại thì chủ động xóa trạng thái đăng nhập và đưa người dùng về màn hình đăng nhập.
+
+- *Khó khăn 2 — nhập hàng loạt file CSV / Excel tiếng Việt:* file do người dùng tự soạn có đủ kiểu lỗi: sai font tiếng Việt do thiếu BOM UTF-8, thiếu cột, ngày sinh sai định dạng, email trùng — nếu gửi thẳng lên server thì một dòng lỗi làm hỏng cả đợt nhập. **Cách khắc phục:** đọc và chuẩn hóa dữ liệu ngay trên trình duyệt, dựng bảng xem trước phân loại rõ dòng hợp lệ / dòng lỗi kèm lý do từng dòng, chỉ gửi các dòng hợp lệ lên server; khi xuất file CSV chủ động ghi kèm BOM UTF-8 để mở bằng Excel không vỡ font.
+
+**3. Minh chứng cá nhân** *(chèn ảnh chụp màn hình các đoạn mã sau khi in báo cáo)*:
+
+- Bộ chặn axios tự làm mới token (đánh dấu thử lại một lần): `client_side/src/config/axiosClient.js`.
+
+- Ngăn nhập hàng loạt với bảng xem trước hợp lệ / lỗi: `client_side/src/components/BulkImportDrawer.jsx`; tiện ích đọc / ghi file: `client_side/src/utils/csv.js`, `utils/excel.js`.
+
+- Ảnh màn hình đăng nhập, quên mật khẩu và các màn hình Quản trị viên tại mục 4.1 – 4.2.
+
+## Phụ lục C. Báo cáo cá nhân — Nguyễn Lê Minh Quân
+
+**Họ tên sinh viên:** Nguyễn Lê Minh Quân — **Mã SV:** ................ — **Lớp:** ................
+
+**1. Tự đánh giá (phần việc trực tiếp thực hiện):**
+
+Tôi phụ trách phần frontend gồm **toàn bộ phân hệ Giảng viên và phân hệ Sinh viên**, cụ thể:
+
+- Phân hệ Giảng viên (mục 4.3): dashboard (số lớp phụ trách, tỷ lệ điểm danh, xu hướng 8 buổi gần nhất); danh sách lớp của tôi kèm lịch dạy trong tuần; màn hình điểm danh theo buổi với bốn trạng thái và lưu cả lớp một lần; bảng nhập điểm tự tính điểm tổng kết và xếp loại chữ ngay khi gõ, nút khóa điểm; lịch dạy nhóm theo học kỳ.
+
+- Phân hệ Sinh viên (mục 4.4): dashboard GPA và tín chỉ; màn hình đăng ký học phần với số chỗ còn lại, nhãn cảnh báo "Trùng lịch" gắn ngay trên danh sách lớp đang mở và giỏ đăng ký bên phải; môn của tôi / lịch học; bảng điểm toàn khóa với biểu đồ xu hướng GPA.
+
+- Bộ biểu đồ thống kê dùng chung cho cả ba phân hệ, tự viết bằng SVG thuần (biểu đồ đường, cột, tròn, vòng) không phụ thuộc thư viện ngoài; tham gia hỗ trợ hai ngôn ngữ Việt / Anh và hai chế độ giao diện sáng / tối; viết kịch bản kiểm thử hồi quy đầu-cuối phía client.
+
+**2. Khó khăn và giải quyết vấn đề:**
+
+- *Khó khăn 1 — tự vẽ biểu đồ bằng SVG thuần:* yêu cầu của nhóm là không thêm thư viện biểu đồ để giữ ứng dụng nhẹ, nên tôi phải tự tính toàn bộ: chia thang trục theo dữ liệu thật, dựng đường path từ dãy điểm, co giãn theo kích thước màn hình và đổi màu theo chế độ sáng / tối. Ban đầu biểu đồ vỡ bố cục khi dữ liệu chỉ có một điểm hoặc toàn giá trị 0. **Cách khắc phục:** dùng `viewBox` để biểu đồ tự co giãn, viết hàm chuẩn hóa thang đo có xử lý riêng các trường hợp biên (mảng rỗng, một phần tử, min = max), gom thành các component dùng chung trong `charts.jsx` để mọi màn hình thống kê tái sử dụng.
+
+- *Khó khăn 2 — cảnh báo trùng lịch ngay trên giao diện đăng ký:* muốn sinh viên thấy lớp bị trùng lịch **trước khi** bấm đăng ký (thay vì chỉ nhận lỗi từ server), tôi phải so khớp lịch học trong tuần (ngày học + khung giờ) của từng lớp đang mở với tất cả môn sinh viên đã đăng ký. Cách so sánh chuỗi giờ ban đầu cho kết quả sai với các khung giờ giao nhau một phần. **Cách khắc phục:** viết hàm tiện ích quy đổi giờ về số phút, kiểm tra giao nhau của hai khoảng thời gian theo từng thứ trong tuần (`utils/schedule.js`), gắn nhãn cảnh báo trên danh sách; server vẫn kiểm tra lại một lần nữa làm chốt chặn cuối cùng nên giao diện và dữ liệu luôn nhất quán.
+
+**3. Minh chứng cá nhân** *(chèn ảnh chụp màn hình các đoạn mã sau khi in báo cáo)*:
+
+- Bộ component biểu đồ SVG thuần: `client_side/src/components/charts.jsx`.
+
+- Hàm so khớp trùng lịch học trong tuần: `client_side/src/utils/schedule.js`.
+
+- Ảnh các màn hình Giảng viên / Sinh viên tại mục 4.3 – 4.4 và kết quả chạy kiểm thử hồi quy `client_side/tests/e2e.regression.mjs`.
