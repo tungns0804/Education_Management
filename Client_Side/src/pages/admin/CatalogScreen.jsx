@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { I } from '../../components/icons';
 import { BtnSpinner, Drawer, FormField, Modal, fieldCls, useForm, useToast, validate } from '../../components/ui';
 import { DataTable, Page, SectionHead } from '../../components/shell';
-import { TableToolbar, RowAction } from '../../components/table';
+import { TableToolbar, FilterSelect, RowAction } from '../../components/table';
 import { useApp } from '../../context/AppContext';
 import {
   requestTeachers,
@@ -145,6 +145,7 @@ export default function CatalogScreen({ kind }) {
   const [rows,       setRows]       = useState([]);
   const [loading,    setLoading]    = useState(true);
   const [q,          setQ]          = useState('');
+  const [filters,    setFilters]    = useState({});
   const [depts,      setDepts]      = useState([]);
   const [branches,   setBranches]   = useState([]);
   const [teachers,   setTeachers]   = useState([]);
@@ -183,6 +184,11 @@ export default function CatalogScreen({ kind }) {
         { header: t('faculty'), cell: r => <span style={{ fontSize: 13, color: 'var(--text-2)' }}>{r.department?.nameDepartment || '—'}</span> },
       ],
       search: (r) => (r.nameBranch || '') + ' ' + (r.code || ''),
+      filters: [
+        { key: 'departmentId', allLabel: lang === 'vi' ? 'Mọi khoa' : 'All faculties',
+          options: depts.map(d => ({ value: String(d.id), label: d.nameDepartment })),
+          match: (r, v) => String(r.departmentId ?? '') === v },
+      ],
       add:    lang === 'vi' ? 'Thêm ngành' : 'Add major',
     },
     class: {
@@ -198,6 +204,14 @@ export default function CatalogScreen({ kind }) {
         { header: lang === 'vi' ? 'CVHT' : 'Advisor', cell: r => <span style={{ fontSize: 13, color: 'var(--text-2)' }}>{r.teacher?.fullName || '—'}</span> },
       ],
       search: (r) => (r.nameClass || '') + ' ' + (r.code || ''),
+      filters: [
+        { key: 'branchId', allLabel: lang === 'vi' ? 'Mọi ngành' : 'All majors',
+          options: branches.map(b => ({ value: String(b.id), label: b.nameBranch })),
+          match: (r, v) => String(r.branchId ?? '') === v },
+        { key: 'teacherId', allLabel: lang === 'vi' ? 'Mọi CVHT' : 'All advisors',
+          options: teachers.map(tc => ({ value: String(tc.id), label: tc.fullName })),
+          match: (r, v) => String(r.teacherId ?? '') === v },
+      ],
       add:    lang === 'vi' ? 'Thêm lớp' : 'Add class',
     },
     subject: {
@@ -228,9 +242,11 @@ export default function CatalogScreen({ kind }) {
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { setRows([]); setQ(''); setDrawer(null); loadData(); }, [kind]);
+  useEffect(() => { setRows([]); setQ(''); setFilters({}); setDrawer(null); loadData(); }, [kind]);
 
-  const filtered = rows.filter(r => !q || conf.search(r).toLowerCase().includes(q.toLowerCase()));
+  const filtered = rows.filter(r =>
+    (!q || conf.search(r).toLowerCase().includes(q.toLowerCase())) &&
+    (conf.filters ?? []).every(f => !filters[f.key] || f.match(r, filters[f.key])));
 
   return (
     <Page>
@@ -243,7 +259,10 @@ export default function CatalogScreen({ kind }) {
           onDelete={() => setConfirmDel(r)}/>}
         toolbar={<TableToolbar q={q} setQ={setQ}
           onAdd={() => setDrawer({ row: null })}
-          addLabel={conf.add}/>}/>
+          addLabel={conf.add}
+          filters={conf.filters && conf.filters.map(f =>
+            <FilterSelect key={f.key} value={filters[f.key] || ''} allLabel={f.allLabel} options={f.options}
+              onChange={v => setFilters(s => ({ ...s, [f.key]: v }))}/>)}/>}/>
 
       <CatalogFormDrawer
         open={!!drawer}

@@ -7,7 +7,7 @@ import { useApp } from '../../context/AppContext';
 import { WEEKDAYS } from '../../constants/schedule.constants';
 import { formatSchedule } from '../../utils/schedule';
 import {
-  requestTeachers, requestSubjects,
+  requestTeachers, requestSubjects, requestSemesters,
   requestSubjectClasses, requestCreateSubjectClass, requestUpdateSubjectClass, requestDeleteSubjectClass,
 } from '../../config/userRequest';
 
@@ -16,7 +16,7 @@ import {
 // ── Section Drawer (add / edit lớp học phần) ──────────────────────────────────
 const SECTION_STATUSES = ['active', 'completed', 'canceled'];
 
-function SectionDrawer({ open, row, subjects, teachers, onClose, onSave }) {
+function SectionDrawer({ open, row, subjects, teachers, semesters, onClose, onSave }) {
   const { t, lang } = useApp();
   const isEdit = !!row;
   const toast = useToast();
@@ -66,6 +66,14 @@ function SectionDrawer({ open, row, subjects, teachers, onClose, onSave }) {
 
   const statusLabel = { active: lang === 'vi' ? 'Đang mở' : 'Active', completed: lang === 'vi' ? 'Đã kết thúc' : 'Completed', canceled: lang === 'vi' ? 'Đã hủy' : 'Canceled' };
 
+  // Danh sách học kỳ do admin tạo; nếu lớp đang sửa có học kỳ cũ không còn
+  // trong danh sách thì vẫn giữ lại làm 1 option để không mất dữ liệu.
+  const semesterOptions = useMemo(() => {
+    const names = (semesters || []).map(s => s.name);
+    if (form.semester && !names.includes(form.semester)) names.push(form.semester);
+    return names;
+  }, [semesters, form.semester]);
+
   return (
     <Drawer open={open} onClose={onClose} width={460}
       title={isEdit ? (lang === 'vi' ? 'Sửa lớp học phần' : 'Edit section') : (lang === 'vi' ? 'Tạo lớp học phần' : 'New section')}
@@ -105,7 +113,10 @@ function SectionDrawer({ open, row, subjects, teachers, onClose, onSave }) {
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
           <FormField label={lang === 'vi' ? 'Học kỳ' : 'Semester'} error={showError('semester')}>
-            <input className={fieldCls(showError('semester'))} value={form.semester} onChange={e => set('semester', e.target.value)} onBlur={() => touch('semester')} placeholder={lang === 'vi' ? 'HK1 2024-2025' : '2024-Fall'}/>
+            <select className={fieldCls(showError('semester'))} value={form.semester} onChange={e => set('semester', e.target.value)} onBlur={() => touch('semester')}>
+              <option value="">— {lang === 'vi' ? 'Chọn học kỳ' : 'Select semester'}</option>
+              {semesterOptions.map(name => <option key={name} value={name}>{name}</option>)}
+            </select>
           </FormField>
           <FormField label={lang === 'vi' ? 'Sĩ số tối đa' : 'Max students'} error={showError('maxStudents')} optional optionalLabel={t('optional') || 'tùy chọn'}>
             <input className={fieldCls(showError('maxStudents'))} value={form.maxStudents} onChange={e => set('maxStudents', e.target.value.replace(/\D/g, ''))} onBlur={() => touch('maxStudents')} placeholder="50" inputMode="numeric"/>
@@ -159,6 +170,7 @@ export default function SectionsScreen() {
   const [sections,     setSections]     = useState([]);
   const [subjects,     setSubjects]     = useState([]);
   const [teachers,     setTeachers]     = useState([]);
+  const [semesterList, setSemesterList] = useState([]);
   const [loading,      setLoading]      = useState(true);
   const [q,            setQ]            = useState('');
   const [semFilter,    setSemFilter]    = useState('');
@@ -190,11 +202,12 @@ export default function SectionsScreen() {
 
   const loadData = () => {
     setLoading(true);
-    Promise.all([requestSubjectClasses(), requestSubjects(), requestTeachers()])
-      .then(([secRes, subRes, tcRes]) => {
+    Promise.all([requestSubjectClasses(), requestSubjects(), requestTeachers(), requestSemesters()])
+      .then(([secRes, subRes, tcRes, semRes]) => {
         setSections(secRes.metadata ?? []);
         setSubjects(subRes.metadata ?? []);
         setTeachers(tcRes.metadata ?? []);
+        setSemesterList(Array.isArray(semRes) ? semRes : []);
       })
       .catch(() => toast(lang === 'vi' ? 'Lỗi tải lớp học phần' : 'Failed to load sections', 'danger'))
       .finally(() => setLoading(false));
@@ -311,6 +324,7 @@ export default function SectionsScreen() {
         row={drawer?.row ?? null}
         subjects={subjects}
         teachers={teachers}
+        semesters={semesterList}
         onClose={() => setDrawer(null)}
         onSave={async (data) => {
           try {

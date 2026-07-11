@@ -123,6 +123,31 @@ export class UsersService {
     );
   }
 
+  // ----------------------------------------------------------------
+  // Suy ra mã khoa từ mã lớp (Class → Branch → Department)
+  // User.department lưu mã khoa (Department.code) — dashboard đếm theo mã này
+  // ----------------------------------------------------------------
+
+  private async resolveDepartmentByClass(classCode?: string | null): Promise<string | undefined> {
+    if (!classCode) return undefined;
+    const cls = await this.prisma.class.findUnique({
+      where: { code: classCode },
+      select: { branch: { select: { department: { select: { code: true } } } } },
+    });
+    return cls?.branch?.department?.code;
+  }
+
+  // Bản batch cho bulk import: map mã lớp → mã khoa trong một query
+  private async mapDepartmentsByClass(classCodes: Array<string | undefined>): Promise<Record<string, string>> {
+    const unique = [...new Set(classCodes.filter((c): c is string => !!c))];
+    if (unique.length === 0) return {};
+    const classes = await this.prisma.class.findMany({
+      where: { code: { in: unique } },
+      select: { code: true, branch: { select: { department: { select: { code: true } } } } },
+    });
+    return Object.fromEntries(classes.map(c => [c.code, c.branch.department.code]));
+  }
+
   // Endpoint preview: trả về mã sẽ được cấp tiếp theo
   async getNextStudentId(): Promise<string> {
     const [id] = await this.generateStudentIds(1);
@@ -168,6 +193,7 @@ export class UsersService {
     const email = this.generateSchoolEmail(idStudent);
     const tempPassword = this.generateTempPassword();
     const hashed = await bcrypt.hash(tempPassword, BCRYPT_SALT_ROUNDS);
+    const department = (await this.resolveDepartmentByClass(data.class)) ?? data.department;
 
     const user = await this.prisma.user.create({
       data: {
@@ -179,7 +205,7 @@ export class UsersService {
         class:         data.class,
         gender:        data.gender as any,
         birthDay:      data.birthDay ? new Date(data.birthDay) : undefined,
-        department:    data.department,
+        department,
         personalEmail: data.personalEmail,
         status:        UserStatus.studying,
       },
@@ -279,6 +305,7 @@ export class UsersService {
 
     // Bước 2: sinh mã sinh viên liên tiếp cho toàn bộ danh sách
     const ids = await this.generateStudentIds(rows.length);
+    const deptByClass = await this.mapDepartmentsByClass(rows.map(r => r.class));
 
     // Bước 3: chuẩn bị hash password (bên ngoài transaction để không timeout)
     const prepared = await Promise.all(
@@ -304,7 +331,7 @@ export class UsersService {
             class:         r.class,
             gender:        r.gender as any,
             birthDay:      r.birthDay ? new Date(r.birthDay) : undefined,
-            department:    r.department,
+            department:    (r.class && deptByClass[r.class]) || r.department,
             personalEmail: r.personalEmail,
             status:        UserStatus.studying,
           },
@@ -402,6 +429,14 @@ export class UsersService {
     await this.findById(id);
     // Không cho phép thay đổi password, email, role qua endpoint này
     const { password: _pw, email: _em, role: _r, ...safeData } = data as any;
+
+    // Khi đổi lớp: đồng bộ lại mã khoa theo lớp mới (chỉ khi lớp tra ra được khoa —
+    // không đụng đến department nếu class rỗng, vd giáo viên cập nhật hồ sơ)
+    if (safeData.class) {
+      const department = await this.resolveDepartmentByClass(safeData.class);
+      if (department) safeData.department = department;
+    }
+
     const user = await this.prisma.user.update({
       where: { id },
       data: {
