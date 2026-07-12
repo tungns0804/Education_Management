@@ -50,6 +50,7 @@ const NAV = {
   ],
 };
 
+// Khung giao diện chính sau đăng nhập: Sidebar + Topbar + nội dung theo route, dùng chung cho 3 vai trò
 export default function MainLayout({ apiUser, onSignOut }) {
   const { t, lang } = useApp();
   const role   = apiUser?.roleKey || ROLE_ADMIN;
@@ -58,7 +59,7 @@ export default function MainLayout({ apiUser, onSignOut }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [logoutAsk,  setLogoutAsk]  = useState(false);
   const [params,     setParams]     = useState({});
-  // Build sidebar user shape from real API user
+  // Dựng thông tin người dùng cho sidebar từ dữ liệu API thật
   const user = {
     email: apiUser?.email                                 || DEMO_USERS[role]?.email,
     name:  apiUser?.fullName                              || DEMO_USERS[role]?.name,

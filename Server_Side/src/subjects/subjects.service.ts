@@ -5,6 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 export class SubjectsService {
   constructor(private readonly prisma: PrismaService) {}
 
+  // Lấy danh sách môn học (lọc theo ngành nếu có)
   async findAll(branchId?: string) {
     return this.prisma.subject.findMany({
       where: { ...(branchId && { branchId }) },
@@ -16,6 +17,7 @@ export class SubjectsService {
     });
   }
 
+  // Lấy chi tiết một môn học theo id
   async findOne(id: string) {
     const subject = await this.prisma.subject.findUnique({
       where: { id },
@@ -25,6 +27,7 @@ export class SubjectsService {
     return subject;
   }
 
+  // Tạo môn học mới
   async create(data: { code: string; name: string; credits: number; branchId: string }) {
     const existing = await this.prisma.subject.findUnique({ where: { code: data.code } });
     if (existing) throw new ConflictException(`Mã môn ${data.code} đã tồn tại`);
@@ -34,11 +37,13 @@ export class SubjectsService {
     });
   }
 
+  // Cập nhật thông tin môn học
   async update(id: string, data: { code?: string; name?: string; credits?: number; branchId?: string }) {
     await this.findOne(id);
     return this.prisma.subject.update({ where: { id }, data });
   }
 
+  // Xóa môn học
   async remove(id: string) {
     await this.findOne(id);
     await this.prisma.subject.delete({ where: { id } });

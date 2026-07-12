@@ -14,7 +14,7 @@ import {
 
 /* EduManage — Admin: Danh mục đào tạo (Khoa / Ngành / Lớp / Môn học) */
 
-// ── Catalog Form Drawer (Faculty / Major / Class / Subject) ───────────────────
+// ── Drawer form danh mục (Khoa / Ngành / Lớp / Môn học) ───────────────────────
 function CatalogFormDrawer({ open, onClose, onSave, kind, row, depts, branches, teachers, lang, t }) {
   const isEdit = !!row;
 
@@ -138,7 +138,7 @@ function CatalogFormDrawer({ open, onClose, onSave, kind, row, depts, branches, 
   );
 }
 
-// ── Catalog screen — Faculty / Major / Class / Subject ────────────────────────
+// ── Màn hình danh mục — Khoa / Ngành / Lớp / Môn học ──────────────────────────
 export default function CatalogScreen({ kind }) {
   const { t, lang } = useApp();
   const toast = useToast();

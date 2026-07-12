@@ -5,6 +5,7 @@
 // ================================================================
 import { WEEKDAYS } from '../constants/schedule.constants';
 
+// Nhãn hiển thị của một ngày trong tuần theo ngôn ngữ
 const dayLabel = (d, lang) => {
   const wd = WEEKDAYS.find(w => w.value === d);
   if (!wd) return '';
@@ -25,6 +26,7 @@ export const formatSchedule = (s, lang = 'vi') => {
   return `${formatScheduleDays(s.scheduleDays, lang)} · ${s.startTime}–${s.endTime}`;
 };
 
+// Đổi chuỗi "HH:mm" sang tổng số phút để so sánh khung giờ
 const toMinutes = (t) => {
   const [h, m] = t.split(':').map(Number);
   return h * 60 + m;

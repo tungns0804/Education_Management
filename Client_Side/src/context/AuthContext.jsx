@@ -4,6 +4,7 @@ import { DB_ROLE_MAP, DEFAULT_ROLE } from '../constants/auth.constants';
 
 const AuthContext = createContext(null);
 
+// Bổ sung roleKey (khóa vai trò frontend) vào object user nhận từ API
 function enrichUser(raw) {
   return {
     ...raw,
@@ -11,9 +12,10 @@ function enrichUser(raw) {
   };
 }
 
+// Provider xác thực: khôi phục phiên khi tải trang, cung cấp user / login / logout
 export function AuthProvider({ children }) {
-  const [user, setUser]               = useState(null);   // null → not authenticated
-  const [loading, setLoading]         = useState(true);   // true while verifying session on mount
+  const [user, setUser]               = useState(null);   // null → chưa đăng nhập
+  const [loading, setLoading]         = useState(true);   // true trong lúc xác minh phiên khi mount
   const [lockedMessage, setLockedMessage] = useState(null);
 
   const checkAuth = useCallback(async () => {
@@ -44,12 +46,12 @@ export function AuthProvider({ children }) {
   }, []);
 
   const logout = useCallback(async () => {
-    // Reset client state first so the UI returns to the login screen immediately.
-    // The server round-trip must not gate this: after a password change the access
-    // token is already revoked, so requestLogout() 401s and its interceptor cannot
-    // reliably redirect an SPA that is already at '/'.
+    // Reset state phía client trước để UI quay về màn hình đăng nhập ngay lập tức.
+    // Không được chờ server phản hồi: sau khi đổi mật khẩu, access token đã bị
+    // thu hồi nên requestLogout() trả 401, và interceptor của nó không thể
+    // chuyển hướng tin cậy một SPA vốn đang ở sẵn '/'.
     setUser(null);
-    try { await requestLogout(); } catch { /* token may already be revoked */ }
+    try { await requestLogout(); } catch { /* token có thể đã bị thu hồi */ }
   }, []);
 
   const clearLockedMessage = useCallback(() => setLockedMessage(null), []);
@@ -61,4 +63,5 @@ export function AuthProvider({ children }) {
   );
 }
 
+// Hook truy cập context xác thực
 export const useAuth = () => useContext(AuthContext);

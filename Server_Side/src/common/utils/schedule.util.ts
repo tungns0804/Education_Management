@@ -24,6 +24,7 @@ export interface ScheduleInput {
   endTime?: string | null;
 }
 
+// Đổi chuỗi "HH:mm" sang tổng số phút để so sánh khung giờ
 export function toMinutes(time: string): number {
   const [h, m] = time.split(':').map(Number);
   return h * 60 + m;

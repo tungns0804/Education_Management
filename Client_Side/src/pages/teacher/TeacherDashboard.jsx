@@ -12,6 +12,7 @@ import { requestTeacherDashboard } from '../../config/userRequest';
 
 const SECTION_COLORS = ['#2F6FED', '#1F8A5B', '#8B5CF6', '#C9821A', '#EC6A9C', '#0E9F9F'];
 
+// Dashboard giảng viên: số lớp, số sinh viên, tỷ lệ chuyên cần, điểm chờ nhập
 export default function TeacherDashboard() {
   const { t, lang } = useApp();
   const [stats, setStats] = useState(null);

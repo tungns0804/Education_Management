@@ -8,7 +8,7 @@ class ApiClient {
     this.axiosInstance = axios.create({
       baseURL:         API_BASE_URL,
       timeout:         API_TIMEOUT_MS,
-      withCredentials: true, // send cookies on cross-origin requests
+      withCredentials: true, // gửi kèm cookie trong request cross-origin
     });
     this.isRefreshing = false;
     this.failedQueue  = [];
@@ -16,7 +16,7 @@ class ApiClient {
   }
 
   _isLoggedIn() {
-    // Non-httpOnly cookie set by the server; safe to read from JS
+    // Cookie không httpOnly do server set; JS đọc được an toàn
     return Cookies.get(COOKIE_LOGGED) === COOKIE_LOGGED_VALUE;
   }
 
@@ -29,7 +29,7 @@ class ApiClient {
 
   _handleAuthFailure() {
     Cookies.remove(COOKIE_LOGGED);
-    // Redirect to root — App renders <LoginUser> when user is null
+    // Chuyển về trang gốc — App sẽ hiển thị <LoginUser> khi user là null
     window.location.href = '/';
   }
 
@@ -69,7 +69,7 @@ class ApiClient {
             return Promise.reject(error);
           }
 
-          // If a refresh is already in flight, queue this request until it resolves
+          // Nếu đang có một lượt refresh token chạy dở, xếp request này vào hàng đợi chờ kết quả
           if (this.isRefreshing) {
             return new Promise((resolve, reject) => {
               this.failedQueue.push({ resolve, reject });

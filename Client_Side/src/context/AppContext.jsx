@@ -10,8 +10,10 @@ import {
 /* EduManage — App context: theme (sáng/tối) + ngôn ngữ (vi/en) + hàm dịch t() */
 
 const AppCtx = createContext(null);
+// Hook truy cập context ứng dụng (theme, ngôn ngữ, hàm dịch)
 const useApp = () => useContext(AppCtx);
 
+// Provider quản lý theme + ngôn ngữ, lưu lựa chọn vào localStorage, cung cấp hàm dịch t()
 function AppProvider({ children }) {
   const [theme, setTheme] = useState(() => localStorage.getItem(LS_THEME) || DEFAULT_THEME);
   const [lang, setLang] = useState(() => localStorage.getItem(LS_LANG)  || DEFAULT_LANG);

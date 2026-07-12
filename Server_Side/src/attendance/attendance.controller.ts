@@ -12,6 +12,7 @@ type AuthReq = express.Request & { user: { id: string; role: string } };
 export class AttendanceController {
   constructor(private readonly attendanceService: AttendanceService) {}
 
+  // Lấy toàn bộ điểm danh của một lớp học phần
   @Get(':subjectClassId')
   @UseGuards(RolesGuard)
   @Roles('teacher', 'admin')
@@ -20,6 +21,7 @@ export class AttendanceController {
     return { success: true, message: 'success', metadata: data };
   }
 
+  // Sinh viên xem điểm danh của chính mình trong một lớp học phần
   @Get('my/:subjectClassId')
   @UseGuards(RolesGuard)
   @Roles('student')

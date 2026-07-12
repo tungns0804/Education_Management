@@ -19,6 +19,7 @@ function calcTotal(att, mid, fin) {
   return Math.round((a * 0.1 + m * 0.3 + f * 0.6) * 10) / 10;
 }
 
+// Quy đổi điểm tổng kết (thang 10) sang điểm chữ A/B/C/D/F
 function calcLetter(total) {
   if (total === null || total === undefined) return '—';
   if (total >= 8.5) return 'A';
@@ -28,6 +29,7 @@ function calcLetter(total) {
   return 'F';
 }
 
+// Màu hiển thị tương ứng với từng điểm chữ
 function letterColor(l) {
   if (!l || l === '—') return 'var(--muted)';
   if (l === 'F') return 'var(--danger)';
@@ -36,6 +38,7 @@ function letterColor(l) {
   return 'var(--accent)';
 }
 
+// Màn hình nhập điểm: chọn lớp học phần, nhập 3 cột điểm, lưu và khóa điểm
 export default function GradeEntryScreen({ sectionId }) {
   const { t, lang } = useApp();
   const toast = useToast();
@@ -43,7 +46,7 @@ export default function GradeEntryScreen({ sectionId }) {
   const [sections,    setSections]    = useState([]);
   const [sec,         setSec]         = useState(sectionId || '');
   const [gradeSheet,  setGradeSheet]  = useState([]);
-  const [grades,      setGrades]      = useState({});   // { enrollmentId: { att, mid, fin } }
+  const [grades,      setGrades]      = useState({});   // { enrollmentId: { att: chuyên cần, mid: giữa kỳ, fin: cuối kỳ } }
   const [loading,     setLoading]     = useState(false);
   const [saving,      setSaving]      = useState(false);
   const [lockLoading, setLockLoading] = useState({});
@@ -51,7 +54,7 @@ export default function GradeEntryScreen({ sectionId }) {
   const [page,        setPage]        = useState(1);
   const PAGE_SIZE = 15;
 
-  // Load teacher's sections
+  // Tải danh sách lớp học phần của giảng viên
   useEffect(() => {
     requestMySections().then(res => {
       const secs = res.metadata || [];
@@ -60,7 +63,7 @@ export default function GradeEntryScreen({ sectionId }) {
     }).catch(() => {});
   }, []);
 
-  // Load grade sheet when section changes
+  // Tải bảng điểm khi đổi lớp học phần
   const loadGradeSheet = useCallback((secId) => {
     if (!secId) return;
     setLoading(true);

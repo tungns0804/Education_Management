@@ -9,16 +9,19 @@ import { Roles } from '../common/decorators/roles.decorator';
 export class SemestersController {
   constructor(private readonly semestersService: SemestersService) {}
 
+  // Lấy danh sách tất cả học kỳ
   @Get()
   findAll() {
     return this.semestersService.findAll();
   }
 
+  // Lấy các học kỳ đang kích hoạt
   @Get('active')
   findActive() {
     return this.semestersService.findActive();
   }
 
+  // Tạo học kỳ mới theo tên
   @Post()
   @UseGuards(RolesGuard)
   @Roles('admin')
@@ -26,6 +29,7 @@ export class SemestersController {
     return this.semestersService.create(name);
   }
 
+  // Cập nhật tên / trạng thái kích hoạt của học kỳ
   @Put(':id')
   @UseGuards(RolesGuard)
   @Roles('admin')
@@ -33,6 +37,7 @@ export class SemestersController {
     return this.semestersService.update(id, body);
   }
 
+  // Bật / tắt trạng thái kích hoạt của học kỳ
   @Patch(':id/toggle-active')
   @UseGuards(RolesGuard)
   @Roles('admin')
@@ -40,6 +45,7 @@ export class SemestersController {
     return this.semestersService.toggleActive(id);
   }
 
+  // Xóa học kỳ
   @Delete(':id')
   @UseGuards(RolesGuard)
   @Roles('admin')

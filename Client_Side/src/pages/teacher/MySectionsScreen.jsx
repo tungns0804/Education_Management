@@ -10,6 +10,7 @@ import { requestMySections } from '../../config/userRequest';
 
 const SECTION_COLORS = ['#2F6FED', '#1F8A5B', '#8B5CF6', '#C9821A', '#EC6A9C', '#0E9F9F'];
 
+// Màn hình các lớp học phần giảng viên phụ trách, có lối tắt sang điểm danh / nhập điểm
 export default function MySectionsScreen({ onOpenAttendance, onOpenGrades }) {
   const { t, lang } = useApp();
   const [sections, setSections] = useState([]);

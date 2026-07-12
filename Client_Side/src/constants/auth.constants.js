@@ -1,45 +1,45 @@
 // ================================================================
-// Authentication & role constants (client-side)
+// Hằng số xác thực & vai trò (phía client)
 // ================================================================
 
-// ---- Role keys (uppercase) used throughout the frontend ----------
+// ---- Khóa vai trò (viết hoa) dùng xuyên suốt frontend ------------
 export const ROLE_ADMIN   = 'ADMIN';
 export const ROLE_TEACHER = 'TEACHER';
 export const ROLE_STUDENT = 'STUDENT';
 
-// Maps DB role value (lowercase) → frontend role key (uppercase)
+// Ánh xạ giá trị role trong DB (chữ thường) → khóa vai trò frontend (chữ hoa)
 export const DB_ROLE_MAP = {
   admin:   ROLE_ADMIN,
   teacher: ROLE_TEACHER,
   student: ROLE_STUDENT,
 };
 
-// Fallback role when mapping is unknown
+// Vai trò mặc định khi không ánh xạ được
 export const DEFAULT_ROLE = ROLE_ADMIN;
 
-// ---- Account ID input placeholder --------------------------------
-// Shown in the account ID field on the login / forgot-password screens.
-// One shared placeholder for every role — the server resolves the role
-// from the account ID, no role selection needed on the client.
+// ---- Placeholder cho ô nhập mã tài khoản -------------------------
+// Hiển thị trong ô mã tài khoản ở màn hình đăng nhập / quên mật khẩu.
+// Dùng chung một placeholder cho mọi vai trò — server tự xác định vai trò
+// từ mã tài khoản, client không cần chọn vai trò.
 export const ACCOUNT_ID_PLACEHOLDER = {
   vi: 'Nhập mã tài khoản',
   en: 'Enter your account ID',
 };
 
-// ---- Avatar hue (HSL) — gives each role a distinct color --------
+// ---- Tông màu avatar (HSL) — mỗi vai trò một màu riêng -----------
 export const AVATAR_HUE = {
-  [ROLE_ADMIN]:   215, // blue
-  [ROLE_TEACHER]: 160, // teal
-  [ROLE_STUDENT]: 280, // purple
+  [ROLE_ADMIN]:   215, // xanh dương
+  [ROLE_TEACHER]: 160, // xanh ngọc
+  [ROLE_STUDENT]: 280, // tím
 };
 
-// ---- OTP (one-time password) settings ---------------------------
-export const OTP_LENGTH           = 6;    // digits
-export const OTP_EXPIRY_SECONDS   = 300;  // 5 minutes countdown shown in UI
-export const OTP_TIMER_INTERVAL_MS = 1000; // how often the countdown ticks (1 s)
+// ---- Cấu hình OTP (mật khẩu dùng một lần) ------------------------
+export const OTP_LENGTH           = 6;    // số chữ số
+export const OTP_EXPIRY_SECONDS   = 300;  // đếm ngược 5 phút hiển thị trên UI
+export const OTP_TIMER_INTERVAL_MS = 1000; // chu kỳ cập nhật đồng hồ đếm ngược (1 giây)
 
-// ---- Demo / quick-login credentials (development only) ----------
-// Must match the passwords set in server_side/src/constants/seed.constants.ts
+// ---- Tài khoản demo / đăng nhập nhanh (chỉ dùng khi phát triển) --
+// Phải khớp với mật khẩu trong server_side/src/constants/seed.constants.ts
 export const DEMO_USERS = {
   [ROLE_ADMIN]: {
     identifier:    'admin',
@@ -62,8 +62,8 @@ export const DEMO_PASSWORDS = {
   [ROLE_STUDENT]: 'Student@123',
 };
 
-// ---- Password strength rules ------------------------------------
-// Each rule has a test function and bilingual labels.
+// ---- Quy tắc độ mạnh mật khẩu ------------------------------------
+// Mỗi quy tắc gồm hàm kiểm tra và nhãn song ngữ.
 export const PW_RULES = [
   {
     key:      'len',

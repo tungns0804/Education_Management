@@ -16,6 +16,7 @@ import {
 // ── Section Drawer (add / edit lớp học phần) ──────────────────────────────────
 const SECTION_STATUSES = ['active', 'completed', 'canceled'];
 
+// Drawer thêm / sửa lớp học phần (môn, giảng viên, học kỳ, lịch học, sĩ số)
 function SectionDrawer({ open, row, subjects, teachers, semesters, onClose, onSave }) {
   const { t, lang } = useApp();
   const isEdit = !!row;
@@ -161,9 +162,10 @@ function SectionDrawer({ open, row, subjects, teachers, semesters, onClose, onSa
   );
 }
 
-// ── Sections screen ────────────────────────────────────────────────────────────
+// ── Màn hình lớp học phần ──────────────────────────────────────────────────────
 const ROWS_PER_PAGE = 2;
 
+// Màn hình quản lý lớp học phần: tìm kiếm, lọc theo học kỳ/trạng thái, thêm/sửa/xóa
 export default function SectionsScreen() {
   const { t, lang } = useApp();
   const toast = useToast();
@@ -182,9 +184,9 @@ export default function SectionsScreen() {
   const gridRef = useRef(null);
   const [cols, setCols] = useState(1);
 
-  // grid-cards uses `repeat(auto-fill, minmax(252px, 1fr))`, so the number of
-  // columns changes with viewport width. Measure it so pagination always breaks
-  // on a full row instead of leaving a half-filled row on the current page.
+  // grid-cards dùng `repeat(auto-fill, minmax(252px, 1fr))` nên số cột thay đổi
+  // theo chiều rộng màn hình. Cần đo số cột thực tế để phân trang luôn ngắt
+  // đúng cuối một hàng đầy, không để lại hàng lửng trên trang hiện tại.
   useLayoutEffect(() => {
     const el = gridRef.current;
     if (!el) return;

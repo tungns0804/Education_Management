@@ -27,8 +27,10 @@ const page = await ctx.newPage();
 page.on('console',  (m) => { if (m.type() === 'error') errors.push(m.text()); });
 page.on('pageerror', (e) => errors.push('PAGEERROR: ' + e.message));
 
+// Ghi nhận kết quả một testcase (PASS/FAIL) vào danh sách tổng hợp
 function check(name, cond) { results.push(`${cond ? 'PASS' : 'FAIL'} — ${name}`); }
 
+// Đăng nhập qua UI bằng mã tài khoản + mật khẩu
 async function login(id, pw) {
   await page.goto(BASE, { waitUntil: 'networkidle' });
   await page.getByPlaceholder('Nhập mã tài khoản').fill(id);
@@ -37,6 +39,7 @@ async function login(id, pw) {
   await page.waitForTimeout(2500);
 }
 
+// Đăng xuất qua UI
 async function logout() {
   await page.locator('header >> div[style*="position: relative"] button').first().click();
   await page.getByText('Đăng xuất', { exact: true }).first().click();
@@ -45,6 +48,7 @@ async function logout() {
   await page.waitForTimeout(1500);
 }
 
+// Bấm một mục trên sidebar theo nhãn hiển thị
 async function clickNav(label) {
   await page.locator('nav button', { hasText: label }).first().click();
   await page.waitForTimeout(1600);

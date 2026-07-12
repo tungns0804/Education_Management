@@ -15,10 +15,12 @@ export class PrismaService
     super({ adapter });
   }
 
+  // Mở kết nối database khi module khởi tạo
   async onModuleInit() {
     await this.$connect();
   }
 
+  // Đóng kết nối database khi ứng dụng tắt
   async onModuleDestroy() {
     await this.$disconnect();
   }

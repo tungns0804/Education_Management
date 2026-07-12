@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 
-/* EduManage — Charts (pure SVG, theme-aware) */
+/* EduManage — Biểu đồ (SVG thuần, tự thích ứng theme sáng/tối) */
 
-// Smooth area + line chart
+// Biểu đồ đường + vùng nền, đường cong mượt
 function LineChart({ data, height = 200, accent = 'var(--accent)', yMax = 4, yLabel, fmt = (v) => v }) {
   const ref = useRef(null);
   const [w, setW] = useState(560);
@@ -17,7 +17,7 @@ function LineChart({ data, height = 200, accent = 'var(--accent)', yMax = 4, yLa
   const x = i => padL + (n === 1 ? iw / 2 : (i / (n - 1)) * iw);
   const y = v => padT + ih - (v / yMax) * ih;
   const pts = data.map((d, i) => [x(i), y(d.gpa ?? d.value)]);
-  // smooth path
+  // dựng path cong mượt qua các điểm
   const line = pts.map((p, i) => {
     if (i === 0) return `M ${p[0]} ${p[1]}`;
     const prev = pts[i - 1];
@@ -59,7 +59,7 @@ function LineChart({ data, height = 200, accent = 'var(--accent)', yMax = 4, yLa
   );
 }
 
-// Vertical bar chart
+// Biểu đồ cột dọc
 function BarChart({ data, height = 200, accent = 'var(--accent)' }) {
   const ref = useRef(null);
   const [w, setW] = useState(560);
@@ -96,7 +96,7 @@ function BarChart({ data, height = 200, accent = 'var(--accent)' }) {
   );
 }
 
-// Donut chart with center label
+// Biểu đồ vòng (donut) có nhãn ở giữa
 function DonutChart({ data, size = 168, thickness = 22, centerTop, centerSub }) {
   const total = data.reduce((s, d) => s + d.value, 0) || 1;
   const r = (size - thickness) / 2;
@@ -138,7 +138,7 @@ function DonutChart({ data, size = 168, thickness = 22, centerTop, centerSub }) 
   );
 }
 
-// Horizontal bars (ranked list)
+// Thanh ngang (danh sách xếp hạng)
 function HBars({ data, accent = 'var(--accent)' }) {
   const max = Math.max(...data.map(d => d.value), 1);
   return (
@@ -158,7 +158,7 @@ function HBars({ data, accent = 'var(--accent)' }) {
   );
 }
 
-// Progress ring (small)
+// Vòng tiến độ (cỡ nhỏ)
 function Ring({ value, max = 4, size = 120, thickness = 11, color = 'var(--accent)', label, sub }) {
   const r = (size - thickness) / 2, c = 2 * Math.PI * r;
   const len = Math.min(value / max, 1) * c;

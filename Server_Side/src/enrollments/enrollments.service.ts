@@ -9,6 +9,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { EnrollmentStatus, LetterGrade, SubjectClassStatus } from '@prisma/client';
 import { schedulesOverlap, formatSchedule, hasSchedule } from '../common/utils/schedule.util';
 
+// Quy đổi điểm tổng kết (thang 10) sang điểm chữ A/B/C/D/F
 function calcLetter(total: number): LetterGrade {
   if (total >= 8.5) return LetterGrade.A;
   if (total >= 7.0) return LetterGrade.B;
@@ -17,6 +18,7 @@ function calcLetter(total: number): LetterGrade {
   return LetterGrade.F;
 }
 
+// Tính điểm tổng kết: 10% chuyên cần + 30% giữa kỳ + 60% cuối kỳ
 function calcTotal(att: number, mid: number, fin: number): number {
   return Math.round((att * 0.1 + mid * 0.3 + fin * 0.6) * 10) / 10;
 }
@@ -26,7 +28,7 @@ export class EnrollmentsService {
   constructor(private readonly prisma: PrismaService) {}
 
   // ----------------------------------------------------------------
-  // Student: current enrollments
+  // Sinh viên: các đăng ký học phần hiện tại
   // ----------------------------------------------------------------
 
   async findMy(studentId: string) {
@@ -50,7 +52,7 @@ export class EnrollmentsService {
   }
 
   // ----------------------------------------------------------------
-  // Student: transcript
+  // Sinh viên: bảng điểm toàn khóa
   // ----------------------------------------------------------------
 
   async getTranscript(studentId: string) {
@@ -74,7 +76,7 @@ export class EnrollmentsService {
   }
 
   // ----------------------------------------------------------------
-  // Student: GPA trend by semester
+  // Sinh viên: diễn biến GPA theo học kỳ
   // ----------------------------------------------------------------
 
   async getGpaTrend(studentId: string) {
@@ -102,7 +104,7 @@ export class EnrollmentsService {
   }
 
   // ----------------------------------------------------------------
-  // Teacher/Admin: grade sheet for a section
+  // Giảng viên/Admin: bảng điểm của một lớp học phần
   // ----------------------------------------------------------------
 
   async getGradeSheet(subjectClassId: string) {
@@ -118,7 +120,7 @@ export class EnrollmentsService {
   }
 
   // ----------------------------------------------------------------
-  // Student: register / drop
+  // Sinh viên: đăng ký / hủy đăng ký học phần
   // ----------------------------------------------------------------
 
   async register(studentId: string, subjectClassId: string) {
@@ -167,6 +169,7 @@ export class EnrollmentsService {
     });
   }
 
+  // Hủy đăng ký học phần: chỉ chủ nhân đăng ký và khi điểm chưa bị khóa
   async drop(enrollmentId: string, studentId: string) {
     const e = await this.prisma.enrollment.findUnique({ where: { id: enrollmentId } });
     if (!e) throw new NotFoundException('Không tìm thấy đăng ký');
@@ -177,7 +180,7 @@ export class EnrollmentsService {
   }
 
   // ----------------------------------------------------------------
-  // Teacher: enter grades
+  // Giảng viên: nhập điểm
   // ----------------------------------------------------------------
 
   async updateGrade(
@@ -213,6 +216,7 @@ export class EnrollmentsService {
     });
   }
 
+  // Khóa / mở khóa điểm của một đăng ký học phần
   async toggleGradeLock(enrollmentId: string, locked: boolean) {
     const e = await this.prisma.enrollment.findUnique({ where: { id: enrollmentId } });
     if (!e) throw new NotFoundException('Không tìm thấy đăng ký');

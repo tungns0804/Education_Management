@@ -1,6 +1,6 @@
 // ================================================================
-// Demo / seed data — credentials used in prisma/seed.ts
-// Must stay in sync with client_side/src/constants/auth.constants.js
+// Dữ liệu demo / seed — thông tin đăng nhập dùng trong prisma/seed.ts
+// Phải đồng bộ với client_side/src/constants/auth.constants.js
 // ================================================================
 
 export const DEMO_ADMIN = {
@@ -13,7 +13,7 @@ export const DEMO_ADMIN = {
   personalEmail: 'nguyensontung0804@gmail.com',
 };
 
-// ── Teachers ────────────────────────────────────────────────────
+// ── Giảng viên ──────────────────────────────────────────────────
 
 export const DEMO_TEACHER = {
   fullName:  'GV. Nguyễn Sơn Tùng',
@@ -64,7 +64,7 @@ export const TEACHER_4 = {
   department:'NN',
 };
 
-// ── Students ────────────────────────────────────────────────────
+// ── Sinh viên ───────────────────────────────────────────────────
 
 export const DEMO_STUDENT = {
   fullName:      'Lê Anh Duy',

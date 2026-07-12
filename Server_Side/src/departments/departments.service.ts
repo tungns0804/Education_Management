@@ -5,6 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 export class DepartmentsService {
   constructor(private readonly prisma: PrismaService) {}
 
+  // Lấy danh sách khoa
   async findAll() {
     return this.prisma.department.findMany({
       include: {
@@ -14,6 +15,7 @@ export class DepartmentsService {
     });
   }
 
+  // Lấy chi tiết một khoa theo id
   async findOne(id: string) {
     const dep = await this.prisma.department.findUnique({
       where: { id },
@@ -26,17 +28,20 @@ export class DepartmentsService {
     return dep;
   }
 
+  // Tạo khoa mới
   async create(data: { code: string; nameDepartment: string }) {
     const existing = await this.prisma.department.findUnique({ where: { code: data.code } });
     if (existing) throw new ConflictException(`Mã khoa ${data.code} đã tồn tại`);
     return this.prisma.department.create({ data });
   }
 
+  // Cập nhật thông tin khoa
   async update(id: string, data: { code?: string; nameDepartment?: string }) {
     await this.findOne(id);
     return this.prisma.department.update({ where: { id }, data });
   }
 
+  // Xóa khoa
   async remove(id: string) {
     await this.findOne(id);
     await this.prisma.department.delete({ where: { id } });

@@ -19,6 +19,7 @@ function InfoRow({ icon, label, value, mono }) {
   );
 }
 
+// Trang hồ sơ chi tiết một sinh viên (admin mở từ danh sách để xem / chỉnh sửa)
 export default function StudentProfile({ studentId, onBack }) {
   const { t, lang } = useApp();
   const toast = useToast();

@@ -5,6 +5,7 @@ import { AppModule } from './app.module';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const cookieParser = require('cookie-parser');
 
+// Khởi động server NestJS: cấu hình CORS theo URL_CLIENT, cookie-parser và lắng nghe cổng PORT
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 

@@ -9,18 +9,21 @@ import { Roles } from '../common/decorators/roles.decorator';
 export class SubjectsController {
   constructor(private readonly subjectsService: SubjectsService) {}
 
+  // Lấy danh sách môn học (lọc theo ngành nếu truyền branchId)
   @Get()
   async findAll(@Query('branchId') branchId?: string) {
     const data = await this.subjectsService.findAll(branchId);
     return { success: true, message: 'success', metadata: data };
   }
 
+  // Lấy chi tiết một môn học theo id
   @Get(':id')
   async findOne(@Param('id') id: string) {
     const data = await this.subjectsService.findOne(id);
     return { success: true, message: 'success', metadata: data };
   }
 
+  // Tạo môn học mới
   @Post()
   @UseGuards(RolesGuard)
   @Roles('admin')
@@ -29,6 +32,7 @@ export class SubjectsController {
     return { success: true, message: 'Tạo môn học thành công', metadata: data };
   }
 
+  // Cập nhật thông tin môn học
   @Put(':id')
   @UseGuards(RolesGuard)
   @Roles('admin')
@@ -37,6 +41,7 @@ export class SubjectsController {
     return { success: true, message: 'Cập nhật thành công', metadata: data };
   }
 
+  // Xóa môn học
   @Delete(':id')
   @UseGuards(RolesGuard)
   @Roles('admin')

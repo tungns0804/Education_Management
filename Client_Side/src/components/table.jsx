@@ -21,6 +21,7 @@ function TableToolbar({ q, setQ, onAdd, addLabel, filters, right }) {
   );
 }
 
+// Ô chọn lọc dữ liệu cho bảng, kèm lựa chọn "Tất cả"
 function FilterSelect({ value, onChange, options, allLabel }) {
   return (
     <select className="select" style={{ height: 40, width: 'auto', minWidth: 130, paddingRight: 30 }} value={value} onChange={e => onChange(e.target.value)}>
@@ -30,6 +31,7 @@ function FilterSelect({ value, onChange, options, allLabel }) {
   );
 }
 
+// Menu thao tác trên từng dòng bảng: sửa, khóa/mở khóa, xóa
 function RowAction({ onEdit, onToggle, active, onDelete }) {
   const { t } = useApp();
   const [open, setOpen] = useState(false);

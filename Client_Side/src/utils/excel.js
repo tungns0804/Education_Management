@@ -1,6 +1,6 @@
 /* EduManage — Tiện ích Excel: đọc file CSV/XLSX, sinh file mẫu import */
 
-// Helper: read a File and resolve with its text content (CSV or Excel)
+// Hàm hỗ trợ: đọc một File và trả về nội dung dạng text (CSV hoặc Excel)
 export async function readFileAsText(file) {
   const ext = (file.name || '').split('.').pop().toLowerCase();
   if (ext === 'xlsx' || ext === 'xls') {
@@ -26,7 +26,7 @@ export async function readFileAsText(file) {
   });
 }
 
-// ============== Student Excel template ==============
+// ============== File Excel mẫu import sinh viên ==============
 export async function generateStudentExcelTemplate(lang) {
   const { default: writeXlsxFile } = await import('write-excel-file/browser');
   const vi = lang === 'vi';
@@ -75,35 +75,35 @@ export async function generateStudentExcelTemplate(lang) {
   ];
 
   const data = [
-    // Row 1 — university name
+    // Dòng 1 — tên trường
     [span6(vi ? 'TRƯỜNG ĐẠI HỌC KHOA HỌC VÀ CÔNG NGHỆ VIỆT NAM' : 'VIETNAM UNIVERSITY OF SCIENCE AND TECHNOLOGY', {
       fontSize: 15, fontWeight: 'bold', color: WHITE, backgroundColor: NAVY,
       align: 'center', alignVertical: 'middle', height: 44,
     })],
-    // Row 2 — department
+    // Dòng 2 — phòng ban
     [span6(vi ? 'PHÒNG ĐÀO TẠO  ·  PHÒNG CÔNG TÁC SINH VIÊN' : 'ACADEMIC AFFAIRS OFFICE  ·  STUDENT SERVICES OFFICE', {
       fontSize: 11, fontStyle: 'italic', color: WHITE, backgroundColor: BLUE,
       align: 'center', alignVertical: 'middle', height: 24,
     })],
-    // Row 3 — spacer
+    // Dòng 3 — dòng trống ngăn cách
     [span6(null, { height: 12 })],
-    // Row 4 — document title
+    // Dòng 4 — tiêu đề tài liệu
     [span6(vi ? 'DANH SÁCH SINH VIÊN NHẬP HỌC' : 'STUDENT ENROLLMENT LIST', {
       fontSize: 14, fontWeight: 'bold', textDecoration: 'underline', color: NAVY,
       align: 'center', alignVertical: 'middle', height: 38,
     })],
-    // Row 5 — year / semester fill-in line
+    // Dòng 5 — dòng điền năm học / học kỳ
     [span6(vi
       ? 'Năm học: ____________________      Học kỳ: _____________      Khoa/Bộ môn: __________________'
       : 'Academic Year: __________________      Semester: _____________      Faculty: __________________', {
       fontSize: 11, fontStyle: 'italic', color: MUTED,
       align: 'center', alignVertical: 'middle', height: 22,
     })],
-    // Row 6 — spacer
+    // Dòng 6 — dòng trống ngăn cách
     [span6(null, { height: 10 })],
-    // Row 7 — column headers
+    // Dòng 7 — tiêu đề các cột
     hdrs.map(h => hdr(h)),
-    // Rows 8-11 — sample data
+    // Dòng 8-11 — dữ liệu mẫu
     ...samples.map((row, ri) => [
       dat(row[0], ri, true),
       dat(row[1], ri),
@@ -112,16 +112,16 @@ export async function generateStudentExcelTemplate(lang) {
       dat(row[4], ri, true),
       dat(row[5], ri),
     ]),
-    // Row 12 — spacer
+    // Dòng 12 — dòng trống ngăn cách
     [span6(null, { height: 10 })],
-    // Row 13 — required-field note
+    // Dòng 13 — ghi chú cột bắt buộc
     [span6(vi
       ? '(*) Cột bắt buộc điền. Mã lớp phải khớp chính xác với mã trong hệ thống. Xóa các dòng mẫu trước khi nhập dữ liệu thực tế.'
       : '(*) Required fields. Class code must exactly match system codes (case-sensitive). Remove sample rows before importing real data.', {
       fontSize: 10, fontStyle: 'italic', color: NOTE_T, backgroundColor: NOTE_B,
       align: 'left', alignVertical: 'middle', wrap: true, height: 34,
     })],
-    // Row 14 — auto-generation note
+    // Dòng 14 — ghi chú về dữ liệu tự sinh
     [span6(vi
       ? 'ℹ  Mã sinh viên và email trường (.edu.vn) sẽ được hệ thống tự động sinh. Thông tin đăng nhập gửi về email cá nhân sau khi nhập thành công.'
       : 'ℹ  Student code and school email (.edu.vn) are auto-generated. Login credentials will be sent to personal email after successful import.', {
@@ -138,7 +138,7 @@ export async function generateStudentExcelTemplate(lang) {
   await writeXlsxFile(data, { columns, sheet: vi ? 'DS Sinh Viên' : 'Student List' }).toFile(fileName);
 }
 
-// ============== Teacher Excel template ==============
+// ============== File Excel mẫu import giảng viên ==============
 export async function generateTeacherExcelTemplate(lang) {
   const { default: writeXlsxFile } = await import('write-excel-file/browser');
   const vi = lang === 'vi';
@@ -187,35 +187,35 @@ export async function generateTeacherExcelTemplate(lang) {
   ];
 
   const data = [
-    // Row 1 — university name
+    // Dòng 1 — tên trường
     [span6(vi ? 'TRƯỜNG ĐẠI HỌC KHOA HỌC VÀ CÔNG NGHỆ VIỆT NAM' : 'VIETNAM UNIVERSITY OF SCIENCE AND TECHNOLOGY', {
       fontSize: 15, fontWeight: 'bold', color: WHITE, backgroundColor: NAVY,
       align: 'center', alignVertical: 'middle', height: 44,
     })],
-    // Row 2 — department
+    // Dòng 2 — phòng ban
     [span6(vi ? 'PHÒNG TỔ CHỨC NHÂN SỰ  ·  PHÒNG ĐÀO TẠO' : 'HUMAN RESOURCES OFFICE  ·  ACADEMIC AFFAIRS OFFICE', {
       fontSize: 11, fontStyle: 'italic', color: WHITE, backgroundColor: TEAL,
       align: 'center', alignVertical: 'middle', height: 24,
     })],
-    // Row 3 — spacer
+    // Dòng 3 — dòng trống ngăn cách
     [span6(null, { height: 12 })],
-    // Row 4 — document title
+    // Dòng 4 — tiêu đề tài liệu
     [span6(vi ? 'DANH SÁCH GIẢNG VIÊN' : 'FACULTY & STAFF ROSTER', {
       fontSize: 14, fontWeight: 'bold', textDecoration: 'underline', color: NAVY,
       align: 'center', alignVertical: 'middle', height: 38,
     })],
-    // Row 5 — year / dept fill-in
+    // Dòng 5 — dòng điền năm học / khoa
     [span6(vi
       ? 'Năm học: ____________________      Khoa/Bộ môn: __________________________      Bậc đào tạo: _______________'
       : 'Academic Year: __________________      Faculty/Department: __________________________      Level: _______________', {
       fontSize: 11, fontStyle: 'italic', color: MUTED,
       align: 'center', alignVertical: 'middle', height: 22,
     })],
-    // Row 6 — spacer
+    // Dòng 6 — dòng trống ngăn cách
     [span6(null, { height: 10 })],
-    // Row 7 — column headers
+    // Dòng 7 — tiêu đề các cột
     hdrs.map(h => hdr(h)),
-    // Rows 8-11 — sample data
+    // Dòng 8-11 — dữ liệu mẫu
     ...samples.map((row, ri) => [
       dat(row[0], ri, true),
       dat(row[1], ri),
@@ -224,16 +224,16 @@ export async function generateTeacherExcelTemplate(lang) {
       dat(row[4], ri),
       dat(row[5], ri),
     ]),
-    // Row 12 — spacer
+    // Dòng 12 — dòng trống ngăn cách
     [span6(null, { height: 10 })],
-    // Row 13 — required note
+    // Dòng 13 — ghi chú cột bắt buộc
     [span6(vi
       ? '(*) Cột bắt buộc điền. Học hàm/học vị hợp lệ: ThS, TS, PGS, GS, CN (để trống nếu không có). Xóa các dòng mẫu trước khi nhập.'
       : '(*) Required fields. Valid degrees: M.Sc., Ph.D., Assoc., Prof., B.Sc. (leave blank if none). Remove sample rows before importing.', {
       fontSize: 10, fontStyle: 'italic', color: NOTE_T, backgroundColor: NOTE_B,
       align: 'left', alignVertical: 'middle', wrap: true, height: 34,
     })],
-    // Row 14 — auto-generation note
+    // Dòng 14 — ghi chú về dữ liệu tự sinh
     [span6(vi
       ? 'ℹ  Mã giảng viên và email trường (.edu.vn) sẽ được hệ thống tự động sinh. Thông tin đăng nhập gửi về email cá nhân sau khi nhập thành công.'
       : 'ℹ  Teacher code and school email (.edu.vn) are auto-generated. Login credentials will be sent to personal email after successful import.', {

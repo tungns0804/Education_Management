@@ -19,7 +19,7 @@ const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma  = new PrismaClient({ adapter });
 
 // ──────────────────────────────────────────────────────────────
-// 1. RAW MASTER DATA
+// 1. DỮ LIỆU GỐC (MASTER DATA)
 // ──────────────────────────────────────────────────────────────
 
 const DEPARTMENTS = [
@@ -83,7 +83,7 @@ const SUBJECT_CLASSES_RAW = [
   { code: 'TOARR-HK1-2324',  semester: 'HK1 2023-2024', maxStudents: 40, status: 'completed' as const, subjectCode: 'TOARR',  teacherEmail: 'gv1001@school.edu.vn', scheduleDays: [1, 4], startTime: '07:00', endTime: '09:30' },
 ];
 
-// Enrollments: [studentEmail, subjectClassCode]
+// Đăng ký học phần: [email sinh viên, mã lớp học phần]
 const ENROLLMENTS_RAW: [string, string][] = [
   // Lê Anh Duy (20216001)
   ['20216001@student.school.edu.vn', 'LTCB-HK1-2425'],
@@ -109,7 +109,7 @@ const ENROLLMENTS_RAW: [string, string][] = [
 ];
 
 // ──────────────────────────────────────────────────────────────
-// 2. HELPERS
+// 2. HÀM HỖ TRỢ
 // ──────────────────────────────────────────────────────────────
 
 function ok(label: string) {
@@ -117,7 +117,7 @@ function ok(label: string) {
 }
 
 // ──────────────────────────────────────────────────────────────
-// 3. MAIN
+// 3. HÀM CHÍNH
 // ──────────────────────────────────────────────────────────────
 
 async function main() {
@@ -133,7 +133,7 @@ async function main() {
     DEMO_STUDENT, STUDENT_2, STUDENT_3, STUDENT_4, STUDENT_5, STUDENT_6,
   ];
 
-  const userMap = new Map<string, string>(); // email → id
+  const userMap = new Map<string, string>(); // ánh xạ email → id
 
   for (const u of usersRaw) {
     const hashed = await bcrypt.hash(u.password, BCRYPT_SALT_ROUNDS);
@@ -167,7 +167,7 @@ async function main() {
 
   // ── 3.3 Departments ────────────────────────────────────────
   console.log('\n▶ Departments...');
-  const deptMap = new Map<string, string>(); // code → id
+  const deptMap = new Map<string, string>(); // ánh xạ mã → id
 
   for (const d of DEPARTMENTS) {
     const record = await prisma.department.upsert({
@@ -181,7 +181,7 @@ async function main() {
 
   // ── 3.3 Branches ───────────────────────────────────────────
   console.log('\n▶ Branches...');
-  const branchMap = new Map<string, string>(); // code → id
+  const branchMap = new Map<string, string>(); // ánh xạ mã → id
   for (const b of BRANCHES) {
     const departmentId = deptMap.get(b.departmentCode)!;
     const record = await prisma.branch.upsert({
@@ -208,7 +208,7 @@ async function main() {
 
   // ── 3.5 Subjects ───────────────────────────────────────────
   console.log('\n▶ Subjects...');
-  const subjectMap = new Map<string, string>(); // code → id
+  const subjectMap = new Map<string, string>(); // ánh xạ mã → id
 
   for (const s of SUBJECTS_RAW) {
     const branchId = branchMap.get(s.branchCode)!;
@@ -223,7 +223,7 @@ async function main() {
 
   // ── 3.6 SubjectClasses (lớp học phần) ─────────────────────
   console.log('\n▶ SubjectClasses...');
-  const scMap = new Map<string, string>(); // code → id
+  const scMap = new Map<string, string>(); // ánh xạ mã → id
 
   for (const sc of SUBJECT_CLASSES_RAW) {
     const subjectId = subjectMap.get(sc.subjectCode)!;

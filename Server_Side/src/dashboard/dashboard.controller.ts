@@ -12,6 +12,7 @@ type AuthReq = express.Request & { user: { id: string; role: string } };
 export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
 
+  // Số liệu tổng quan hệ thống cho dashboard admin
   @Get()
   @Roles('admin')
   async getStats() {
@@ -19,6 +20,7 @@ export class DashboardController {
     return { success: true, message: 'success', metadata: data };
   }
 
+  // Số liệu sinh viên theo khoa cho biểu đồ (lọc theo học kỳ nếu có)
   @Get('students-by-department')
   @Roles('admin')
   async getStudentsByDepartment(@Query('semester') semester?: string) {
@@ -26,6 +28,7 @@ export class DashboardController {
     return { success: true, message: 'success', metadata: data };
   }
 
+  // Số liệu dashboard của giảng viên đang đăng nhập
   @Get('teacher')
   @Roles('teacher')
   async getTeacherStats(@Req() req: AuthReq) {
@@ -33,6 +36,7 @@ export class DashboardController {
     return { success: true, message: 'success', metadata: data };
   }
 
+  // Số liệu dashboard của sinh viên đang đăng nhập
   @Get('student')
   @Roles('student')
   async getStudentStats(@Req() req: AuthReq) {

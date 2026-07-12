@@ -76,6 +76,7 @@ function SemesterDrawer({ open, row, onClose, onSave }) {
   );
 }
 
+// Màn hình quản lý học kỳ: tạo, đổi tên, bật/tắt kích hoạt, xóa
 export default function SemestersScreen() {
   const { t, lang } = useApp();
   const toast = useToast();

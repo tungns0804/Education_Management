@@ -15,13 +15,13 @@ import {
 
 /* EduManage — Admin: Quản lý sinh viên */
 
-// ── Adapter: normalise API student → UI shape ──────────────────────────────
+// ── Adapter: chuẩn hóa sinh viên từ API → cấu trúc dùng cho UI ─────────────
 const toStudent = (s) => ({
   id:            s.id,
   name:          s.fullName,
   code:          s.idStudent,
   email:         s.email,
-  classId:       s.class || '',           // class code used as filter key
+  classId:       s.class || '',           // mã lớp, dùng làm khóa lọc
   gender:        s.gender === 'male' ? 'M' : 'F',
   dob:           s.birthDay ? s.birthDay.split('T')[0] : '',
   active:        ['active', 'studying'].includes(s.status),
@@ -31,6 +31,7 @@ const toStudent = (s) => ({
   status:        s.status,
 });
 
+// Màn hình quản lý sinh viên: danh sách, tìm kiếm, lọc, thêm/sửa/xóa, import/export
 export default function StudentsScreen({ onOpenProfile }) {
   const { t, lang } = useApp();
   const toast = useToast();

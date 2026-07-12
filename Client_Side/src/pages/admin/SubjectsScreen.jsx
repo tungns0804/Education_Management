@@ -82,7 +82,7 @@ function SubjectDrawer({ open, row, branches, onClose, onSave }) {
   );
 }
 
-// ── Subjects screen ────────────────────────────────────────────────────────────
+// ── Màn hình môn học ───────────────────────────────────────────────────────────
 export default function SubjectsScreen() {
   const { t, lang } = useApp();
   const toast = useToast();

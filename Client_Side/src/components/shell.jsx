@@ -3,7 +3,7 @@ import { I } from './icons';
 import { Avatar, EmptyRow, Pagination } from './ui';
 import { useApp } from '../context/AppContext';
 
-/* EduManage — App shell: Sidebar, Topbar, DataTable */
+/* EduManage — Khung ứng dụng: Sidebar, Topbar, DataTable */
 
 function NavItem({ icon, label, active, onClick, collapsed }) {
   return (
@@ -23,6 +23,7 @@ function NavItem({ icon, label, active, onClick, collapsed }) {
   );
 }
 
+// Thanh điều hướng bên trái: menu theo vai trò, thu gọn được, kèm thông tin người dùng
 function Sidebar({ nav, route, setRoute, user, role, collapsed, mobileOpen, onCloseMobile }) {
   const { t } = useApp();
   const inner = (
@@ -66,6 +67,7 @@ function Sidebar({ nav, route, setRoute, user, role, collapsed, mobileOpen, onCl
   );
 }
 
+// Thanh trên cùng: tiêu đề trang, nút thu gọn sidebar, đổi theme/ngôn ngữ, đăng xuất
 function Topbar({ title, subtitle, onToggleSidebar, onToggleMobile, onLogout, onSwitchRole, onOpenSearch, onProfile, user, role }) {
   const { t, lang, toggleLang, theme, toggleTheme } = useApp();
   const [menu, setMenu] = useState(false);
@@ -119,6 +121,7 @@ function Topbar({ title, subtitle, onToggleSidebar, onToggleMobile, onLogout, on
   );
 }
 
+// Một dòng trong menu thả xuống (icon + nhãn)
 function MenuRow({ icon, label, onClick }) {
   return (
     <button onClick={onClick} style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '9px 12px', borderRadius: 8, fontSize: 13.5, fontWeight: 600, color: 'var(--text-2)' }}
@@ -128,7 +131,7 @@ function MenuRow({ icon, label, onClick }) {
   );
 }
 
-// ---------------- Generic DataTable ----------------
+// ---------------- Bảng dữ liệu dùng chung (DataTable) ----------------
 function DataTable({ columns, rows, perPage = 8, renderActions, onRowClick, toolbar, emptyLabel }) {
   const { t } = useApp();
   const [page, setPage] = useState(1);
@@ -173,12 +176,12 @@ function DataTable({ columns, rows, perPage = 8, renderActions, onRowClick, tool
   );
 }
 
-// Page container
+// Khung chứa nội dung trang
 function Page({ children }) {
   return <div className="anim-fade" style={{ padding: 'clamp(18px, 3vw, 30px)', maxWidth: 1280, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 22 }}>{children}</div>;
 }
 
-// Section header
+// Tiêu đề khu vực (kèm mô tả và nút bên phải)
 function SectionHead({ title, desc, right }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 16, flexWrap: 'wrap' }}>

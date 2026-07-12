@@ -32,9 +32,10 @@ const toTeacher = (tc) => ({
   status:    tc.status,
 });
 
-// ── Teacher Drawer (add / edit) ───────────────────────────────────────────────
+// ── Drawer giảng viên (thêm / sửa) ────────────────────────────────────────────
 const DEGREES = ['ThS', 'TS', 'PGS', 'GS', 'CN'];
 
+// Drawer thêm / sửa giảng viên
 function TeacherDrawer({ state, depts, onClose, onSave }) {
   const { t, lang } = useApp();
   const open   = !!state;
@@ -164,7 +165,7 @@ function TeacherDrawer({ state, depts, onClose, onSave }) {
   );
 }
 
-// ── Teachers screen ────────────────────────────────────────────────────────────
+// ── Màn hình giảng viên ────────────────────────────────────────────────────────
 export default function TeachersScreen() {
   const { t, lang } = useApp();
   const toast = useToast();

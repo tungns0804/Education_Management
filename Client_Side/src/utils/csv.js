@@ -1,13 +1,13 @@
 /* EduManage — Tiện ích CSV: xuất file, phân tích dữ liệu import sinh viên / giảng viên */
 
-// ============== CSV export ==============
+// ============== Xuất CSV ==============
 export function downloadCSV(filename, headers, rows) {
   const esc = (v) => {
     const s = String(v == null ? '' : v);
     return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
   };
   const lines = [headers.map(esc).join(',')].concat(rows.map(r => r.map(esc).join(',')));
-  const csv = '\uFEFF' + lines.join('\r\n'); // BOM for Excel UTF-8
+  const csv = '\uFEFF' + lines.join('\r\n'); // BOM để Excel nhận đúng UTF-8
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -47,7 +47,7 @@ export function parseCSV(text, classes = []) {
   const header = splitLine(lines[0]);
   const looksHeader = /họ tên|full name|name/i.test(header[0]);
   const dataLines = looksHeader ? lines.slice(1) : lines;
-  // Validate class codes against real classes from API (case-insensitive)
+  // Kiểm tra mã lớp so với danh sách lớp thật từ API (không phân biệt hoa thường)
   const validClassCodes = new Set(classes.map(c => (c.code || '').toUpperCase()));
   const rows = dataLines.map((l, i) => {
     const [name, gender, dob, cls, pmail] = splitLine(l);

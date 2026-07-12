@@ -20,12 +20,13 @@ const ATT_OPTS = [
   { v: 'excused',  label_vi: 'Phép',   label_en: 'Excused',  color: 'var(--accent)',  soft: 'var(--info-soft)'    },
 ];
 
+// Trả về ngày hôm nay dạng YYYY-MM-DD
 function todayISO() {
   return new Date().toISOString().split('T')[0];
 }
 
 // ─── AttendanceHistory ───────────────────────────────────────────────────────
-// Accepts real roster + records, builds the grid
+// Nhận danh sách lớp + bản ghi điểm danh thật, dựng lưới lịch sử
 
 export function AttendanceHistory({ roster, records }) {
   const { t, lang } = useApp();
@@ -142,12 +143,12 @@ export default function AttendanceScreen({ sectionId }) {
   const [tab,         setTab]         = useState('today');
   const [date,        setDate]        = useState(todayISO());
   const [roster,      setRoster]      = useState([]);
-  const [records,     setRecords]     = useState([]);   // all attendance for section
+  const [records,     setRecords]     = useState([]);   // toàn bộ điểm danh của lớp học phần
   const [marks,       setMarks]       = useState({});   // { studentId: 'present'|'late'|... }
   const [loadingData, setLoadingData] = useState(false);
   const [saving,      setSaving]      = useState(false);
 
-  // Load teacher's sections list
+  // Tải danh sách lớp học phần của giảng viên
   useEffect(() => {
     requestMySections().then(res => {
       const secs = res.metadata || [];
@@ -156,7 +157,7 @@ export default function AttendanceScreen({ sectionId }) {
     }).catch(() => {});
   }, []);
 
-  // Reload roster + attendance when section changes
+  // Tải lại danh sách sinh viên + điểm danh khi đổi lớp học phần
   useEffect(() => {
     if (!sec) return;
     setLoadingData(true);
@@ -172,7 +173,7 @@ export default function AttendanceScreen({ sectionId }) {
       .finally(() => setLoadingData(false));
   }, [sec]);
 
-  // Rebuild marks when date changes (without re-fetching)
+  // Dựng lại trạng thái điểm danh khi đổi ngày (không cần gọi lại API)
   useEffect(() => {
     rebuildMarks(roster, records, date);
   }, [date]);
@@ -204,7 +205,7 @@ export default function AttendanceScreen({ sectionId }) {
         date,
         records: roster.map(e => ({ studentId: e.studentId, status: marks[e.studentId] || 'present' })),
       });
-      // Refresh records
+      // Làm mới bản ghi điểm danh
       const aRes = await requestAttendance(sec);
       setRecords(aRes.metadata || []);
       toast(lang==='vi'?'Đã lưu điểm danh':'Attendance saved');

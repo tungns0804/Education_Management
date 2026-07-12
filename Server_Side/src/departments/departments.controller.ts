@@ -9,18 +9,21 @@ import { Roles } from '../common/decorators/roles.decorator';
 export class DepartmentsController {
   constructor(private readonly departmentsService: DepartmentsService) {}
 
+  // Lấy danh sách khoa
   @Get()
   async findAll() {
     const data = await this.departmentsService.findAll();
     return { success: true, message: 'success', metadata: data };
   }
 
+  // Lấy chi tiết một khoa theo id
   @Get(':id')
   async findOne(@Param('id') id: string) {
     const data = await this.departmentsService.findOne(id);
     return { success: true, message: 'success', metadata: data };
   }
 
+  // Tạo khoa mới
   @Post()
   @UseGuards(RolesGuard)
   @Roles('admin')
@@ -29,6 +32,7 @@ export class DepartmentsController {
     return { success: true, message: 'Tạo khoa thành công', metadata: data };
   }
 
+  // Cập nhật thông tin khoa
   @Put(':id')
   @UseGuards(RolesGuard)
   @Roles('admin')
@@ -37,6 +41,7 @@ export class DepartmentsController {
     return { success: true, message: 'Cập nhật thành công', metadata: data };
   }
 
+  // Xóa khoa
   @Delete(':id')
   @UseGuards(RolesGuard)
   @Roles('admin')

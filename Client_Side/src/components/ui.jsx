@@ -3,7 +3,7 @@ import { I } from './icons';
 import { useApp } from '../context/AppContext';
 import { TOAST_AUTO_DISMISS_MS } from '../constants/storage.constants';
 
-/* EduManage — Shared UI primitives: Avatar, Badge, Modal, Drawer, Toast, Form */
+/* EduManage — Các thành phần UI dùng chung: Avatar, Badge, Modal, Drawer, Toast, Form */
 
 // ---------------- Avatar ----------------
 function Avatar({ name, hue = 210, size = 38, code }) {
@@ -20,7 +20,7 @@ function Avatar({ name, hue = 210, size = 38, code }) {
   );
 }
 
-// ---------------- Badge for status ----------------
+// ---------------- Nhãn trạng thái (hoạt động / khóa) ----------------
 function StatusBadge({ active }) {
   const { t } = useApp();
   return active
@@ -28,7 +28,7 @@ function StatusBadge({ active }) {
     : <span className="badge badge-danger"><span className="dot"></span>{t('locked')}</span>;
 }
 
-// ---------------- Segmented control ----------------
+// ---------------- Nút chuyển đổi dạng phân đoạn (segmented) ----------------
 function Segmented({ options, value, onChange, size }) {
   return (
     <div style={{ display: 'inline-flex', background: 'var(--surface-3)', borderRadius: 9, padding: 3, gap: 2 }}>
@@ -45,7 +45,7 @@ function Segmented({ options, value, onChange, size }) {
   );
 }
 
-// ---------------- Stat card ----------------
+// ---------------- Thẻ thống kê nhanh ----------------
 function StatCard({ icon, label, value, delta, deltaUp, accent = 'var(--accent)', tint }) {
   return (
     <div className="card" style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 14, position: 'relative', overflow: 'hidden' }}>
@@ -97,7 +97,7 @@ function Pagination({ page, pages, total, perPage, onPage }) {
   );
 }
 
-// ---------------- Drawer (right side) ----------------
+// ---------------- Ngăn trượt (Drawer) bên phải ----------------
 function Drawer({ open, onClose, title, subtitle, children, footer, width = 460 }) {
   useEffect(() => {
     if (!open) return;
@@ -125,7 +125,7 @@ function Drawer({ open, onClose, title, subtitle, children, footer, width = 460 
   );
 }
 
-// ---------------- Modal (centered) ----------------
+// ---------------- Hộp thoại (Modal) căn giữa ----------------
 function Modal({ open, onClose, title, children, footer, width = 440, icon, tone }) {
   useEffect(() => {
     if (!open) return;
@@ -150,7 +150,9 @@ function Modal({ open, onClose, title, children, footer, width = 440, icon, tone
 
 // ---------------- Toast ----------------
 const ToastCtx = createContext(null);
+// Hook lấy hàm hiển thị toast từ context
 const useToast = () => useContext(ToastCtx);
+// Provider quản lý danh sách toast và hiển thị chúng ở góc màn hình
 function ToastHost({ children }) {
   const [items, setItems] = useState([]);
   const push = useCallback((msg, tone = 'success') => {
@@ -178,7 +180,7 @@ function ToastHost({ children }) {
   );
 }
 
-// ---------------- Button spinner ----------------
+// ---------------- Vòng xoay trong nút bấm ----------------
 // Vòng xoay nhỏ đặt trong nút bấm khi đang gọi API thêm/sửa/xóa — dùng kèm disabled
 function BtnSpinner({ size = 15 }) {
   return (
@@ -190,13 +192,13 @@ function BtnSpinner({ size = 15 }) {
   );
 }
 
-// ---------------- Empty state ----------------
+// ---------------- Hàng trống khi bảng không có dữ liệu ----------------
 function EmptyRow({ colSpan, label }) {
   return <tr><td colSpan={colSpan} style={{ padding: '48px 0', textAlign: 'center', color: 'var(--muted)', fontSize: 14 }}>{label}</td></tr>;
 }
 
-// ---------------- Form validation ----------------
-// validators: { field: (value, form) => errorKeyOrMessage | null }
+// ---------------- Kiểm tra dữ liệu form ----------------
+// validators: { tênTrường: (giáTrị, form) => thôngBáoLỗi | null }
 function useForm(initial, validators = {}) {
   const [form, setForm] = useState(initial);
   const [touched, setTouched] = useState({});
@@ -249,7 +251,7 @@ const validate = {
   },
 };
 
-// Field wrapper with inline error + hint
+// Khung bọc trường nhập liệu, hiển thị lỗi + gợi ý ngay bên dưới
 function FormField({ label, error, hint, optional, children, optionalLabel }) {
   return (
     <div className="field">
@@ -266,7 +268,7 @@ function FormField({ label, error, hint, optional, children, optionalLabel }) {
   );
 }
 
-// input/select className helper for error state
+// Hàm chọn className cho input/select khi có lỗi
 function fieldCls(error) { return error ? 'input input-error' : 'input'; }
 
 export { Avatar, StatusBadge, Segmented, StatCard, Pagination, Drawer, Modal, ToastHost, useToast, BtnSpinner, EmptyRow, useForm, validate, FormField, fieldCls };

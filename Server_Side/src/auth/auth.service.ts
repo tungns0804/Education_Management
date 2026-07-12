@@ -46,6 +46,7 @@ export class AuthService {
     });
   }
 
+  // Ký JWT bằng private key của người dùng với thời hạn cho trước
   private sign(payload: object, privateKey: string, expiresIn: string): string {
     return jwt.sign(payload, privateKey, {
       algorithm: JWT_ALGORITHM,
@@ -94,6 +95,7 @@ export class AuthService {
     });
   }
 
+  // Đăng nhập: kiểm tra mật khẩu, cấp cặp khóa RSA mới, phát hành access + refresh token
   async login(identifier: string, password: string) {
     if (!identifier || !password)
       throw new BadRequestException('Vui lòng nhập mã tài khoản và mật khẩu');
@@ -123,6 +125,7 @@ export class AuthService {
     return { token, refreshToken, user: safeUser };
   }
 
+  // Lấy thông tin người dùng theo id (đã loại bỏ mật khẩu)
   async getMe(userId: string) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new UnauthorizedException('Người dùng không tồn tại');
@@ -130,12 +133,14 @@ export class AuthService {
     return safeUser;
   }
 
+  // Đăng xuất: xóa cặp khóa RSA nên mọi token đang tồn tại bị vô hiệu ngay
   async logout(userId: string) {
     // Xóa cặp khóa → vô hiệu hóa toàn bộ token của người dùng ngay lập tức
     await this.prisma.apiKey.deleteMany({ where: { userId } });
     return { status: 200 };
   }
 
+  // Cấp access token mới từ refresh token còn hạn
   async refreshAccessToken(refreshToken: string) {
     if (!refreshToken)
       throw new UnauthorizedException('Vui lòng đăng nhập lại');
@@ -152,10 +157,12 @@ export class AuthService {
     return { token };
   }
 
+  // Băm mật khẩu bằng bcrypt
   async hashPassword(plain: string): Promise<string> {
     return bcrypt.hash(plain, BCRYPT_SALT_ROUNDS);
   }
 
+  // Kiểm tra độ mạnh mật khẩu (độ dài, chữ hoa, chữ số, ký tự đặc biệt)
   private validatePasswordStrength(password: string): void {
     if (!password || password.length < 8)
       throw new BadRequestException('Mật khẩu phải có ít nhất 8 ký tự');
@@ -167,6 +174,7 @@ export class AuthService {
       throw new BadRequestException('Mật khẩu phải có ít nhất 1 ký tự đặc biệt (!@#$%...)');
   }
 
+  // Quên mật khẩu: sinh OTP 6 số, băm rồi lưu (hạn 5 phút) và gửi về email cá nhân
   async forgotPassword(identifier: string) {
     if (!identifier) throw new BadRequestException('Vui lòng nhập mã tài khoản');
     const user = await this.findUserByIdentifier(identifier);
@@ -198,6 +206,7 @@ export class AuthService {
     return true;
   }
 
+  // Kiểm tra OTP người dùng nhập có khớp bản ghi còn hạn không
   async verifyOtp(identifier: string, otp: string) {
     if (!identifier || !otp) throw new BadRequestException('Thiếu thông tin xác thực');
 
@@ -216,6 +225,7 @@ export class AuthService {
     return true;
   }
 
+  // Đặt lại mật khẩu bằng OTP: xác thực OTP, đổi mật khẩu, xóa OTP và thu hồi mọi token
   async resetPassword(identifier: string, otp: string, newPassword: string) {
     if (!identifier || !otp || !newPassword)
       throw new BadRequestException('Thiếu thông tin đặt lại mật khẩu');
@@ -242,6 +252,7 @@ export class AuthService {
     return true;
   }
 
+  // Đổi mật khẩu khi đã đăng nhập: kiểm tra mật khẩu cũ, đổi mới và thu hồi mọi token
   async changePassword(userId: string, currentPassword: string, newPassword: string) {
     if (!currentPassword || !newPassword)
       throw new BadRequestException('Vui lòng nhập đầy đủ thông tin');

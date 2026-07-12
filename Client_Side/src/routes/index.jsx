@@ -1,6 +1,6 @@
 import React from 'react';
 import { ROLE_ADMIN, ROLE_TEACHER, ROLE_STUDENT } from '../constants/auth.constants';
-// Admin pages
+// Các trang của admin
 import AdminDashboard from '../pages/admin/AdminDashboard';
 import StudentsScreen from '../pages/admin/StudentsScreen';
 import StudentProfile from '../pages/admin/StudentProfile';
@@ -9,16 +9,16 @@ import CatalogScreen from '../pages/admin/CatalogScreen';
 import SubjectsScreen from '../pages/admin/SubjectsScreen';
 import SectionsScreen from '../pages/admin/SectionsScreen';
 import SemestersScreen from '../pages/admin/SemestersScreen';
-// Teacher pages
+// Các trang của giảng viên
 import TeacherDashboard from '../pages/teacher/TeacherDashboard';
 import MySectionsScreen from '../pages/teacher/MySectionsScreen';
 import AttendanceScreen from '../pages/teacher/AttendanceScreen';
 import GradeEntryScreen from '../pages/teacher/GradeEntryScreen';
-// Student pages
+// Các trang của sinh viên
 import StudentDashboard from '../pages/student/StudentDashboard';
 import RegistrationScreen from '../pages/student/RegistrationScreen';
 import TranscriptScreen from '../pages/student/TranscriptScreen';
-// Shared pages
+// Các trang dùng chung
 import ScheduleScreen from '../pages/shared/ScheduleScreen';
 import ProfilePage from '../pages/profile/ProfilePage';
 

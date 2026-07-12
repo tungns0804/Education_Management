@@ -11,6 +11,7 @@ import * as express from 'express';
 export class JwtAuthGuard implements CanActivate {
   constructor(private readonly authService: AuthService) {}
 
+  // Đọc access token từ cookie, xác thực và gắn payload người dùng vào request
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest<express.Request>();
     const cookies = req.cookies as Record<string, string> | undefined;

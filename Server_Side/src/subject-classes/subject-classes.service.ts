@@ -19,6 +19,7 @@ export class SubjectClassesService {
     return { semester: { in: active.map(s => s.name) } };
   }
 
+  // Lấy danh sách lớp học phần, phạm vi dữ liệu tùy vai trò người gọi
   async findAll(role: string, userId: string) {
     const semFilter = (role === 'teacher' || role === 'student') ? await this.getActiveSemesterFilter() : {};
 
@@ -36,6 +37,7 @@ export class SubjectClassesService {
     });
   }
 
+  // Lấy các lớp học phần do một giảng viên phụ trách
   async findMySections(teacherId: string) {
     const semFilter = await this.getActiveSemesterFilter();
     return this.prisma.subjectClass.findMany({
@@ -45,6 +47,7 @@ export class SubjectClassesService {
     });
   }
 
+  // Lấy chi tiết một lớp học phần theo id
   async findOne(id: string) {
     const sc = await this.prisma.subjectClass.findUnique({
       where: { id },
@@ -54,6 +57,7 @@ export class SubjectClassesService {
     return sc;
   }
 
+  // Lấy danh sách sinh viên đã đăng ký của một lớp học phần
   async findRoster(id: string) {
     await this.findOne(id);
     return this.prisma.enrollment.findMany({
@@ -157,6 +161,7 @@ export class SubjectClassesService {
     return this.prisma.subjectClass.update({ where: { id }, data, include: this.sectionInclude });
   }
 
+  // Xóa lớp học phần
   async remove(id: string) {
     await this.findOne(id);
     await this.prisma.subjectClass.delete({ where: { id } });

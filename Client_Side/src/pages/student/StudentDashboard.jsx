@@ -13,6 +13,7 @@ import { requestStudentDashboard } from '../../config/userRequest';
 
 const COURSE_COLORS = ['#2F6FED', '#1F8A5B', '#8B5CF6', '#C9821A', '#EC6A9C', '#0E9F9F'];
 
+// Dashboard sinh viên: GPA, tín chỉ, chuyên cần, môn đang học và biểu đồ điểm
 export default function StudentDashboard({ onNav }) {
   const { user } = useAuth();
   const { t, lang } = useApp();
@@ -35,8 +36,8 @@ export default function StudentDashboard({ onNav }) {
     : stats?.gpa >= 5.5 ? (lang==='vi'?'Khá':'Fair')
     : (lang==='vi'?'Trung bình':'Average');
 
-  // Map GPA 4.0 scale to 10-point for ring (rough)
-  const TOTAL_CREDITS = 145; // typical degree requirement
+  // Quy đổi GPA thang 4.0 sang thang 10 cho vòng tiến độ (ước lượng)
+  const TOTAL_CREDITS = 145; // tổng tín chỉ điển hình của một chương trình đào tạo
 
   return (
     <Page>

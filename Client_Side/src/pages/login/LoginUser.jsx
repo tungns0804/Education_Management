@@ -14,6 +14,7 @@ import {
 
 export { PW_RULES };
 
+// Ô nhập mật khẩu có nút ẩn / hiện nội dung
 export function PwField({ label, value, onChange, placeholder, autoFocus }) {
   const { t } = useApp();
   const [show, setShow] = useState(false);
@@ -45,6 +46,7 @@ export function PwField({ label, value, onChange, placeholder, autoFocus }) {
   );
 }
 
+// Danh sách kiểm tra độ mạnh mật khẩu theo PW_RULES, cập nhật theo giá trị đang nhập
 export function PwChecklist({ value, lang }) {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 14px', marginTop: 2 }}>
@@ -63,6 +65,7 @@ export function PwChecklist({ value, lang }) {
   );
 }
 
+// Panel thương hiệu bên trái màn hình đăng nhập
 function BrandPanel() {
   const { t, lang } = useApp();
   return (
@@ -92,12 +95,13 @@ function BrandPanel() {
   );
 }
 
+// Màn hình xác thực: đăng nhập, quên mật khẩu, nhập OTP, đặt lại mật khẩu
 export default function LoginUser({ renderApp }) {
   const { login, logout, user, loading: authLoading } = useAuth();
   const { t, lang, theme, toggleTheme, toggleLang } = useApp();
   const toast = useToast();
 
-  const [view, setView]             = useState('login'); // login | forgot | otp | reset | first
+  const [view, setView]             = useState('login'); // các màn: login | forgot | otp | reset | first
   const [identifier, setIdentifier] = useState('');
   const [pw, setPw]                 = useState('');
   const [npw, setNpw]               = useState('');
@@ -118,7 +122,7 @@ export default function LoginUser({ renderApp }) {
     setView(v);
   };
 
-  // Must be declared before any early returns (Rules of Hooks)
+  // Phải khai báo trước mọi lệnh return sớm (quy tắc Rules of Hooks)
   useEffect(() => {
     if (view !== 'otp') return;
     setSecs(OTP_EXPIRY_SECONDS);
@@ -126,7 +130,7 @@ export default function LoginUser({ renderApp }) {
     return () => clearInterval(iv);
   }, [view]);
 
-  // Clear form whenever the login screen is shown (logout, session expiry, initial load)
+  // Xóa trắng form mỗi khi màn hình đăng nhập hiển thị (đăng xuất, hết phiên, lần tải đầu)
   useEffect(() => {
     if (!user && !authLoading) {
       setIdentifier('');

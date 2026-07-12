@@ -17,6 +17,7 @@ function letterColor(l) {
   return 'var(--accent)';
 }
 
+// Màn hình bảng điểm sinh viên: điểm từng môn theo học kỳ và GPA tích lũy
 export default function TranscriptScreen() {
   const { t, lang } = useApp();
   const [data,     setData]     = useState({ enrollments: [], gpa: 0, totalCredits: 0 });

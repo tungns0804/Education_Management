@@ -9,18 +9,21 @@ import { Roles } from '../common/decorators/roles.decorator';
 export class BranchesController {
   constructor(private readonly branchesService: BranchesService) {}
 
+  // Lấy danh sách ngành (lọc theo khoa nếu truyền departmentId)
   @Get()
   async findAll(@Query('departmentId') departmentId?: string) {
     const data = await this.branchesService.findAll(departmentId);
     return { success: true, message: 'success', metadata: data };
   }
 
+  // Lấy chi tiết một ngành theo id
   @Get(':id')
   async findOne(@Param('id') id: string) {
     const data = await this.branchesService.findOne(id);
     return { success: true, message: 'success', metadata: data };
   }
 
+  // Tạo ngành mới
   @Post()
   @UseGuards(RolesGuard)
   @Roles('admin')
@@ -29,6 +32,7 @@ export class BranchesController {
     return { success: true, message: 'Tạo ngành thành công', metadata: data };
   }
 
+  // Cập nhật thông tin ngành
   @Put(':id')
   @UseGuards(RolesGuard)
   @Roles('admin')
@@ -37,6 +41,7 @@ export class BranchesController {
     return { success: true, message: 'Cập nhật thành công', metadata: data };
   }
 
+  // Xóa ngành
   @Delete(':id')
   @UseGuards(RolesGuard)
   @Roles('admin')

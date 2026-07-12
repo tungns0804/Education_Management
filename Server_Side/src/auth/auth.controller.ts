@@ -22,8 +22,10 @@ import {
   REFRESH_TOKEN_MAX_AGE_MS,
 } from '../constants/auth.constants';
 
+// Đang chạy môi trường production hay không
 const isProd = () => process.env.NODE_ENV === 'production';
 
+// Tạo tùy chọn cookie thống nhất (httpOnly, secure theo môi trường, maxAge)
 function buildCookieOptions(maxAgeMs: number, httpOnly: boolean) {
   return {
     httpOnly,
@@ -33,6 +35,7 @@ function buildCookieOptions(maxAgeMs: number, httpOnly: boolean) {
   };
 }
 
+// Set 3 cookie sau đăng nhập: token, refreshToken và cờ logged cho client
 function setCookies(res: express.Response, token: string, refreshToken: string) {
   res.cookie(COOKIE_TOKEN,         token,        buildCookieOptions(ACCESS_TOKEN_MAX_AGE_MS,  true));
   res.cookie(COOKIE_REFRESH_TOKEN, refreshToken, buildCookieOptions(REFRESH_TOKEN_MAX_AGE_MS, true));
@@ -58,6 +61,7 @@ export class AuthController {
     return { success: true, message: 'success', metadata: { user } };
   }
 
+  // Lấy thông tin người dùng của phiên hiện tại
   @Get('auth')
   @UseGuards(JwtAuthGuard)
   async getMe(@Req() req: express.Request) {
@@ -95,6 +99,7 @@ export class AuthController {
     return { success: true, message: 'success', metadata: { token } };
   }
 
+  // Bước 1 quên mật khẩu: gửi OTP về email cá nhân
   @Post('forgot-password')
   @HttpCode(HttpStatus.OK)
   async forgotPassword(@Body() body: { identifier: string }) {
@@ -102,6 +107,7 @@ export class AuthController {
     return { success: true, message: 'OTP đã được gửi tới email của bạn' };
   }
 
+  // Bước 2 quên mật khẩu: kiểm tra OTP hợp lệ
   @Post('verify-otp')
   @HttpCode(HttpStatus.OK)
   async verifyOtp(@Body() body: { identifier: string; otp: string }) {

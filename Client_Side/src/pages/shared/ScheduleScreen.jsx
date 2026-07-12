@@ -10,6 +10,7 @@ import { requestMySections, requestMyEnrollments } from '../../config/userReques
 
 const SECTION_COLORS = ['#2F6FED', '#1F8A5B', '#8B5CF6', '#C9821A', '#EC6A9C', '#0E9F9F'];
 
+// Màn hình thời khóa biểu dùng chung: giảng viên xem lớp phụ trách, sinh viên xem lớp đã đăng ký
 export default function ScheduleScreen({ role }) {
   const { t, lang } = useApp();
   const [items, setItems] = useState([]);
@@ -23,7 +24,7 @@ export default function ScheduleScreen({ role }) {
         if (role === 'TEACHER') {
           setItems(data);
         } else {
-          // Student: flatten from enrollments
+          // Sinh viên: trải phẳng danh sách từ các đăng ký học phần
           setItems(data.map(e => e.subjectClass).filter(Boolean));
         }
       })
@@ -31,7 +32,7 @@ export default function ScheduleScreen({ role }) {
       .finally(() => setLoading(false));
   }, [role]);
 
-  // Group by semester
+  // Gom nhóm theo học kỳ
   const bySemester = useMemo(() => {
     const m = {};
     items.forEach(s => {

@@ -12,6 +12,7 @@ import * as express from 'express';
 export class RolesGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
 
+  // Đối chiếu vai trò của người dùng với danh sách vai trò yêu cầu từ decorator @Roles
   canActivate(context: ExecutionContext): boolean {
     const required = this.reflector.getAllAndOverride<string[]>(ROLES_KEY, [
       context.getHandler(),

@@ -7,10 +7,12 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import LoginUser from './pages/login/LoginUser';
 import MainLayout from './layouts/MainLayout';
 
+// Component gốc: hiển thị màn đăng nhập / ứng dụng chính và modal tài khoản bị khóa
 function Root() {
   const { lang } = useApp();
   const { lockedMessage, clearLockedMessage, logout } = useAuth();
 
+  // Đóng modal tài khoản bị khóa rồi đăng xuất
   function handleLockedOk() {
     clearLockedMessage();
     logout();
@@ -37,6 +39,7 @@ function Root() {
   );
 }
 
+// Điểm vào ứng dụng: bọc các Provider (theme/ngôn ngữ, toast, xác thực) quanh Root
 export default function App() {
   return (
     <AppProvider>

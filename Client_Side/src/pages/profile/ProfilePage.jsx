@@ -7,6 +7,7 @@ import { PwField, PwChecklist } from '../login/LoginUser';
 import { requestUpdateUser, requestChangePassword } from '../../config/userRequest';
 import { ROLE_TEACHER, ROLE_STUDENT, AVATAR_HUE, PW_RULES } from '../../constants/auth.constants';
 
+// Nén ảnh đại diện về kích thước tối đa maxPx và trả về chuỗi base64
 function compressImage(file, maxPx = 256, quality = 0.78) {
   return new Promise((resolve) => {
     const reader = new FileReader();
@@ -26,6 +27,7 @@ function compressImage(file, maxPx = 256, quality = 0.78) {
   });
 }
 
+// Avatar tròn: hiển thị ảnh nếu có, không thì chữ cái đầu; có nút đổi ảnh khi đang sửa
 function AvatarCircle({ src, name, hue, size = 90, editing, onClick }) {
   const initials = (name || '?').split(' ').slice(-2).map(s => s[0]).join('').toUpperCase();
   return (
@@ -55,6 +57,7 @@ function AvatarCircle({ src, name, hue, size = 90, editing, onClick }) {
   );
 }
 
+// Một dòng thông tin trong hồ sơ (icon + nhãn + giá trị)
 function InfoRow({ icon, label, value }) {
   if (value == null || value === '') return null;
   return (
@@ -68,6 +71,7 @@ function InfoRow({ icon, label, value }) {
   );
 }
 
+// Trang hồ sơ cá nhân: xem / sửa thông tin, đổi ảnh đại diện, đổi mật khẩu
 export default function ProfilePage() {
   const { user, login, logout } = useAuth();
   const { t, lang } = useApp();
@@ -101,11 +105,15 @@ export default function ProfilePage() {
   const pwAllPass = PW_RULES.every(r => r.test(pwForm.newPw));
   const pwMatch   = pwForm.newPw === pwForm.confirmPw;
 
+  // Tạo handler onChange cập nhật một trường của form theo khóa k
   function setF(k) { return (e) => setForm(f => ({ ...f, [k]: e.target.value })); }
 
+  // Bật chế độ chỉnh sửa với dữ liệu hiện tại
   function startEdit() { setForm(initForm()); setNewAvatar(null); setEditing(true); }
+  // Hủy chỉnh sửa, bỏ mọi thay đổi
   function cancelEdit() { setEditing(false); setNewAvatar(null); }
 
+  // Xử lý chọn file ảnh đại diện: nén rồi lưu tạm chờ bấm Lưu
   async function handleAvatarPick(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -114,6 +122,7 @@ export default function ProfilePage() {
     e.target.value = '';
   }
 
+  // Lưu thông tin hồ sơ đã sửa lên server và cập nhật lại context
   async function handleSave() {
     if (!form.fullName.trim()) { toast(t('errRequired'), 'danger'); return; }
     setSaving(true);
@@ -133,6 +142,7 @@ export default function ProfilePage() {
     }
   }
 
+  // Gửi yêu cầu đổi mật khẩu sau khi kiểm tra quy tắc và khớp xác nhận
   async function handleChangePassword() {
     if (!pwForm.currentPw)  { toast(t('errRequired'), 'danger'); return; }
     if (!pwAllPass)          { toast(t('errFixForm'), 'danger'); return; }

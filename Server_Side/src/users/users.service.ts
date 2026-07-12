@@ -17,6 +17,7 @@ export class UsersService {
     private readonly emailService: EmailService,
   ) {}
 
+  // Loại bỏ trường password khỏi object user trước khi trả về client
   private omitPassword<T extends { password: string }>(user: T) {
     const { password: _pw, ...rest } = user;
     return rest;
@@ -50,6 +51,7 @@ export class UsersService {
     });
   }
 
+  // Tìm danh sách giảng viên theo từ khóa và khoa
   async findTeachers(q?: string, departmentId?: string) {
     return this.prisma.user.findMany({
       where: {
@@ -73,6 +75,7 @@ export class UsersService {
     });
   }
 
+  // Tìm người dùng theo id, không thấy thì báo lỗi 404
   async findById(id: string) {
     const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) throw new NotFoundException('Người dùng không tồn tại');
@@ -154,6 +157,7 @@ export class UsersService {
     return id;
   }
 
+  // Xem trước mã giảng viên sẽ được cấp tiếp theo
   async getNextTeacherId(): Promise<string> {
     const [id] = await this.generateTeacherIds(1);
     return id;
@@ -167,6 +171,7 @@ export class UsersService {
     return `${idStudent.toLowerCase()}@student.school.edu.vn`;
   }
 
+  // Sinh mật khẩu tạm ngẫu nhiên 10 ký tự để gửi qua email
   private generateTempPassword(): string {
     const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789@#!';
     return Array.from({ length: 10 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
@@ -447,6 +452,7 @@ export class UsersService {
     return this.omitPassword(user);
   }
 
+  // Đổi mật khẩu: kiểm tra mật khẩu hiện tại, cập nhật và thu hồi mọi token
   async changePassword(userId: string, currentPassword: string, newPassword: string) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('Người dùng không tồn tại');
@@ -461,6 +467,7 @@ export class UsersService {
     return { message: 'Mật khẩu đã được cập nhật. Vui lòng đăng nhập lại.' };
   }
 
+  // Khóa / mở khóa tài khoản người dùng
   async toggleStatus(id: string, status: 'active' | 'inactive') {
     await this.findById(id);
     const newStatus = status === 'active' ? UserStatus.active : UserStatus.inactive;

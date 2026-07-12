@@ -6,6 +6,7 @@ import { Role, SubjectClassStatus, AttendanceStatus, EnrollmentStatus } from '@p
 export class DashboardService {
   constructor(private readonly prisma: PrismaService) {}
 
+  // Tổng hợp số liệu toàn hệ thống: người dùng, lớp học phần, phân bố giới tính và điểm chữ
   async getStats() {
     const [
       totalStudents,
@@ -53,8 +54,8 @@ export class DashboardService {
     };
   }
 
-  // Students grouped by department (khoa), optionally filtered by semester (học kỳ) —
-  // i.e. only students with at least one enrollment in a subject class of that semester.
+  // Đếm sinh viên theo khoa, có thể lọc theo học kỳ —
+  // tức chỉ tính sinh viên có ít nhất một đăng ký học phần trong học kỳ đó.
   async getStudentsByDepartment(semester?: string) {
     const [departments, semesters, students] = await Promise.all([
       this.prisma.department.findMany({
@@ -97,6 +98,7 @@ export class DashboardService {
     return { semester: { in: active.map(s => s.name) } };
   }
 
+  // Thống kê cho giảng viên: lớp phụ trách, sĩ số, tỷ lệ chuyên cần, điểm chờ nhập
   async getTeacherStats(teacherId: string) {
     const semFilter = await this.getActiveSemesterFilter();
     const sections = await this.prisma.subjectClass.findMany({
@@ -158,6 +160,7 @@ export class DashboardService {
     };
   }
 
+  // Thống kê cho sinh viên: môn đang học, tín chỉ, GPA và diễn biến theo học kỳ
   async getStudentStats(studentId: string) {
     const semFilter = await this.getActiveSemesterFilter();
     const [currentEnrollments, completedEnrollments] = await Promise.all([

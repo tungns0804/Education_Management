@@ -1,6 +1,6 @@
 import React from 'react';
 
-/* EduManage — Icon set (stroke icons, inherit currentColor) */
+/* EduManage — Bộ icon (icon nét mảnh, kế thừa màu currentColor) */
 const Icon = ({ d, paths, size = 18, fill = 'none', sw = 1.7, ...p }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke="currentColor"
        strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" {...p}>

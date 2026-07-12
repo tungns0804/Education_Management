@@ -11,6 +11,7 @@ import { AttendanceStatus } from '@prisma/client';
 export class AttendanceService {
   constructor(private readonly prisma: PrismaService) {}
 
+  // Lấy toàn bộ bản ghi điểm danh của một lớp học phần (kèm thông tin sinh viên)
   async findBySection(subjectClassId: string) {
     return this.prisma.attendance.findMany({
       where: { subjectClassId },
@@ -22,6 +23,7 @@ export class AttendanceService {
     });
   }
 
+  // Lấy điểm danh của một sinh viên trong một lớp học phần
   async findMyAttendance(studentId: string, subjectClassId: string) {
     return this.prisma.attendance.findMany({
       where: { studentId, subjectClassId },
@@ -71,6 +73,7 @@ export class AttendanceService {
     return { saved, failed };
   }
 
+  // Sửa một bản ghi điểm danh — chỉ giảng viên phụ trách lớp mới được sửa
   async updateOne(id: string, teacherId: string, data: { status: AttendanceStatus; note?: string }) {
     const record = await this.prisma.attendance.findUnique({
       where: { id },

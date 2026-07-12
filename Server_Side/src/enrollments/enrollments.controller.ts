@@ -25,6 +25,7 @@ type AuthReq = express.Request & { user: { id: string; role: string } };
 export class EnrollmentsController {
   constructor(private readonly enrollmentsService: EnrollmentsService) {}
 
+  // Sinh viên xem các đăng ký học phần hiện tại của mình
   @Get('my')
   @UseGuards(RolesGuard)
   @Roles('student')
@@ -33,6 +34,7 @@ export class EnrollmentsController {
     return { success: true, message: 'success', metadata: data };
   }
 
+  // Sinh viên xem bảng điểm toàn khóa
   @Get('transcript')
   @UseGuards(RolesGuard)
   @Roles('student')
@@ -41,6 +43,7 @@ export class EnrollmentsController {
     return { success: true, message: 'success', metadata: data };
   }
 
+  // Sinh viên xem diễn biến GPA theo học kỳ
   @Get('gpa-trend')
   @UseGuards(RolesGuard)
   @Roles('student')
@@ -49,6 +52,7 @@ export class EnrollmentsController {
     return { success: true, message: 'success', metadata: data };
   }
 
+  // Lấy bảng điểm của một lớp học phần (giảng viên / admin)
   @Get(':subjectClassId/grades')
   @UseGuards(RolesGuard)
   @Roles('teacher', 'admin')
@@ -68,6 +72,7 @@ export class EnrollmentsController {
     return { success: true, message: 'Đăng ký thành công', metadata: data };
   }
 
+  // Sinh viên hủy đăng ký học phần của mình
   @Delete(':id')
   @UseGuards(RolesGuard)
   @Roles('student')

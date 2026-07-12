@@ -1,16 +1,16 @@
 // ================================================================
-// API / HTTP configuration constants
+// Các hằng số cấu hình API / HTTP
 // ================================================================
 
 export const API_BASE_URL   = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-export const API_TIMEOUT_MS = 10_000; // 10 seconds before a request is aborted
+export const API_TIMEOUT_MS = 10_000; // request bị hủy sau 10 giây
 
-// Base path for all user-related endpoints
+// Đường dẫn gốc cho mọi endpoint liên quan đến người dùng
 const USERS_BASE = '/api/users';
 
-// Individual endpoint paths (consumed by userRequest.js)
+// Danh sách endpoint (được userRequest.js sử dụng)
 export const API_ENDPOINTS = {
-  // ---- Auth (unauthenticated) ----
+  // ---- Xác thực (không cần đăng nhập) ----
   LOGIN:           `${USERS_BASE}/login`,
   LOGOUT:          `${USERS_BASE}/logout`,
   AUTH:            `${USERS_BASE}/auth`,
@@ -20,7 +20,7 @@ export const API_ENDPOINTS = {
   RESET_PASSWORD:  `${USERS_BASE}/reset-password`,
   CHANGE_PASSWORD: `${USERS_BASE}/change-password`,
 
-  // ---- User management ----
+  // ---- Quản lý người dùng ----
   ME:          `${USERS_BASE}/me`,
   STUDENTS:    `${USERS_BASE}/students`,
   TEACHERS:    `${USERS_BASE}/teachers`,

@@ -49,6 +49,7 @@ export class UsersController {
     return { success: true, message: 'success', metadata: data };
   }
 
+  // Xem trước mã sinh viên sẽ được cấp tiếp theo
   @Get('next-student-id')
   @UseGuards(RolesGuard)
   @Roles('admin')
@@ -57,6 +58,7 @@ export class UsersController {
     return { success: true, message: 'success', metadata: { nextId } };
   }
 
+  // Xem trước mã giảng viên sẽ được cấp tiếp theo
   @Get('next-teacher-id')
   @UseGuards(RolesGuard)
   @Roles('admin')
@@ -65,18 +67,21 @@ export class UsersController {
     return { success: true, message: 'success', metadata: { nextId } };
   }
 
+  // Lấy thông tin người dùng đang đăng nhập
   @Get('me')
   async getMe(@Req() req: AuthReq) {
     const data = await this.usersService.findById(req.user.id);
     return { success: true, message: 'success', metadata: data };
   }
 
+  // Lấy thông tin một người dùng theo id
   @Get(':id')
   async getOne(@Param('id') id: string) {
     const data = await this.usersService.findById(id);
     return { success: true, message: 'success', metadata: data };
   }
 
+  // Tạo sinh viên mới (mã sinh viên do server tự sinh)
   @Post('students')
   @UseGuards(RolesGuard)
   @Roles('admin')
@@ -87,6 +92,7 @@ export class UsersController {
     return { success: true, message: 'Tạo sinh viên thành công', metadata: data };
   }
 
+  // Tạo giảng viên mới (mã và email do server tự sinh)
   @Post('teachers')
   @UseGuards(RolesGuard)
   @Roles('admin')
@@ -97,6 +103,7 @@ export class UsersController {
     return { success: true, message: 'Tạo giảng viên thành công', metadata: data };
   }
 
+  // Nhập danh sách sinh viên hàng loạt
   @Post('bulk-import')
   @UseGuards(RolesGuard)
   @Roles('admin')
@@ -105,6 +112,7 @@ export class UsersController {
     return { success: true, message: `Đã tạo ${data.created} sinh viên`, metadata: data };
   }
 
+  // Nhập danh sách giảng viên hàng loạt
   @Post('bulk-import-teachers')
   @UseGuards(RolesGuard)
   @Roles('admin')
@@ -113,6 +121,7 @@ export class UsersController {
     return { success: true, message: `Đã tạo ${data.created} giảng viên`, metadata: data };
   }
 
+  // Đổi mật khẩu của người dùng đang đăng nhập
   @Put('change-password')
   async changePassword(@Req() req: AuthReq, @Body() body: any) {
     const data = await this.usersService.changePassword(req.user.id, body.currentPassword, body.newPassword);
@@ -125,7 +134,7 @@ export class UsersController {
     @Req() req: AuthReq,
     @Body() body: any,
   ) {
-    // Users can update their own profile; admin can update anyone
+    // Người dùng chỉ được cập nhật hồ sơ của chính mình; admin cập nhật được mọi người
     const targetId = req.user.role === 'admin' ? id : req.user.id;
     const data = await this.usersService.update(targetId, body);
     return { success: true, message: 'Cập nhật thành công', metadata: data };
@@ -142,6 +151,7 @@ export class UsersController {
     return { success: true, message: 'Cập nhật trạng thái thành công', metadata: data };
   }
 
+  // Xóa người dùng theo id
   @Delete(':id')
   @UseGuards(RolesGuard)
   @Roles('admin')

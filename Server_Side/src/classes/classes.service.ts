@@ -5,6 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 export class ClassesService {
   constructor(private readonly prisma: PrismaService) {}
 
+  // Lấy danh sách lớp (lọc theo ngành nếu có)
   async findAll(branchId?: string) {
     return this.prisma.class.findMany({
       where: { ...(branchId && { branchId }) },
@@ -16,6 +17,7 @@ export class ClassesService {
     });
   }
 
+  // Lấy chi tiết một lớp theo id
   async findOne(id: string) {
     const cls = await this.prisma.class.findUnique({
       where: { id },
@@ -28,6 +30,7 @@ export class ClassesService {
     return cls;
   }
 
+  // Tạo lớp mới (gắn giảng viên chủ nhiệm và ngành)
   async create(data: { code: string; nameClass: string; teacherId: string; branchId: string }) {
     const existing = await this.prisma.class.findUnique({ where: { code: data.code } });
     if (existing) throw new ConflictException(`Mã lớp ${data.code} đã tồn tại`);
@@ -40,6 +43,7 @@ export class ClassesService {
     });
   }
 
+  // Cập nhật thông tin lớp
   async update(id: string, data: { code?: string; nameClass?: string; teacherId?: string; branchId?: string }) {
     await this.findOne(id);
     return this.prisma.class.update({
@@ -52,6 +56,7 @@ export class ClassesService {
     });
   }
 
+  // Xóa lớp
   async remove(id: string) {
     await this.findOne(id);
     await this.prisma.class.delete({ where: { id } });
