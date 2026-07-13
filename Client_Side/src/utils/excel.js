@@ -77,7 +77,7 @@ function makeCells(theme, nCols) {
 // Khối đầu trang dùng chung: tên trường, phòng ban, tiêu đề tài liệu, dòng phụ
 function buildHeadRows({ span, theme, vi, deptLine, title, subLine }) {
   return [
-    [span(vi ? 'TRƯỜNG ĐẠI HỌC KHOA HỌC VÀ CÔNG NGHỆ VIỆT NAM' : 'VIETNAM UNIVERSITY OF SCIENCE AND TECHNOLOGY', {
+    [span(vi ? 'HỌC VIỆN NÔNG NGHIỆP VIỆT NAM' : 'VIETNAM NATIONAL UNIVERSITY OF AGRICULTURE', {
       fontSize: 15, fontWeight: 'bold', color: theme.bannerText, backgroundColor: theme.bannerBg,
       align: 'center', alignVertical: 'middle', height: 44,
     })],
