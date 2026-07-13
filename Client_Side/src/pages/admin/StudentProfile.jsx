@@ -5,7 +5,21 @@ import { Page } from '../../components/shell';
 import { Spinner } from '../../components/feedback';
 import { useApp } from '../../context/AppContext';
 import StudentDrawer from './StudentDrawer';
-import { requestUser, requestUpdateUser, requestToggleUserStatus } from '../../config/userRequest';
+import { requestUser, requestUpdateUser, requestToggleUserStatus, requestClasses } from '../../config/userRequest';
+import { normalizeDob, isoToDob } from '../../utils/csv';
+
+// API user → cấu trúc row mà StudentDrawer kỳ vọng (cùng shape với StudentsScreen)
+const toDrawerRow = (s) => ({
+  id:            s.id,
+  name:          s.fullName,
+  code:          s.idStudent,
+  email:         s.email,
+  classId:       s.class || '',
+  gender:        s.gender === 'male' ? 'M' : 'F',
+  dob:           s.birthDay ? isoToDob(s.birthDay) : '',
+  personalEmail: s.personalEmail || '',
+  active:        ['active', 'studying'].includes(s.status),
+});
 
 /* EduManage — Admin: Hồ sơ chi tiết sinh viên */
 
@@ -24,6 +38,7 @@ export default function StudentProfile({ studentId, onBack }) {
   const { t, lang } = useApp();
   const toast = useToast();
   const [student, setStudent] = useState(null);
+  const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [drawer, setDrawer] = useState(null);
   const [tick, setTick] = useState(0);
@@ -31,8 +46,11 @@ export default function StudentProfile({ studentId, onBack }) {
   useEffect(() => {
     if (!studentId) return;
     setLoading(true);
-    requestUser(studentId)
-      .then(res => setStudent(res.metadata || null))
+    Promise.all([requestUser(studentId), requestClasses()])
+      .then(([uRes, cRes]) => {
+        setStudent(uRes.metadata || null);
+        setClasses(cRes.metadata ?? []);
+      })
       .catch(() => setStudent(null))
       .finally(() => setLoading(false));
   }, [studentId, tick]);
@@ -86,7 +104,7 @@ export default function StudentProfile({ studentId, onBack }) {
             <button className="btn btn-outline btn-sm" style={{ height: 40 }} onClick={onToggle}>
               {isActive ? <I.lock size={16}/> : <I.unlock size={16}/>}{isActive ? t('lock') : t('unlock')}
             </button>
-            <button className="btn btn-primary btn-sm" style={{ height: 40 }} onClick={() => setDrawer({ mode: 'edit', row: student })}>
+            <button className="btn btn-primary btn-sm" style={{ height: 40 }} onClick={() => setDrawer({ mode: 'edit', row: toDrawerRow(student) })}>
               <I.edit size={15}/>{t('editProfile')}
             </button>
           </div>
@@ -95,10 +113,17 @@ export default function StudentProfile({ studentId, onBack }) {
 
       <StudentDrawer
         state={drawer}
+        classes={classes}
         onClose={() => setDrawer(null)}
         onSave={async (data) => {
           try {
-            await requestUpdateUser(student.id, data);
+            await requestUpdateUser(student.id, {
+              fullName:      data.name,
+              gender:        data.gender === 'M' ? 'male' : 'female',
+              birthDay:      data.dob ? normalizeDob(data.dob) : undefined,
+              class:         data.classId || undefined,
+              personalEmail: data.personalEmail,
+            });
             setTick(x => x + 1);
             toast(lang==='vi'?'Đã lưu thay đổi':'Changes saved');
             setDrawer(null);

@@ -6,6 +6,7 @@ import { TableToolbar, FilterSelect, RowAction } from '../../components/table';
 import { BulkImportDrawer } from '../../components/BulkImportDrawer';
 import { useApp } from '../../context/AppContext';
 import { exportStudentsExcel } from '../../utils/excel';
+import { normalizeDob, isoToDob } from '../../utils/csv';
 import StudentDrawer from './StudentDrawer';
 import {
   requestStudents, requestCreateStudent, requestBulkImport,
@@ -23,7 +24,7 @@ const toStudent = (s) => ({
   email:         s.email,
   classId:       s.class || '',           // mã lớp, dùng làm khóa lọc
   gender:        s.gender === 'male' ? 'M' : 'F',
-  dob:           s.birthDay ? s.birthDay.split('T')[0] : '',
+  dob:           s.birthDay ? isoToDob(s.birthDay) : '',
   active:        ['active', 'studying'].includes(s.status),
   avatarHue:     280,
   personalEmail: s.personalEmail || '',
@@ -150,10 +151,10 @@ export default function StudentsScreen({ onOpenProfile }) {
         onSave={async (data) => {
           try {
             if (drawer.mode === 'add') {
-              await requestCreateStudent({ fullName: data.name, gender: data.gender === 'M' ? 'male' : 'female', birthDay: data.dob || undefined, class: data.classId, personalEmail: data.personalEmail });
+              await requestCreateStudent({ fullName: data.name, gender: data.gender === 'M' ? 'male' : 'female', birthDay: data.dob ? normalizeDob(data.dob) : undefined, class: data.classId, personalEmail: data.personalEmail });
               toast(lang === 'vi' ? 'Đã tạo hồ sơ & gửi tài khoản về email cá nhân' : 'Profile created · credentials emailed');
             } else {
-              await requestUpdateUser(drawer.row.id, { fullName: data.name, gender: data.gender === 'M' ? 'male' : 'female', birthDay: data.dob || undefined, class: data.classId, personalEmail: data.personalEmail });
+              await requestUpdateUser(drawer.row.id, { fullName: data.name, gender: data.gender === 'M' ? 'male' : 'female', birthDay: data.dob ? normalizeDob(data.dob) : undefined, class: data.classId, personalEmail: data.personalEmail });
               toast(lang === 'vi' ? 'Đã lưu thay đổi' : 'Changes saved');
             }
             loadData();

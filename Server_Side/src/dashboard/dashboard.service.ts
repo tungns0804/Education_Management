@@ -54,23 +54,15 @@ export class DashboardService {
     };
   }
 
-  // Đếm sinh viên theo khoa, có thể lọc theo học kỳ —
-  // tức chỉ tính sinh viên có ít nhất một đăng ký học phần trong học kỳ đó.
-  async getStudentsByDepartment(semester?: string) {
-    const [departments, semesters, students] = await Promise.all([
+  // Đếm sinh viên theo khoa trên toàn trường
+  async getStudentsByDepartment() {
+    const [departments, students] = await Promise.all([
       this.prisma.department.findMany({
         select: { code: true, nameDepartment: true },
         orderBy: { code: 'asc' },
       }),
-      this.prisma.semester.findMany({
-        select: { name: true },
-        orderBy: { name: 'asc' },
-      }),
       this.prisma.user.findMany({
-        where: {
-          role: Role.student,
-          ...(semester ? { enrollments: { some: { subjectClass: { semester } } } } : {}),
-        },
+        where: { role: Role.student },
         select: { department: true },
       }),
     ]);
@@ -89,7 +81,7 @@ export class DashboardService {
 
     const total = data.reduce((sum, d) => sum + d.value, 0);
 
-    return { semester: semester ?? null, semesters: semesters.map(s => s.name), total, data };
+    return { total, data };
   }
 
   private async getActiveSemesterFilter(): Promise<{ semester?: { in: string[] } }> {

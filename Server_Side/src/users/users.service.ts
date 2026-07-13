@@ -45,7 +45,7 @@ export class UsersService {
       select: {
         id: true, fullName: true, email: true, idStudent: true, class: true,
         gender: true, birthDay: true, status: true, avatar: true, department: true,
-        address: true, createdAt: true, updatedAt: true,
+        personalEmail: true, address: true, createdAt: true, updatedAt: true,
       },
       orderBy: { createdAt: 'desc' },
     });

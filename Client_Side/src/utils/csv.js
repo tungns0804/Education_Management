@@ -34,11 +34,17 @@ const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 // Chuẩn hóa ngày sinh dd/mm/yyyy → yyyy-mm-dd (new Date() phía server hiểu
 // chuỗi dd/mm theo kiểu Mỹ mm/dd nên phải đổi sang ISO trước khi gửi)
-const normalizeDob = (s) => {
+export const normalizeDob = (s) => {
   const v = (s || '').trim();
   const m = /^(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{4})$/.exec(v);
   if (m) return `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`;
   return v;
+};
+
+// Chiều ngược lại: ISO yyyy-mm-dd → dd/mm/yyyy, khớp validator/placeholder form hồ sơ
+export const isoToDob = (iso) => {
+  const [y, m, d] = (iso || '').split('T')[0].split('-');
+  return y && m && d ? `${d}/${m}/${y}` : '';
 };
 
 // Nhận diện ô tiêu đề cột "Họ tên" — dùng để tìm dòng header trong file

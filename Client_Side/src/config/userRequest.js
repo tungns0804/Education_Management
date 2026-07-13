@@ -24,8 +24,8 @@ export const requestChangePassword = (data) => apiClient.put(API_ENDPOINTS.CHANG
 
 // ── Dashboard ────────────────────────────────────────────────────────────────
 export const requestDashboard        = ()  => apiClient.get(API_ENDPOINTS.DASHBOARD).then((r) => r.data);
-// Lấy số liệu sinh viên theo khoa cho biểu đồ (lọc theo học kỳ nếu có)
-export const requestStudentsByDepartment = (semester) => apiClient.get(API_ENDPOINTS.STUDENTS_BY_DEPARTMENT, { params: semester ? { semester } : {} }).then((r) => r.data);
+// Lấy số liệu sinh viên theo khoa cho biểu đồ
+export const requestStudentsByDepartment = () => apiClient.get(API_ENDPOINTS.STUDENTS_BY_DEPARTMENT).then((r) => r.data);
 // Lấy số liệu dashboard của giảng viên
 export const requestTeacherDashboard = ()  => apiClient.get(API_ENDPOINTS.TEACHER_DASHBOARD).then((r) => r.data);
 // Lấy số liệu dashboard của sinh viên

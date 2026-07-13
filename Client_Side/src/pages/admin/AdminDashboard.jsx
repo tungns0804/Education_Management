@@ -11,18 +11,17 @@ import { requestDashboard, requestStudentsByDepartment } from '../../config/user
 export default function AdminDashboard() {
   const { t, lang } = useApp();
   const [stats, setStats] = useState(null);
-  const [deptDist, setDeptDist] = useState({ semesters: [], total: 0, data: [] });
-  const [semester, setSemester] = useState('');
+  const [deptDist, setDeptDist] = useState({ total: 0, data: [] });
 
   useEffect(() => {
     requestDashboard().then(r => setStats(r.metadata)).catch(() => {});
   }, []);
 
   useEffect(() => {
-    requestStudentsByDepartment(semester)
-      .then(r => setDeptDist(r.metadata ?? { semesters: [], total: 0, data: [] }))
+    requestStudentsByDepartment()
+      .then(r => setDeptDist(r.metadata ?? { total: 0, data: [] }))
       .catch(() => {});
-  }, [semester]);
+  }, []);
 
   const s = stats ?? { students: 0, teachers: 0, sections: 0, subjects: 0, gender: { male: 0, female: 0 } };
 
@@ -33,8 +32,8 @@ export default function AdminDashboard() {
     color: DEPT_PALETTE[i % DEPT_PALETTE.length],
   }));
   const deptDesc = lang === 'vi'
-    ? (semester ? `Phân bổ sinh viên học kỳ ${semester} · ${deptDist.total ?? 0} SV` : `Phân bổ toàn trường · ${deptDist.total ?? 0} sinh viên`)
-    : (semester ? `Distribution · semester ${semester} · ${deptDist.total ?? 0} students` : `Distribution across faculties · ${deptDist.total ?? 0} students`);
+    ? `Phân bổ toàn trường · ${deptDist.total ?? 0} sinh viên`
+    : `Distribution across faculties · ${deptDist.total ?? 0} students`;
 
   return (
     <Page>
@@ -47,15 +46,7 @@ export default function AdminDashboard() {
 
       <div className="grid-2-1">
         <div className="card" style={{ padding: 22 }}>
-          <SectionHead title={lang==='vi'?'Sinh viên theo khoa':'Students by faculty'} desc={deptDesc}
-            right={
-              <select className="select" style={{ height: 38, width: 'auto', minWidth: 140, paddingRight: 30 }} value={semester} onChange={e => setSemester(e.target.value)}>
-                <option value="">{lang === 'vi' ? 'Mọi học kỳ' : 'All semesters'}</option>
-                {(deptDist.semesters ?? []).map(sem => (
-                  <option key={sem} value={sem}>{sem}</option>
-                ))}
-              </select>
-            }/>
+          <SectionHead title={lang==='vi'?'Sinh viên theo khoa':'Students by faculty'} desc={deptDesc}/>
           <div style={{ marginTop: 18 }}><BarChart data={deptChart} height={230}/></div>
         </div>
         <div className="card" style={{ padding: 22 }}>
