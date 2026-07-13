@@ -54,18 +54,36 @@ export class DashboardService {
     };
   }
 
-  // Đếm sinh viên theo khoa trên toàn trường
-  async getStudentsByDepartment() {
-    const [departments, students] = await Promise.all([
+  // Đếm sinh viên theo khoa trong một học kỳ — chỉ tính sinh viên có ít nhất
+  // một đăng ký học phần trong học kỳ đó. Không truyền học kỳ thì mặc định
+  // là học kỳ đang kích hoạt, nếu không có thì lấy học kỳ mới nhất.
+  async getStudentsByDepartment(semester?: string) {
+    const [departments, semesterRows] = await Promise.all([
       this.prisma.department.findMany({
         select: { code: true, nameDepartment: true },
         orderBy: { code: 'asc' },
       }),
-      this.prisma.user.findMany({
-        where: { role: Role.student },
-        select: { department: true },
+      this.prisma.semester.findMany({
+        select: { name: true, isActive: true },
+        orderBy: { name: 'asc' },
       }),
     ]);
+
+    const semesters = semesterRows.map(s => s.name);
+    const selected = semester
+      ?? semesterRows.find(s => s.isActive)?.name
+      ?? semesters[semesters.length - 1]
+      ?? null;
+
+    const students = selected
+      ? await this.prisma.user.findMany({
+          where: {
+            role: Role.student,
+            enrollments: { some: { subjectClass: { semester: selected } } },
+          },
+          select: { department: true },
+        })
+      : [];
 
     const counts: Record<string, number> = {};
     for (const s of students) {
@@ -81,7 +99,7 @@ export class DashboardService {
 
     const total = data.reduce((sum, d) => sum + d.value, 0);
 
-    return { total, data };
+    return { semester: selected, semesters, total, data };
   }
 
   private async getActiveSemesterFilter(): Promise<{ semester?: { in: string[] } }> {

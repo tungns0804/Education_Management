@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards, Req } from '@nestjs/common';
 import { DashboardService } from './dashboard.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -20,11 +20,12 @@ export class DashboardController {
     return { success: true, message: 'success', metadata: data };
   }
 
-  // Số liệu sinh viên theo khoa cho biểu đồ
+  // Số liệu sinh viên theo khoa cho biểu đồ, lọc theo học kỳ
+  // (không truyền thì server tự chọn học kỳ mặc định)
   @Get('students-by-department')
   @Roles('admin')
-  async getStudentsByDepartment() {
-    const data = await this.dashboardService.getStudentsByDepartment();
+  async getStudentsByDepartment(@Query('semester') semester?: string) {
+    const data = await this.dashboardService.getStudentsByDepartment(semester || undefined);
     return { success: true, message: 'success', metadata: data };
   }
 
