@@ -8,6 +8,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { EnrollmentStatus, LetterGrade, SubjectClassStatus } from '@prisma/client';
 import { schedulesOverlap, formatSchedule, hasSchedule } from '../common/utils/schedule.util';
+import { MAX_CREDITS_PER_SEMESTER } from '../constants/enrollment.constants';
 
 // Quy đổi điểm tổng kết (thang 10) sang điểm chữ A/B/C/D/F
 function calcLetter(total: number): LetterGrade {
@@ -124,7 +125,10 @@ export class EnrollmentsService {
   // ----------------------------------------------------------------
 
   async register(studentId: string, subjectClassId: string) {
-    const sc = await this.prisma.subjectClass.findUnique({ where: { id: subjectClassId } });
+    const sc = await this.prisma.subjectClass.findUnique({
+      where: { id: subjectClassId },
+      include: { subject: { select: { name: true, credits: true } } },
+    });
     if (!sc) throw new NotFoundException('Lớp học phần không tồn tại');
     if (sc.status !== SubjectClassStatus.active)
       throw new BadRequestException('Lớp học phần không còn mở đăng ký');
@@ -137,24 +141,39 @@ export class EnrollmentsService {
     });
     if (existing) throw new ConflictException('Bạn đã đăng ký lớp học phần này');
 
+    // Các đăng ký còn hiệu lực của sinh viên trong cùng học kỳ — dùng chung
+    // cho kiểm tra trần tín chỉ và kiểm tra trùng lịch bên dưới
+    const myEnrollments = await this.prisma.enrollment.findMany({
+      where: {
+        studentId,
+        status: EnrollmentStatus.registered,
+        subjectClass: { semester: sc.semester, status: { not: SubjectClassStatus.canceled } },
+      },
+      include: {
+        subjectClass: {
+          select: {
+            code: true, scheduleDays: true, startTime: true, endTime: true,
+            subject: { select: { name: true, credits: true } },
+          },
+        },
+      },
+    });
+
+    // Nghiệp vụ: tổng tín chỉ đăng ký trong một học kỳ không được vượt trần
+    const currentCredits = myEnrollments.reduce(
+      (s, e) => s + (e.subjectClass.subject.credits || 0), 0);
+    const newCredits = sc.subject?.credits || 0;
+    if (currentCredits + newCredits > MAX_CREDITS_PER_SEMESTER) {
+      throw new BadRequestException(
+        `Vượt giới hạn tín chỉ: bạn đã đăng ký ${currentCredits} tín chỉ trong học kỳ ${sc.semester}, ` +
+        `đăng ký thêm ${sc.subject?.name} (${newCredits} tín chỉ) sẽ vượt mức tối đa ` +
+        `${MAX_CREDITS_PER_SEMESTER} tín chỉ. Vui lòng hủy bớt học phần trước khi đăng ký mới.`,
+      );
+    }
+
     // Nghiệp vụ: không cho đăng ký lớp trùng lịch (cùng học kỳ, trùng ngày
     // trong tuần và giao nhau về khung giờ) với lớp đã đăng ký trước đó
     if (hasSchedule(sc)) {
-      const myEnrollments = await this.prisma.enrollment.findMany({
-        where: {
-          studentId,
-          status: EnrollmentStatus.registered,
-          subjectClass: { semester: sc.semester, status: { not: SubjectClassStatus.canceled } },
-        },
-        include: {
-          subjectClass: {
-            select: {
-              code: true, scheduleDays: true, startTime: true, endTime: true,
-              subject: { select: { name: true } },
-            },
-          },
-        },
-      });
       const conflict = myEnrollments.find(e => schedulesOverlap(sc, e.subjectClass));
       if (conflict) {
         throw new ConflictException(

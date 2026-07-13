@@ -25,7 +25,6 @@ export default function RegistrationScreen() {
   const [filterSubject,  setFilterSubject]  = useState('');
   const [filterCode,     setFilterCode]     = useState('');
   const [filterTeacher,  setFilterTeacher]  = useState('');
-  const [filterSemester, setFilterSemester] = useState('');
   const [page,           setPage]           = useState(1);
   const PAGE_SIZE = 8;
 
@@ -58,17 +57,19 @@ export default function RegistrationScreen() {
     regSections.reduce((a, s) => a + (s.subject?.credits ?? 0), 0),
     [regSections]);
 
-  const semesters = useMemo(() =>
-    [...new Set(available.map(s => s.semester).filter(Boolean))].sort(),
-    [available]);
+  // Tổng tín chỉ đã đăng ký theo từng học kỳ — trần tín chỉ tính riêng mỗi học kỳ
+  const semCreditsMap = useMemo(() => {
+    const m = {};
+    regSections.forEach(s => { m[s.semester] = (m[s.semester] || 0) + (s.subject?.credits ?? 0); });
+    return m;
+  }, [regSections]);
 
-  const hasFilter = !!(filterSubject || filterCode || filterTeacher || filterSemester);
+  const hasFilter = !!(filterSubject || filterCode || filterTeacher);
 
   const clearFilters = () => {
     setFilterSubject('');
     setFilterCode('');
     setFilterTeacher('');
-    setFilterSemester('');
     setPage(1);
   };
 
@@ -80,16 +81,25 @@ export default function RegistrationScreen() {
       if (subj    && !s.subject?.name?.toLowerCase().includes(subj))       return false;
       if (code    && !s.code?.toLowerCase().includes(code))                 return false;
       if (teacher && !s.teacher?.fullName?.toLowerCase().includes(teacher)) return false;
-      if (filterSemester && s.semester !== filterSemester)                  return false;
       return true;
     });
-  }, [available, filterSubject, filterCode, filterTeacher, filterSemester]);
+  }, [available, filterSubject, filterCode, filterTeacher]);
 
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const MAX_CREDITS = 24;
 
   const register = async (section) => {
+    // Chặn sớm phía client khi vượt trần tín chỉ học kỳ (server cũng kiểm tra lại)
+    const semCredits  = semCreditsMap[section.semester] || 0;
+    const newCredits  = section.subject?.credits ?? 0;
+    if (semCredits + newCredits > MAX_CREDITS) {
+      toast(lang==='vi'
+        ? `Vượt giới hạn tín chỉ: bạn đã đăng ký ${semCredits} tín chỉ, thêm ${section.subject?.name} (${newCredits} tín chỉ) sẽ vượt mức tối đa ${MAX_CREDITS} tín chỉ. Hãy hủy bớt học phần trước khi đăng ký mới.`
+        : `Credit limit exceeded: you have ${semCredits} credits registered; adding ${section.subject?.name} (${newCredits} credits) would exceed the ${MAX_CREDITS}-credit cap. Drop a course before registering.`,
+        'danger');
+      return;
+    }
     setActionBusy(p => ({ ...p, [section.id]: true }));
     try {
       const res = await requestRegister(section.id);
@@ -147,11 +157,6 @@ export default function RegistrationScreen() {
                     onChange={e => { setFilterTeacher(e.target.value); setPage(1); }}
                     placeholder={lang==='vi'?'Giảng viên…':'Teacher…'}/>
                 </div>
-                <select className="input" style={{ height: 40, flex: '1 1 150px', paddingLeft: 12, cursor: 'pointer' }}
-                  value={filterSemester} onChange={e => { setFilterSemester(e.target.value); setPage(1); }}>
-                  <option value="">{lang==='vi'?'— Tất cả học kỳ —':'— All semesters —'}</option>
-                  {semesters.map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
                 {hasFilter && (
                   <button className="btn btn-ghost btn-sm" onClick={clearFilters} style={{ whiteSpace: 'nowrap' }}>
                     <I.x size={14}/>{lang==='vi'?'Xóa bộ lọc':'Clear filters'}
@@ -173,6 +178,9 @@ export default function RegistrationScreen() {
                   const full   = count >= (s.maxStudents ?? 50);
                   // Cảnh báo sớm: lớp này trùng lịch với một lớp đã đăng ký
                   const clash  = !isReg && regSections.find(r => schedulesConflict(s, r));
+                  // Cảnh báo sớm: đăng ký thêm lớp này sẽ vượt trần tín chỉ học kỳ
+                  const overCap = !isReg &&
+                    ((semCreditsMap[s.semester] || 0) + (s.subject?.credits ?? 0)) > MAX_CREDITS;
                   return (
                     <div key={s.id} className="card" style={{ padding: 16, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap',
                       boxShadow: isReg ? 'inset 0 0 0 1.5px var(--accent), var(--shadow-sm)' : 'var(--shadow-sm)' }}>
@@ -201,6 +209,14 @@ export default function RegistrationScreen() {
                             ? `Trùng lịch với ${clash.code} (${formatSchedule(clash, lang)})`
                             : `Conflicts with ${clash.code} (${formatSchedule(clash, lang)})`}>
                           {lang==='vi'?'Trùng lịch':'Time clash'}
+                        </span>
+                      )}
+                      {overCap && (
+                        <span className="badge" style={{ background: 'var(--danger-soft)', color: 'var(--danger)' }}
+                          title={lang==='vi'
+                            ? `Đã đăng ký ${semCreditsMap[s.semester] || 0}/${MAX_CREDITS} tín chỉ — thêm lớp này sẽ vượt trần`
+                            : `${semCreditsMap[s.semester] || 0}/${MAX_CREDITS} credits registered — adding this exceeds the cap`}>
+                          {lang==='vi'?'Vượt tín chỉ':'Over credit cap'}
                         </span>
                       )}
                       <button

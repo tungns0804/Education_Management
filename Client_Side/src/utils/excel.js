@@ -1,4 +1,4 @@
-/* EduManage — Tiện ích Excel: đọc file CSV/XLSX, sinh file mẫu import */
+/* EduManage — Tiện ích Excel: đọc file CSV/XLSX, sinh file mẫu import, xuất danh sách */
 
 // Hàm hỗ trợ: đọc một File và trả về nội dung dạng text (CSV hoặc Excel)
 export async function readFileAsText(file) {
@@ -26,37 +26,99 @@ export async function readFileAsText(file) {
   });
 }
 
-// ============== File Excel mẫu import sinh viên ==============
-export async function generateStudentExcelTemplate(lang) {
-  const { default: writeXlsxFile } = await import('write-excel-file/browser');
-  const vi = lang === 'vi';
+// ============== Kiểu dáng chung cho file Excel ==============
 
-  const NAVY   = '#1E3A5F';
-  const BLUE   = '#2F6FED';
-  const COL_H  = '#003478';
-  const WHITE  = '#FFFFFF';
-  const ROW_A  = '#EBF2FF';
-  const NOTE_B = '#FFFBEB';
-  const NOTE_T = '#92400E';
-  const INFO_T = '#1D4ED8';
-  const MUTED  = '#64748B';
-  const BORD   = '#B0C4DE';
-  const FONT   = 'Times New Roman';
+const FONT   = 'Times New Roman';
+const WHITE  = '#FFFFFF';
+const MUTED  = '#64748B';
+const NOTE_B = '#FFFBEB';
+const NOTE_T = '#92400E';
 
-  const hdr = (v, extra = {}) => ({
+// Bảng màu SÁNG — nền nhạt, chữ đậm màu (tông xanh dương cho sinh viên)
+const STUDENT_THEME = {
+  title:      '#1E3A5F',
+  bannerBg:   '#DBEAFE', bannerText: '#1E3A5F',
+  subBg:      '#EFF6FF', subText:    '#1D4ED8',
+  headBg:     '#BFDBFE', headText:   '#1E3A5F',
+  rowAlt:     '#EFF6FF', border:     '#93C5FD',
+  info:       '#1D4ED8',
+};
+
+// Tông xanh ngọc cho giảng viên
+const TEACHER_THEME = {
+  title:      '#134E4A',
+  bannerBg:   '#CCFBF1', bannerText: '#134E4A',
+  subBg:      '#F0FDFA', subText:    '#0F766E',
+  headBg:     '#99F6E4', headText:   '#134E4A',
+  rowAlt:     '#F0FDFA', border:     '#5EEAD4',
+  info:       '#0369A1',
+};
+
+// Sinh bộ hàm tạo ô theo theme: hdr (tiêu đề cột), dat (ô dữ liệu), span (dòng gộp)
+function makeCells(theme, nCols) {
+  const hdr = (v) => ({
     value: v, fontFamily: FONT, fontSize: 11, fontWeight: 'bold',
-    color: WHITE, backgroundColor: COL_H, align: 'center', alignVertical: 'middle',
-    height: 28, borderStyle: 'thin', borderColor: COL_H, ...extra,
+    color: theme.headText, backgroundColor: theme.headBg,
+    align: 'center', alignVertical: 'middle',
+    height: 28, borderStyle: 'thin', borderColor: theme.border,
   });
   const dat = (v, ri, center = false) => ({
     value: v,
     type: typeof v === 'number' ? Number : String,
     fontFamily: FONT, fontSize: 11,
-    backgroundColor: ri % 2 === 0 ? ROW_A : WHITE,
+    backgroundColor: ri % 2 === 0 ? theme.rowAlt : WHITE,
     align: center ? 'center' : 'left', alignVertical: 'middle',
-    height: 20, borderStyle: 'thin', borderColor: BORD,
+    height: 20, borderStyle: 'thin', borderColor: theme.border,
   });
-  const span6 = (v, extra = {}) => ({ value: v, span: 6, fontFamily: FONT, ...extra });
+  const span = (v, extra = {}) => ({ value: v, span: nCols, fontFamily: FONT, ...extra });
+  return { hdr, dat, span };
+}
+
+// Khối đầu trang dùng chung: tên trường, phòng ban, tiêu đề tài liệu, dòng phụ
+function buildHeadRows({ span, theme, vi, deptLine, title, subLine }) {
+  return [
+    [span(vi ? 'TRƯỜNG ĐẠI HỌC KHOA HỌC VÀ CÔNG NGHỆ VIỆT NAM' : 'VIETNAM UNIVERSITY OF SCIENCE AND TECHNOLOGY', {
+      fontSize: 15, fontWeight: 'bold', color: theme.bannerText, backgroundColor: theme.bannerBg,
+      align: 'center', alignVertical: 'middle', height: 44,
+    })],
+    [span(deptLine, {
+      fontSize: 11, fontStyle: 'italic', color: theme.subText, backgroundColor: theme.subBg,
+      align: 'center', alignVertical: 'middle', height: 24,
+    })],
+    [span(null, { height: 12 })],
+    [span(title, {
+      fontSize: 14, fontWeight: 'bold', textDecoration: 'underline', color: theme.title,
+      align: 'center', alignVertical: 'middle', height: 38,
+    })],
+    [span(subLine, {
+      fontSize: 11, fontStyle: 'italic', color: MUTED,
+      align: 'center', alignVertical: 'middle', height: 22,
+    })],
+    [span(null, { height: 10 })],
+  ];
+}
+
+const noteRow = (span, text) => [span(text, {
+  fontSize: 10, fontStyle: 'italic', color: NOTE_T, backgroundColor: NOTE_B,
+  align: 'left', alignVertical: 'middle', wrap: true, height: 34,
+})];
+
+const infoRow = (span, text, color) => [span(text, {
+  fontSize: 10, fontStyle: 'italic', color,
+  align: 'left', alignVertical: 'middle', wrap: true, height: 34,
+})];
+
+const todayStr = () => {
+  const d = new Date();
+  return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+};
+
+// ============== File Excel mẫu import sinh viên ==============
+// Hàm build tách riêng (pure) để test được bằng Node — không đụng tới browser API
+export function buildStudentTemplate(lang) {
+  const vi = lang === 'vi';
+  const theme = STUDENT_THEME;
+  const { hdr, dat, span } = makeCells(theme, 6);
 
   const hdrs = vi
     ? ['STT', 'Họ và tên (*)', 'Giới tính (*)', 'Ngày sinh', 'Mã lớp (*)', 'Email cá nhân (*)']
@@ -75,35 +137,14 @@ export async function generateStudentExcelTemplate(lang) {
   ];
 
   const data = [
-    // Dòng 1 — tên trường
-    [span6(vi ? 'TRƯỜNG ĐẠI HỌC KHOA HỌC VÀ CÔNG NGHỆ VIỆT NAM' : 'VIETNAM UNIVERSITY OF SCIENCE AND TECHNOLOGY', {
-      fontSize: 15, fontWeight: 'bold', color: WHITE, backgroundColor: NAVY,
-      align: 'center', alignVertical: 'middle', height: 44,
-    })],
-    // Dòng 2 — phòng ban
-    [span6(vi ? 'PHÒNG ĐÀO TẠO  ·  PHÒNG CÔNG TÁC SINH VIÊN' : 'ACADEMIC AFFAIRS OFFICE  ·  STUDENT SERVICES OFFICE', {
-      fontSize: 11, fontStyle: 'italic', color: WHITE, backgroundColor: BLUE,
-      align: 'center', alignVertical: 'middle', height: 24,
-    })],
-    // Dòng 3 — dòng trống ngăn cách
-    [span6(null, { height: 12 })],
-    // Dòng 4 — tiêu đề tài liệu
-    [span6(vi ? 'DANH SÁCH SINH VIÊN NHẬP HỌC' : 'STUDENT ENROLLMENT LIST', {
-      fontSize: 14, fontWeight: 'bold', textDecoration: 'underline', color: NAVY,
-      align: 'center', alignVertical: 'middle', height: 38,
-    })],
-    // Dòng 5 — dòng điền năm học / học kỳ
-    [span6(vi
-      ? 'Năm học: ____________________      Học kỳ: _____________      Khoa/Bộ môn: __________________'
-      : 'Academic Year: __________________      Semester: _____________      Faculty: __________________', {
-      fontSize: 11, fontStyle: 'italic', color: MUTED,
-      align: 'center', alignVertical: 'middle', height: 22,
-    })],
-    // Dòng 6 — dòng trống ngăn cách
-    [span6(null, { height: 10 })],
-    // Dòng 7 — tiêu đề các cột
+    ...buildHeadRows({ span, theme, vi,
+      deptLine: vi ? 'PHÒNG ĐÀO TẠO  ·  PHÒNG CÔNG TÁC SINH VIÊN' : 'ACADEMIC AFFAIRS OFFICE  ·  STUDENT SERVICES OFFICE',
+      title: vi ? 'DANH SÁCH SINH VIÊN NHẬP HỌC' : 'STUDENT ENROLLMENT LIST',
+      subLine: vi
+        ? 'Năm học: ____________________      Học kỳ: _____________      Khoa/Bộ môn: __________________'
+        : 'Academic Year: __________________      Semester: _____________      Faculty: __________________',
+    }),
     hdrs.map(h => hdr(h)),
-    // Dòng 8-11 — dữ liệu mẫu
     ...samples.map((row, ri) => [
       dat(row[0], ri, true),
       dat(row[1], ri),
@@ -112,22 +153,13 @@ export async function generateStudentExcelTemplate(lang) {
       dat(row[4], ri, true),
       dat(row[5], ri),
     ]),
-    // Dòng 12 — dòng trống ngăn cách
-    [span6(null, { height: 10 })],
-    // Dòng 13 — ghi chú cột bắt buộc
-    [span6(vi
+    [span(null, { height: 10 })],
+    noteRow(span, vi
       ? '(*) Cột bắt buộc điền. Mã lớp phải khớp chính xác với mã trong hệ thống. Xóa các dòng mẫu trước khi nhập dữ liệu thực tế.'
-      : '(*) Required fields. Class code must exactly match system codes (case-sensitive). Remove sample rows before importing real data.', {
-      fontSize: 10, fontStyle: 'italic', color: NOTE_T, backgroundColor: NOTE_B,
-      align: 'left', alignVertical: 'middle', wrap: true, height: 34,
-    })],
-    // Dòng 14 — ghi chú về dữ liệu tự sinh
-    [span6(vi
+      : '(*) Required fields. Class code must exactly match system codes (case-sensitive). Remove sample rows before importing real data.'),
+    infoRow(span, vi
       ? 'ℹ  Mã sinh viên và email trường (.edu.vn) sẽ được hệ thống tự động sinh. Thông tin đăng nhập gửi về email cá nhân sau khi nhập thành công.'
-      : 'ℹ  Student code and school email (.edu.vn) are auto-generated. Login credentials will be sent to personal email after successful import.', {
-      fontSize: 10, fontStyle: 'italic', color: INFO_T,
-      align: 'left', alignVertical: 'middle', wrap: true, height: 34,
-    })],
+      : 'ℹ  Student code and school email (.edu.vn) are auto-generated. Login credentials will be sent to personal email after successful import.', theme.info),
   ];
 
   const columns = [
@@ -135,40 +167,20 @@ export async function generateStudentExcelTemplate(lang) {
   ];
 
   const fileName = vi ? 'mau-danh-sach-sinh-vien.xlsx' : 'student-import-template.xlsx';
-  await writeXlsxFile(data, { columns, sheet: vi ? 'DS Sinh Viên' : 'Student List' }).toFile(fileName);
+  return { data, columns, sheet: vi ? 'DS Sinh Viên' : 'Student List', fileName };
+}
+
+export async function generateStudentExcelTemplate(lang) {
+  const { default: writeXlsxFile } = await import('write-excel-file/browser');
+  const { data, columns, sheet, fileName } = buildStudentTemplate(lang);
+  await writeXlsxFile(data, { columns, sheet }).toFile(fileName);
 }
 
 // ============== File Excel mẫu import giảng viên ==============
-export async function generateTeacherExcelTemplate(lang) {
-  const { default: writeXlsxFile } = await import('write-excel-file/browser');
+export function buildTeacherTemplate(lang) {
   const vi = lang === 'vi';
-
-  const NAVY   = '#1E3A5F';
-  const TEAL   = '#0F6B61';
-  const COL_H  = '#134E4A';
-  const WHITE  = '#FFFFFF';
-  const ROW_A  = '#ECFDF5';
-  const NOTE_B = '#FFFBEB';
-  const NOTE_T = '#92400E';
-  const INFO_T = '#0369A1';
-  const MUTED  = '#64748B';
-  const BORD   = '#A7C4BC';
-  const FONT   = 'Times New Roman';
-
-  const hdr = (v) => ({
-    value: v, fontFamily: FONT, fontSize: 11, fontWeight: 'bold',
-    color: WHITE, backgroundColor: COL_H, align: 'center', alignVertical: 'middle',
-    height: 28, borderStyle: 'thin', borderColor: COL_H,
-  });
-  const dat = (v, ri, center = false) => ({
-    value: v,
-    type: typeof v === 'number' ? Number : String,
-    fontFamily: FONT, fontSize: 11,
-    backgroundColor: ri % 2 === 0 ? ROW_A : WHITE,
-    align: center ? 'center' : 'left', alignVertical: 'middle',
-    height: 20, borderStyle: 'thin', borderColor: BORD,
-  });
-  const span6 = (v, extra = {}) => ({ value: v, span: 6, fontFamily: FONT, ...extra });
+  const theme = TEACHER_THEME;
+  const { hdr, dat, span } = makeCells(theme, 6);
 
   const hdrs = vi
     ? ['STT', 'Họ và tên (*)', 'Học hàm/học vị', 'Số điện thoại', 'Khoa', 'Email cá nhân (*)']
@@ -187,35 +199,14 @@ export async function generateTeacherExcelTemplate(lang) {
   ];
 
   const data = [
-    // Dòng 1 — tên trường
-    [span6(vi ? 'TRƯỜNG ĐẠI HỌC KHOA HỌC VÀ CÔNG NGHỆ VIỆT NAM' : 'VIETNAM UNIVERSITY OF SCIENCE AND TECHNOLOGY', {
-      fontSize: 15, fontWeight: 'bold', color: WHITE, backgroundColor: NAVY,
-      align: 'center', alignVertical: 'middle', height: 44,
-    })],
-    // Dòng 2 — phòng ban
-    [span6(vi ? 'PHÒNG TỔ CHỨC NHÂN SỰ  ·  PHÒNG ĐÀO TẠO' : 'HUMAN RESOURCES OFFICE  ·  ACADEMIC AFFAIRS OFFICE', {
-      fontSize: 11, fontStyle: 'italic', color: WHITE, backgroundColor: TEAL,
-      align: 'center', alignVertical: 'middle', height: 24,
-    })],
-    // Dòng 3 — dòng trống ngăn cách
-    [span6(null, { height: 12 })],
-    // Dòng 4 — tiêu đề tài liệu
-    [span6(vi ? 'DANH SÁCH GIẢNG VIÊN' : 'FACULTY & STAFF ROSTER', {
-      fontSize: 14, fontWeight: 'bold', textDecoration: 'underline', color: NAVY,
-      align: 'center', alignVertical: 'middle', height: 38,
-    })],
-    // Dòng 5 — dòng điền năm học / khoa
-    [span6(vi
-      ? 'Năm học: ____________________      Khoa/Bộ môn: __________________________      Bậc đào tạo: _______________'
-      : 'Academic Year: __________________      Faculty/Department: __________________________      Level: _______________', {
-      fontSize: 11, fontStyle: 'italic', color: MUTED,
-      align: 'center', alignVertical: 'middle', height: 22,
-    })],
-    // Dòng 6 — dòng trống ngăn cách
-    [span6(null, { height: 10 })],
-    // Dòng 7 — tiêu đề các cột
+    ...buildHeadRows({ span, theme, vi,
+      deptLine: vi ? 'PHÒNG TỔ CHỨC NHÂN SỰ  ·  PHÒNG ĐÀO TẠO' : 'HUMAN RESOURCES OFFICE  ·  ACADEMIC AFFAIRS OFFICE',
+      title: vi ? 'DANH SÁCH GIẢNG VIÊN' : 'FACULTY & STAFF ROSTER',
+      subLine: vi
+        ? 'Năm học: ____________________      Khoa/Bộ môn: __________________________      Bậc đào tạo: _______________'
+        : 'Academic Year: __________________      Faculty/Department: __________________________      Level: _______________',
+    }),
     hdrs.map(h => hdr(h)),
-    // Dòng 8-11 — dữ liệu mẫu
     ...samples.map((row, ri) => [
       dat(row[0], ri, true),
       dat(row[1], ri),
@@ -224,22 +215,13 @@ export async function generateTeacherExcelTemplate(lang) {
       dat(row[4], ri),
       dat(row[5], ri),
     ]),
-    // Dòng 12 — dòng trống ngăn cách
-    [span6(null, { height: 10 })],
-    // Dòng 13 — ghi chú cột bắt buộc
-    [span6(vi
+    [span(null, { height: 10 })],
+    noteRow(span, vi
       ? '(*) Cột bắt buộc điền. Học hàm/học vị hợp lệ: ThS, TS, PGS, GS, CN (để trống nếu không có). Xóa các dòng mẫu trước khi nhập.'
-      : '(*) Required fields. Valid degrees: M.Sc., Ph.D., Assoc., Prof., B.Sc. (leave blank if none). Remove sample rows before importing.', {
-      fontSize: 10, fontStyle: 'italic', color: NOTE_T, backgroundColor: NOTE_B,
-      align: 'left', alignVertical: 'middle', wrap: true, height: 34,
-    })],
-    // Dòng 14 — ghi chú về dữ liệu tự sinh
-    [span6(vi
+      : '(*) Required fields. Valid degrees: M.Sc., Ph.D., Assoc., Prof., B.Sc. (leave blank if none). Remove sample rows before importing.'),
+    infoRow(span, vi
       ? 'ℹ  Mã giảng viên và email trường (.edu.vn) sẽ được hệ thống tự động sinh. Thông tin đăng nhập gửi về email cá nhân sau khi nhập thành công.'
-      : 'ℹ  Teacher code and school email (.edu.vn) are auto-generated. Login credentials will be sent to personal email after successful import.', {
-      fontSize: 10, fontStyle: 'italic', color: INFO_T,
-      align: 'left', alignVertical: 'middle', wrap: true, height: 34,
-    })],
+      : 'ℹ  Teacher code and school email (.edu.vn) are auto-generated. Login credentials will be sent to personal email after successful import.', theme.info),
   ];
 
   const columns = [
@@ -247,5 +229,103 @@ export async function generateTeacherExcelTemplate(lang) {
   ];
 
   const fileName = vi ? 'mau-danh-sach-giang-vien.xlsx' : 'teacher-import-template.xlsx';
-  await writeXlsxFile(data, { columns, sheet: vi ? 'DS Giảng Viên' : 'Faculty List' }).toFile(fileName);
+  return { data, columns, sheet: vi ? 'DS Giảng Viên' : 'Faculty List', fileName };
+}
+
+export async function generateTeacherExcelTemplate(lang) {
+  const { default: writeXlsxFile } = await import('write-excel-file/browser');
+  const { data, columns, sheet, fileName } = buildTeacherTemplate(lang);
+  await writeXlsxFile(data, { columns, sheet }).toFile(fileName);
+}
+
+// ============== Xuất danh sách sinh viên ra Excel (định dạng như file mẫu) ==============
+export function buildStudentsExport(students, lang) {
+  const vi = lang === 'vi';
+  const theme = STUDENT_THEME;
+  const { hdr, dat, span } = makeCells(theme, 8);
+
+  const hdrs = vi
+    ? ['STT', 'Họ và tên', 'Mã SV', 'Giới tính', 'Ngày sinh', 'Lớp', 'Email trường', 'Trạng thái']
+    : ['No.', 'Full name', 'Student code', 'Gender', 'Date of birth', 'Class', 'School email', 'Status'];
+
+  const data = [
+    ...buildHeadRows({ span, theme, vi,
+      deptLine: vi ? 'PHÒNG ĐÀO TẠO  ·  PHÒNG CÔNG TÁC SINH VIÊN' : 'ACADEMIC AFFAIRS OFFICE  ·  STUDENT SERVICES OFFICE',
+      title: vi ? 'DANH SÁCH SINH VIÊN' : 'STUDENT LIST',
+      subLine: vi
+        ? `Ngày xuất: ${todayStr()}      Tổng số: ${students.length} sinh viên`
+        : `Exported: ${todayStr()}      Total: ${students.length} students`,
+    }),
+    hdrs.map(h => hdr(h)),
+    ...students.map((s, ri) => [
+      dat(ri + 1, ri, true),
+      dat(s.name || '', ri),
+      dat(s.code || '', ri, true),
+      dat(vi ? (s.gender === 'M' ? 'Nam' : 'Nữ') : (s.gender === 'M' ? 'Male' : 'Female'), ri, true),
+      dat(s.dob || '', ri, true),
+      dat(s.classId || '', ri, true),
+      dat(s.email || '', ri),
+      dat(s.active ? (vi ? 'Hoạt động' : 'Active') : (vi ? 'Đã khóa' : 'Locked'), ri, true),
+    ]),
+  ];
+
+  const columns = [
+    { width: 6 }, { width: 28 }, { width: 13 }, { width: 11 },
+    { width: 13 }, { width: 14 }, { width: 32 }, { width: 12 },
+  ];
+
+  const fileName = vi ? 'danh-sach-sinh-vien.xlsx' : 'student-list.xlsx';
+  return { data, columns, sheet: vi ? 'DS Sinh Viên' : 'Students', fileName };
+}
+
+export async function exportStudentsExcel(students, lang) {
+  const { default: writeXlsxFile } = await import('write-excel-file/browser');
+  const { data, columns, sheet, fileName } = buildStudentsExport(students, lang);
+  await writeXlsxFile(data, { columns, sheet }).toFile(fileName);
+}
+
+// ============== Xuất danh sách giảng viên ra Excel (định dạng như file mẫu) ==============
+export function buildTeachersExport(teachers, lang) {
+  const vi = lang === 'vi';
+  const theme = TEACHER_THEME;
+  const { hdr, dat, span } = makeCells(theme, 8);
+
+  const hdrs = vi
+    ? ['STT', 'Họ và tên', 'Mã GV', 'Học hàm/học vị', 'Khoa', 'Email trường', 'Số lớp HP', 'Trạng thái']
+    : ['No.', 'Full name', 'Teacher code', 'Academic degree', 'Faculty', 'School email', 'Sections', 'Status'];
+
+  const data = [
+    ...buildHeadRows({ span, theme, vi,
+      deptLine: vi ? 'PHÒNG TỔ CHỨC NHÂN SỰ  ·  PHÒNG ĐÀO TẠO' : 'HUMAN RESOURCES OFFICE  ·  ACADEMIC AFFAIRS OFFICE',
+      title: vi ? 'DANH SÁCH GIẢNG VIÊN' : 'FACULTY & STAFF ROSTER',
+      subLine: vi
+        ? `Ngày xuất: ${todayStr()}      Tổng số: ${teachers.length} giảng viên`
+        : `Exported: ${todayStr()}      Total: ${teachers.length} teachers`,
+    }),
+    hdrs.map(h => hdr(h)),
+    ...teachers.map((tc, ri) => [
+      dat(ri + 1, ri, true),
+      dat(tc.name || '', ri),
+      dat(tc.code || '', ri, true),
+      dat(tc.degree || '', ri, true),
+      dat(tc.deptName || '', ri),
+      dat(tc.email || '', ri),
+      dat(typeof tc.sections === 'number' ? tc.sections : (tc.sections || ''), ri, true),
+      dat(tc.active ? (vi ? 'Hoạt động' : 'Active') : (vi ? 'Đã khóa' : 'Locked'), ri, true),
+    ]),
+  ];
+
+  const columns = [
+    { width: 6 }, { width: 26 }, { width: 13 }, { width: 15 },
+    { width: 24 }, { width: 32 }, { width: 10 }, { width: 12 },
+  ];
+
+  const fileName = vi ? 'danh-sach-giang-vien.xlsx' : 'teacher-list.xlsx';
+  return { data, columns, sheet: vi ? 'DS Giảng Viên' : 'Faculty', fileName };
+}
+
+export async function exportTeachersExcel(teachers, lang) {
+  const { default: writeXlsxFile } = await import('write-excel-file/browser');
+  const { data, columns, sheet, fileName } = buildTeachersExport(teachers, lang);
+  await writeXlsxFile(data, { columns, sheet }).toFile(fileName);
 }

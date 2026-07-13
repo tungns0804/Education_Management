@@ -5,7 +5,7 @@ import { DataTable, Page, SectionHead } from '../../components/shell';
 import { TableToolbar, FilterSelect, RowAction } from '../../components/table';
 import { TeacherBulkImportDrawer } from '../../components/TeacherBulkImportDrawer';
 import { useApp } from '../../context/AppContext';
-import { downloadCSV } from '../../utils/csv';
+import { exportTeachersExcel } from '../../utils/excel';
 import {
   requestTeachers, requestCreateTeacher, requestNextTeacherId, requestUpdateUser,
   requestToggleUserStatus, requestDeleteUser, requestBulkImportTeachers,
@@ -231,11 +231,13 @@ export default function TeachersScreen() {
         desc={lang === 'vi' ? `Quản lý ${teachers.length} giảng viên` : `Manage ${teachers.length} teachers`}
         right={<div style={{ display: 'flex', gap: 10 }}>
           <button className="btn btn-outline btn-sm" style={{ height: 40 }} onClick={() => setImportOpen(true)}><I.upload size={16}/>{t('import')}</button>
-          <button className="btn btn-outline btn-sm" style={{ height: 40 }} onClick={() => {
-            downloadCSV('giang-vien.csv',
-              [t('name'), t('code'), t('degree'), t('faculty'), t('email'), t('sections'), t('status')],
-              filtered.map(tc => [tc.name, tc.code, tc.degree, tc.deptName, tc.email, tc.sections, tc.active ? t('active') : t('locked')]));
-            toast(`${t('exported')} · ${filtered.length} ${lang === 'vi' ? 'dòng' : 'rows'}`);
+          <button className="btn btn-outline btn-sm" style={{ height: 40 }} onClick={async () => {
+            try {
+              await exportTeachersExcel(filtered, lang);
+              toast(`${t('exported')} · ${filtered.length} ${lang === 'vi' ? 'dòng' : 'rows'}`);
+            } catch {
+              toast(lang === 'vi' ? 'Xuất file thất bại' : 'Export failed', 'danger');
+            }
           }}><I.download size={16}/>{t('export')}</button>
         </div>}/>
 

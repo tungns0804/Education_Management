@@ -5,7 +5,7 @@ import { DataTable, Page, SectionHead } from '../../components/shell';
 import { TableToolbar, FilterSelect, RowAction } from '../../components/table';
 import { BulkImportDrawer } from '../../components/BulkImportDrawer';
 import { useApp } from '../../context/AppContext';
-import { downloadCSV } from '../../utils/csv';
+import { exportStudentsExcel } from '../../utils/excel';
 import StudentDrawer from './StudentDrawer';
 import {
   requestStudents, requestCreateStudent, requestBulkImport,
@@ -93,11 +93,13 @@ export default function StudentsScreen({ onOpenProfile }) {
       .catch(() => toast(lang === 'vi' ? 'Lỗi cập nhật trạng thái' : 'Status update failed', 'danger'));
   };
 
-  const exportCSV = () => {
-    downloadCSV('sinh-vien.csv',
-      [t('name'), t('code'), t('gender'), t('dob'), t('class'), t('email'), t('status')],
-      filtered.map(s => [s.name, s.code, s.gender === 'M' ? t('male') : t('female'), s.dob, s.classId, s.email, s.active ? t('active') : t('locked')]));
-    toast(`${t('exported')} · ${filtered.length} ${lang === 'vi' ? 'dòng' : 'rows'}`);
+  const exportExcel = async () => {
+    try {
+      await exportStudentsExcel(filtered, lang);
+      toast(`${t('exported')} · ${filtered.length} ${lang === 'vi' ? 'dòng' : 'rows'}`);
+    } catch {
+      toast(lang === 'vi' ? 'Xuất file thất bại' : 'Export failed', 'danger');
+    }
   };
 
   return (
@@ -106,7 +108,7 @@ export default function StudentsScreen({ onOpenProfile }) {
         desc={lang === 'vi' ? `Quản lý ${students.length} hồ sơ sinh viên và tài khoản` : `Manage ${students.length} student profiles and accounts`}
         right={<div style={{ display: 'flex', gap: 10 }}>
           <button className="btn btn-outline btn-sm" style={{ height: 40 }} onClick={() => setImportOpen(true)}><I.upload size={16}/>{t('import')}</button>
-          <button className="btn btn-outline btn-sm" style={{ height: 40 }} onClick={exportCSV}><I.download size={16}/>{t('export')}</button>
+          <button className="btn btn-outline btn-sm" style={{ height: 40 }} onClick={exportExcel}><I.download size={16}/>{t('export')}</button>
         </div>}/>
 
       <DataTable columns={columns} rows={filtered} perPage={8}
